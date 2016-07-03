@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>Theer108.github.io/</title>
+   
+   <link>http://theer108.github.io/</link>
+   <description>Passionate view on Computer Science, IT and nerdy things</description>
+   <language>en-uk</language>
+   <managingEditor> Łukasz Chrząszcz</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Clean code</title>
+	  <link>//clean-code</link>
+	  <author>Łukasz Chrząszcz</author>
+	  <pubDate>2016-07-03T12:18:00+02:00</pubDate>
+	  <guid>//clean-code</guid>
+	  <description><![CDATA[
+	     <p>Clean code. Lorem Ipsum</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nerdy Geek - Articles</title>
+    <description>Passionate view on Computer Science, IT and nerdy things</description>
+    <link>
+    http://theer108.github.io/</link>
+    
+      
+      <item>
+        <title>Clean code</title>
+        
+          <description>&lt;p&gt;Clean code. Lorem Ipsum&lt;/p&gt;
+</description>
+        
+        <pubDate>Sun, 03 Jul 2016 12:18:00 +0200</pubDate>
+        <link>
+        http://theer108.github.io//clean-code</link>
+        <guid isPermaLink="true">http://theer108.github.io//clean-code</guid>
+      </item>
+      
+    
+  </channel>
+</rss>
