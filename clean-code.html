@@ -89,7 +89,7 @@
 <!-- Everything inside the #post tags pulls data from the post -->
 <!-- #post -->
 
-<header class="main-header post-head " style="background-image: url(/assets/images/cover6.jpg) ">
+<header class="main-header post-head " style="background-image: url(/assets/images/cover2.jpg) ">
     <nav class="main-nav  overlay  clearfix">
         <a class="blog-logo" href="/"><img src="/assets/images/ghost.png" alt="Blog Logo" /></a>
         
@@ -135,9 +135,12 @@ don’t want to sell you any pills :P).</p>
 better code - they’re really simple and you can start to use them right away!
 Trust me… it works!</p>
 
-<h2 id="really-is-it-that-simple">Really? Is it that simple?</h2>
+<h2 id="variables-naming">Variables naming</h2>
 
-<p>Yup. I want to keep this post short as for the first post ever, so let’s get to it!</p>
+<p>Variables is probably the biggest set of names in your application code. So it’s crucial
+to name them properly. You probably never wondered you can improve something here,
+but from my experience some simple rules can vastly increase your coding skills.
+So let’s get started! :D</p>
 
 <h3 id="use-meaning-names-for-variables">Use meaning names for variables</h3>
 
@@ -171,11 +174,85 @@ def do_something(employees):
 </div>
 
 <p>With just few changes in variable naming we came to the code that is easy to understand.
-<strong>Always give variable name describing its content!</strong></p>
+<strong>Always give variable name describing its content!</strong>. There are some exceptions - as you
+saw in lambdas above or in some cases in loops, but if you ever catch yourself wondering
+what does this <code class="highlighter-rouge">c</code> means - <strong>change it</strong>.</p>
 
 <h3 id="useless-variables-wait-what">Useless variables. Wait what!?</h3>
 
-<h3 id="functions--">Functions -</h3>
+<p>That one really improved my coding skills by far. Simply <strong>split complex expressions</strong> 
+introducing new variables. Let’s consider again snippet from above. One could write it
+like that (pardon line length):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GOOD_EMPLOYEE = 2
+def do_something(employees):
+    map(lambda s: print ("Give %s promotion!" % s), 
+        map(lambda e: e.name, 
+            filter(lambda e: e.flag == GOOD_EMPLOYEE, employees)))
+</code></pre>
+</div>
+
+<p>Really, really unreadible. We all know keeping Python code neat is a good thing, but
+not to the point where code is hardly understandable (Personally I could live with such
+code, but only after changing function name to describe what the function does - we
+will get to that).</p>
+
+<p>I would suggest introducing variables for each part of expressions so as to understand
+what they mean. Let’s again look at “good” code from above:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GOOD_EMPLOYEE = 2
+def do_something(employees):
+
+    good_employees = filter(lambda emp: emp.flag == GOOD_EMPLOYEE, employees)
+    good_employees_names = map(lambda emp: emp.name, good_employees)
+
+    for good_employee_name in good_employees_names
+        print("Give %s promotion!" % good_employee_name)
+</code></pre>
+</div>
+
+<p>At glance you can understand that we filter all employess to get good employees,
+after that we get list with their names and finally we print message to the user.
+Simple as that!</p>
+
+<h2 id="units">Units!</h2>
+
+<p>This point is short but crucial. If you ever encounter variable with particular unit,
+for example uptime of your application in milliseconds - <strong>use unit in variable name</strong>.</p>
+
+<p>Look at this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>long time;
+int purchaseAge;
+</code></pre>
+</div>
+
+<p>Can you tell if you can add 5 days to <code class="highlighter-rouge">time</code> or 4 years to <code class="highlighter-rouge">purchaseAge</code>? Probably not…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>long timeMilliseconds;
+int purchaseAgeDays;
+</code></pre>
+</div>
+
+<p>And now you can! You don’t have to scan different parts of projects to know what to expect.
+You just know that first variables hold milliseconds and second contains number of days.</p>
+
+<h2 id="dont-use-tricky-names">Don’t use tricky names</h2>
+
+<p>If you use simple names it’s easier for anyone to remember, understand and pronounce variables.
+Code looks more like a poetic masterpiece than a code. It’s easier to get grasp of <code class="highlighter-rouge">employeeCount</code>, 
+<code class="highlighter-rouge">internalState</code> than <code class="highlighter-rouge">emplCnt</code> or <code class="highlighter-rouge">intrinsicStt</code>.</p>
+
+<p>I had an opportunity to work with some scientists on their code and trust me, this point is not so
+obvious for everyone :) In every line there were variables like d_hwhx, d_tauprhx, etc. Total nightmare.
+So the point is to use <strong>simple, commonly understandable phrases</strong></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>That’s all for this post - it’s just the beginning, so stay tuned and I hope those simple rules 
+will enchance your coding skills. I know for most of you they are obvious, but more advanced 
+things are yet to come :D See you soon!</p>
+
 
 
         </section>
@@ -236,13 +313,6 @@ def do_something(employees):
     
     <!-- [[! /next_post ]] -->
     <!-- [[! prev_post ]] -->
-    
-        <a class="read-next-story prev " style="background-image: url(/assets/images/cover2.jpg)" href="/clean-code">
-            <section class="post">
-                <h2>Clean code</h2>
-                <p>One thing was certaiqn, that the white kitten had had nothing to do with it:—...</p>
-            </section>
-        </a>
     
     <!-- [[! /prev_post ]] -->
 </aside>
