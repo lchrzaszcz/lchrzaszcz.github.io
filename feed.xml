@@ -8,12 +8,13 @@
     
       
       <item>
-        <title>Clean code</title>
+        <title>Clean code - Variables</title>
         
           <description>&lt;p&gt;Keeping your code clean is almost as crucial as implementing features on time.
 Do you remember the times you had to deal with old code, that was created in
-rush and with huuuuuuuge technical debt? Well number of FPS (see below :P) was probably high as the sky and what is more
-you probably end up doing workaround or another dirty hack to get task done.&lt;/p&gt;
+rush and with huuuuuuuge technical debt? Well number of FPS (see below :P)
+was probably high as the sky and what is more you probably end up doing workaround
+or another dirty hack to get task done.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;assets/images/clean-code/wtfs.jpg&quot; alt=&quot;FPS&quot; /&gt;&lt;/p&gt;
 
@@ -22,9 +23,9 @@ on maintaining clean code and what I can tell you is that you can improve your
 skills in minutes with few simple tricks (no. programmers don’t hate me and I 
 don’t want to sell you any pills :P).&lt;/p&gt;
 
-&lt;p&gt;In this post I’ll describe some easy to use tips and tricks for crafting
-better code - they’re really simple and you can start to use them right away!
-Trust me… it works!&lt;/p&gt;
+&lt;p&gt;In this post I’ll describe some easy to use tips and tricks when it comes to
+variables for crafting better code - they’re really simple and you can start
+to use them right away! Trust me… it works!&lt;/p&gt;
 
 &lt;h2 id=&quot;variables-naming&quot;&gt;Variables naming&lt;/h2&gt;
 
@@ -65,9 +66,14 @@ def do_something(employees):
 &lt;/div&gt;
 
 &lt;p&gt;With just few changes in variable naming we came to the code that is easy to understand.
-&lt;strong&gt;Always give variable name describing its content!&lt;/strong&gt;. There are some exceptions - as you
+&lt;strong&gt;Always give variable name describing its content!&lt;/strong&gt; There are some exceptions - as you
 saw in lambdas above or in some cases in loops, but if you ever catch yourself wondering
 what does this &lt;code class=&quot;highlighter-rouge&quot;&gt;c&lt;/code&gt; means - &lt;strong&gt;change it&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Friend of mine once told me a golden rule for 
+variable naming - &lt;strong&gt;The bigger scope of variable is, the more descriptive the name should
+be&lt;/strong&gt;. So in case of variables in lambdas or one-line loops - you might consider names like &lt;code class=&quot;highlighter-rouge&quot;&gt;c&lt;/code&gt;,
+&lt;code class=&quot;highlighter-rouge&quot;&gt;i&lt;/code&gt;, etc. but for function local variables or fields you should use really intuitive names.&lt;/p&gt;
 
 &lt;h3 id=&quot;useless-variables-wait-what&quot;&gt;Useless variables. Wait what!?&lt;/h3&gt;
 
@@ -143,7 +149,6 @@ So the point is to use &lt;strong&gt;simple, commonly understandable phrases&lt;
 &lt;p&gt;That’s all for this post - it’s just the beginning, so stay tuned and I hope those simple rules 
 will enchance your coding skills. I know for most of you they are obvious, but more advanced 
 things are yet to come :D See you soon!&lt;/p&gt;
-
 </description>
         
         <pubDate>Sun, 03 Jul 2016 12:18:00 +0200</pubDate>

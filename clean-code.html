@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <!-- [[! Page Meta ]] -->
-    <title>Clean code</title>
+    <title>Clean code - Variables</title>
     <meta name="description" content="Nerdy Geek - Passionate view on Computer Science, IT and nerdy things" />
 
     <meta name="HandheldFriendly" content="True" />
@@ -101,7 +101,7 @@
     <article class="post tag-craftsman">
 
         <header class="post-header">
-            <h1 class="post-title">Clean code</h1>
+            <h1 class="post-title">Clean code - Variables</h1>
             <section class="post-meta">
             <!-- <a href='/'>Łukasz Chrząszcz</a> -->
             <time class="post-date" datetime="2016-07-03">03 Jul 2016</time>
@@ -121,8 +121,9 @@
             
             <p>Keeping your code clean is almost as crucial as implementing features on time.
 Do you remember the times you had to deal with old code, that was created in
-rush and with huuuuuuuge technical debt? Well number of FPS (see below :P) was probably high as the sky and what is more
-you probably end up doing workaround or another dirty hack to get task done.</p>
+rush and with huuuuuuuge technical debt? Well number of FPS (see below :P)
+was probably high as the sky and what is more you probably end up doing workaround
+or another dirty hack to get task done.</p>
 
 <p><img src="assets/images/clean-code/wtfs.jpg" alt="FPS" /></p>
 
@@ -131,9 +132,9 @@ on maintaining clean code and what I can tell you is that you can improve your
 skills in minutes with few simple tricks (no. programmers don’t hate me and I 
 don’t want to sell you any pills :P).</p>
 
-<p>In this post I’ll describe some easy to use tips and tricks for crafting
-better code - they’re really simple and you can start to use them right away!
-Trust me… it works!</p>
+<p>In this post I’ll describe some easy to use tips and tricks when it comes to
+variables for crafting better code - they’re really simple and you can start
+to use them right away! Trust me… it works!</p>
 
 <h2 id="variables-naming">Variables naming</h2>
 
@@ -174,9 +175,14 @@ def do_something(employees):
 </div>
 
 <p>With just few changes in variable naming we came to the code that is easy to understand.
-<strong>Always give variable name describing its content!</strong>. There are some exceptions - as you
+<strong>Always give variable name describing its content!</strong> There are some exceptions - as you
 saw in lambdas above or in some cases in loops, but if you ever catch yourself wondering
 what does this <code class="highlighter-rouge">c</code> means - <strong>change it</strong>.</p>
+
+<p>Friend of mine once told me a golden rule for 
+variable naming - <strong>The bigger scope of variable is, the more descriptive the name should
+be</strong>. So in case of variables in lambdas or one-line loops - you might consider names like <code class="highlighter-rouge">c</code>,
+<code class="highlighter-rouge">i</code>, etc. but for function local variables or fields you should use really intuitive names.</p>
 
 <h3 id="useless-variables-wait-what">Useless variables. Wait what!?</h3>
 
@@ -254,7 +260,6 @@ will enchance your coding skills. I know for most of you they are obvious, but m
 things are yet to come :D See you soon!</p>
 
 
-
         </section>
 
         <footer class="post-footer">
@@ -284,7 +289,7 @@ things are yet to come :D See you soon!</p>
 
             <section class="share">
                 <h4>Share this post</h4>
-                <a class="icon-twitter" href="http://twitter.com/share?text=Clean code&amp;url=http://theer108.github.io/clean-code"
+                <a class="icon-twitter" href="http://twitter.com/share?text=Clean code - Variables&amp;url=http://theer108.github.io/clean-code"
                     onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
                     <span class="hidden">Twitter</span>
                 </a>

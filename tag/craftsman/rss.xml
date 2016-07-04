@@ -12,7 +12,7 @@
    <atom:link href="rss" rel="self" type="application/rss+xml" />
    
 	<item>
-	  <title>Clean code</title>
+	  <title>Clean code - Variables</title>
 	  <link>//clean-code</link>
 	  <author>Łukasz Chrząszcz</author>
 	  <pubDate>2016-07-03T12:18:00+02:00</pubDate>
@@ -20,8 +20,9 @@
 	  <description><![CDATA[
 	     <p>Keeping your code clean is almost as crucial as implementing features on time.
 Do you remember the times you had to deal with old code, that was created in
-rush and with huuuuuuuge technical debt? Well number of FPS (see below :P) was probably high as the sky and what is more
-you probably end up doing workaround or another dirty hack to get task done.</p>
+rush and with huuuuuuuge technical debt? Well number of FPS (see below :P)
+was probably high as the sky and what is more you probably end up doing workaround
+or another dirty hack to get task done.</p>
 
 <p><img src="assets/images/clean-code/wtfs.jpg" alt="FPS" /></p>
 
@@ -30,9 +31,9 @@ on maintaining clean code and what I can tell you is that you can improve your
 skills in minutes with few simple tricks (no. programmers don’t hate me and I 
 don’t want to sell you any pills :P).</p>
 
-<p>In this post I’ll describe some easy to use tips and tricks for crafting
-better code - they’re really simple and you can start to use them right away!
-Trust me… it works!</p>
+<p>In this post I’ll describe some easy to use tips and tricks when it comes to
+variables for crafting better code - they’re really simple and you can start
+to use them right away! Trust me… it works!</p>
 
 <h2 id="variables-naming">Variables naming</h2>
 
@@ -73,9 +74,14 @@ def do_something(employees):
 </div>
 
 <p>With just few changes in variable naming we came to the code that is easy to understand.
-<strong>Always give variable name describing its content!</strong>. There are some exceptions - as you
+<strong>Always give variable name describing its content!</strong> There are some exceptions - as you
 saw in lambdas above or in some cases in loops, but if you ever catch yourself wondering
 what does this <code class="highlighter-rouge">c</code> means - <strong>change it</strong>.</p>
+
+<p>Friend of mine once told me a golden rule for 
+variable naming - <strong>The bigger scope of variable is, the more descriptive the name should
+be</strong>. So in case of variables in lambdas or one-line loops - you might consider names like <code class="highlighter-rouge">c</code>,
+<code class="highlighter-rouge">i</code>, etc. but for function local variables or fields you should use really intuitive names.</p>
 
 <h3 id="useless-variables-wait-what">Useless variables. Wait what!?</h3>
 
@@ -151,7 +157,6 @@ So the point is to use <strong>simple, commonly understandable phrases</strong><
 <p>That’s all for this post - it’s just the beginning, so stay tuned and I hope those simple rules 
 will enchance your coding skills. I know for most of you they are obvious, but more advanced 
 things are yet to come :D See you soon!</p>
-
 
 	  ]]></description>
 	</item>
