@@ -12,6 +12,142 @@
    <atom:link href="rss" rel="self" type="application/rss+xml" />
    
 	<item>
+	  <title>Clean code - Functions</title>
+	  <link>//clean-code-functions</link>
+	  <author>Łukasz Chrząszcz</author>
+	  <pubDate>2016-07-05T20:10:00+02:00</pubDate>
+	  <guid>//clean-code-functions</guid>
+	  <description><![CDATA[
+	     <p>Functions! Good old functions… Your first thought after hearing “readable code”
+was probably functions, methods, etc. In fact you were right. Those little things
+diving our code into reusable blocks are the most crucial when it comes to cleaning
+codebase.</p>
+
+<p>But let’s get back to the beginning - how was it in good old DOS Age? Your application
+was simply set of commands with some simple loops, gotos (kill it kill it kill it!), etc.
+After that smart people introduced functions to cleverly divide your code to reusable blocks
+and enabling you to name them. Now that’s a real thing! - <strong>name them</strong>. With that in mind
+we can move to the first point. To the compilation and beyond!</p>
+
+<p><img src="http://imgs.xkcd.com/comics/goto.png" alt="GoTo" /></p>
+
+<h2 id="proper-naming">Proper naming</h2>
+
+<p>As it may seem obvious - think how many times you returned to your own code and wondered
+<em>oh snap! What the hell does this ‘check’ do?</em>. Probably a lot. This is not an easy thing
+to come up with a proper name at the beginning, so what I do to help myself in this task
+is simply focus on one main thing that function does (by the way - next point shows that 
+in fact your methods should do just one task, no more, no less, but we will get to that).</p>
+
+<p>To illustrate that point let consider code below:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>public void isPasswordCorrect(String username, String password) {
+    String correctPassword = getPasswordFromDatabase(username);
+    if (correctPassword.equals(password) {
+        updateUserSuccessfulLoginTimestamp(username);
+        
+        Session session = createNewSession(username);
+        registerSession(session);
+        
+        return true;
+    }
+    return false;
+}
+</code></pre>
+</div>
+
+<p>As you see function name is completely wrong here! No one could possibly think that
+this will create a session for user and register it somewhere. Everyone would be like
+<em>:( :( :( I just wanted to check if password is correct :( :( :(</em>. I admit that this
+example looks a bit exaggerated, but actually I spent a loooot of time debugging a bug
+that was caused by Wicket sessions.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Session session = getSessionForUser(username); // different user than current one
+session.invalidateNow();
+</code></pre>
+</div>
+
+<p>You might think that this code invalidates session for user <em>username</em>… WROOOOONG!
+In fact it extracts session from current thread and invalidates that now. So
+user executing this code gets kicked :D Fun!</p>
+
+<p>So to sum up this point - <strong>take extra time</strong> after implementing function to <strong>give it
+a proper name</strong>. It won’t cost you much, but you will have a better understanding of what
+function does after you implemented it.</p>
+
+<h2 id="keep-functions-small">Keep functions small</h2>
+
+<p>This point is the most important one - functions should be kept as small as possible
+and they should be delegated to do one thing only. You may ask - <em>how is that possible?
+My application is more complicated than yours n00b!</em> Let me explain - what I meant was
+that you should make your function do one thing at some given abstraction level.
+For example if you need to write something to a file, you could do it that way:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>public void writeToFile(String filepath, String content) {
+    try {
+        BufferedWriter writer = new itWouldBeTooLong();
+        writer.writer("This will be a file");
+        writer.writer("Delimiter");
+        writer.writer(content);
+        writer.writer("That was it");
+        writer.close();
+    } catch (FileNotFoundException ex) {
+
+    }
+}
+</code></pre>
+</div>
+
+<p>In this case it’s not so bad after all, but consider this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>public void writerToFile(String filepath, String content) {
+    try {
+        openAndWriteToFile(filepath, content);
+    } catch (FileNotFoundException ex) {
+        // 
+    }
+    
+private void openFileAndWriteString(String filepath, String content) throws ... {
+    BufferedWriter writer = new itWouldBeTooLong();
+    writeStringToFile(writer, content);
+    writer.close();
+}
+
+private void writeStringToWriter(BufferedWriter writer, String content) {
+    writer.writer("This will be a file");
+    writer.writer("Delimiter");
+    writer.writer(content);
+    writer.writer("That was it");
+}
+</code></pre>
+</div>
+
+<p>Now you have a <strong>beautiful structure</strong> of functiona <strong>each doing it’s own thing</strong> and delegating
+job further. If you ever wanted to change a business logic of messages in files - you
+just change last function, simple as that. You don’t need to distract yourself with
+exception handling or whether the file is opened or not, etc.</p>
+
+<p>Please also notice the way we handled exception above - public method is responsible
+for that. It’s a good idea to <strong>extract exception handling to separate method</strong> obligated
+to do that one thing. It just looks clean and is amazingly separated from business logic!</p>
+
+<p>My solution to that? <strong>Design one big function</strong> - prototype function lets say - and after it works
+more or less the way I want it to, I <strong>divide it to separate functions</strong>. With modern IDEs it’s
+fairly simple - with IntelliJ you just select a bunch of lines and press Ctrl+Alt+M, provide
+method name, hit enter and receive bacon!</p>
+
+<p><img src="http://vignette3.wikia.nocookie.net/bacon/images/e/e4/Push-button-receive-bacon.png/revision/latest?cb=20110421190452" alt="Bacon" /></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>I don’t want this post to be too long, so I’ll end with just these two points, but there’s
+obviously much more to say about increasing readability of functions. I will mention a few 
+more in next post. See you soon!</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
 	  <title>Clean code - Variables</title>
 	  <link>//clean-code</link>
 	  <author>Łukasz Chrząszcz</author>

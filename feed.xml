@@ -8,6 +8,144 @@
     
       
       <item>
+        <title>Clean code - Functions</title>
+        
+          <description>&lt;p&gt;Functions! Good old functions… Your first thought after hearing “readable code”
+was probably functions, methods, etc. In fact you were right. Those little things
+diving our code into reusable blocks are the most crucial when it comes to cleaning
+codebase.&lt;/p&gt;
+
+&lt;p&gt;But let’s get back to the beginning - how was it in good old DOS Age? Your application
+was simply set of commands with some simple loops, gotos (kill it kill it kill it!), etc.
+After that smart people introduced functions to cleverly divide your code to reusable blocks
+and enabling you to name them. Now that’s a real thing! - &lt;strong&gt;name them&lt;/strong&gt;. With that in mind
+we can move to the first point. To the compilation and beyond!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://imgs.xkcd.com/comics/goto.png&quot; alt=&quot;GoTo&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;proper-naming&quot;&gt;Proper naming&lt;/h2&gt;
+
+&lt;p&gt;As it may seem obvious - think how many times you returned to your own code and wondered
+&lt;em&gt;oh snap! What the hell does this ‘check’ do?&lt;/em&gt;. Probably a lot. This is not an easy thing
+to come up with a proper name at the beginning, so what I do to help myself in this task
+is simply focus on one main thing that function does (by the way - next point shows that 
+in fact your methods should do just one task, no more, no less, but we will get to that).&lt;/p&gt;
+
+&lt;p&gt;To illustrate that point let consider code below:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public void isPasswordCorrect(String username, String password) {
+    String correctPassword = getPasswordFromDatabase(username);
+    if (correctPassword.equals(password) {
+        updateUserSuccessfulLoginTimestamp(username);
+        
+        Session session = createNewSession(username);
+        registerSession(session);
+        
+        return true;
+    }
+    return false;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;As you see function name is completely wrong here! No one could possibly think that
+this will create a session for user and register it somewhere. Everyone would be like
+&lt;em&gt;:( :( :( I just wanted to check if password is correct :( :( :(&lt;/em&gt;. I admit that this
+example looks a bit exaggerated, but actually I spent a loooot of time debugging a bug
+that was caused by Wicket sessions.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Session session = getSessionForUser(username); // different user than current one
+session.invalidateNow();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;You might think that this code invalidates session for user &lt;em&gt;username&lt;/em&gt;… WROOOOONG!
+In fact it extracts session from current thread and invalidates that now. So
+user executing this code gets kicked :D Fun!&lt;/p&gt;
+
+&lt;p&gt;So to sum up this point - &lt;strong&gt;take extra time&lt;/strong&gt; after implementing function to &lt;strong&gt;give it
+a proper name&lt;/strong&gt;. It won’t cost you much, but you will have a better understanding of what
+function does after you implemented it.&lt;/p&gt;
+
+&lt;h2 id=&quot;keep-functions-small&quot;&gt;Keep functions small&lt;/h2&gt;
+
+&lt;p&gt;This point is the most important one - functions should be kept as small as possible
+and they should be delegated to do one thing only. You may ask - &lt;em&gt;how is that possible?
+My application is more complicated than yours n00b!&lt;/em&gt; Let me explain - what I meant was
+that you should make your function do one thing at some given abstraction level.
+For example if you need to write something to a file, you could do it that way:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public void writeToFile(String filepath, String content) {
+    try {
+        BufferedWriter writer = new itWouldBeTooLong();
+        writer.writer(&quot;This will be a file&quot;);
+        writer.writer(&quot;Delimiter&quot;);
+        writer.writer(content);
+        writer.writer(&quot;That was it&quot;);
+        writer.close();
+    } catch (FileNotFoundException ex) {
+
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In this case it’s not so bad after all, but consider this:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public void writerToFile(String filepath, String content) {
+    try {
+        openAndWriteToFile(filepath, content);
+    } catch (FileNotFoundException ex) {
+        // 
+    }
+    
+private void openFileAndWriteString(String filepath, String content) throws ... {
+    BufferedWriter writer = new itWouldBeTooLong();
+    writeStringToFile(writer, content);
+    writer.close();
+}
+
+private void writeStringToWriter(BufferedWriter writer, String content) {
+    writer.writer(&quot;This will be a file&quot;);
+    writer.writer(&quot;Delimiter&quot;);
+    writer.writer(content);
+    writer.writer(&quot;That was it&quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Now you have a &lt;strong&gt;beautiful structure&lt;/strong&gt; of functiona &lt;strong&gt;each doing it’s own thing&lt;/strong&gt; and delegating
+job further. If you ever wanted to change a business logic of messages in files - you
+just change last function, simple as that. You don’t need to distract yourself with
+exception handling or whether the file is opened or not, etc.&lt;/p&gt;
+
+&lt;p&gt;Please also notice the way we handled exception above - public method is responsible
+for that. It’s a good idea to &lt;strong&gt;extract exception handling to separate method&lt;/strong&gt; obligated
+to do that one thing. It just looks clean and is amazingly separated from business logic!&lt;/p&gt;
+
+&lt;p&gt;My solution to that? &lt;strong&gt;Design one big function&lt;/strong&gt; - prototype function lets say - and after it works
+more or less the way I want it to, I &lt;strong&gt;divide it to separate functions&lt;/strong&gt;. With modern IDEs it’s
+fairly simple - with IntelliJ you just select a bunch of lines and press Ctrl+Alt+M, provide
+method name, hit enter and receive bacon!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://vignette3.wikia.nocookie.net/bacon/images/e/e4/Push-button-receive-bacon.png/revision/latest?cb=20110421190452&quot; alt=&quot;Bacon&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+
+&lt;p&gt;I don’t want this post to be too long, so I’ll end with just these two points, but there’s
+obviously much more to say about increasing readability of functions. I will mention a few 
+more in next post. See you soon!&lt;/p&gt;
+</description>
+        
+        <pubDate>Tue, 05 Jul 2016 20:10:00 +0200</pubDate>
+        <link>
+        http://theer108.github.io//clean-code-functions</link>
+        <guid isPermaLink="true">http://theer108.github.io//clean-code-functions</guid>
+      </item>
+      
+    
+      
+      <item>
         <title>Clean code - Variables</title>
         
           <description>&lt;p&gt;Keeping your code clean is almost as crucial as implementing features on time.
