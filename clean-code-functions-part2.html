@@ -160,7 +160,7 @@ first thought is to create one constructor with Employee argument to pass superv
 <p>Do you think you’d remember that this em1 is a supervisor of new employee? Probably not.
 Solution is to <strong>create a Factory Method instead of constructor</strong>.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">Employee</span> <span class="nf">createWithSupervisor</span><span class="p">(</span><span class="n">Employee</span> <span class="n">supervisor</span><span class="o">)</span> <span class="o">{...}</span>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">Employee</span> <span class="nf">createNewWithSupervisor</span><span class="p">(</span><span class="n">Employee</span> <span class="n">supervisor</span><span class="o">)</span> <span class="o">{...}</span>
 
 <span class="o">...</span>
 
