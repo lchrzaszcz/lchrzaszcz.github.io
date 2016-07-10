@@ -12,6 +12,155 @@
    <atom:link href="rss" rel="self" type="application/rss+xml" />
    
 	<item>
+	  <title>Clean code - Functions - Part 2</title>
+	  <link>//clean-code-functions-part2</link>
+	  <author>Łukasz Chrząszcz</author>
+	  <pubDate>2016-07-09T11:10:00+02:00</pubDate>
+	  <guid>//clean-code-functions-part2</guid>
+	  <description><![CDATA[
+	     <p>Let’s continue our journey through cleaning dusty functions! Today we’ll talk 
+about <strong>constructors, side effects, return values and how to be awesome in general</strong> 
+If you haven’t done so, go read <a href="/clean-code-functions">Part 1</a>.</p>
+
+<h2 id="constructors">Constructors</h2>
+
+<p>There couldn’t be a decent summary of readable code without mentioning constructors.
+What are they - everybody knows, but what we can do to improve them? … Well… 
+<strong>Remove them?</strong></p>
+
+<p>Seriously, problem with constructors is that they don’t have name so it’s hard to 
+understand their meaning. For sure it’s obvious for ctor such:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">Point</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{...}</span>
+<span class="kd">public</span> <span class="nf">String</span><span class="p">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{...}</span>
+</code></pre>
+</div>
+
+<p>But consider more <strong>complex examples</strong> - assume you have a class <code class="highlighter-rouge">Employee</code> and every
+object of this type has to have a supervisor (don’t care about boss :D). So
+first thought is to create one constructor with Employee argument to pass supervisor.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">Employee</span><span class="p">(</span><span class="n">Employee</span> <span class="n">supervisor</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">supervisor</span> <span class="o">=</span> <span class="n">supervisor</span><span class="o">;</span>
+<span class="o">}</span> 
+</code></pre>
+</div>
+
+<p>So far so good, but after a few months you see following code:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="n">Employee</span> <span class="n">em1</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">Employee</span> <span class="n">em2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Employee</span><span class="o">(</span><span class="n">em1</span><span class="o">);</span>
+</code></pre>
+</div>
+
+<p>Do you think you’d remember that this em1 is a supervisor of new employee? Probably not.
+Solution is to <strong>create a Factory Method instead of constructor</strong>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="n">Employee</span> <span class="nf">createWithSupervisor</span><span class="p">(</span><span class="n">Employee</span> <span class="n">supervisor</span><span class="o">)</span> <span class="o">{...}</span>
+
+<span class="o">...</span>
+
+<span class="n">Employee</span> <span class="n">em1</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">Employee</span> <span class="n">em2</span> <span class="o">=</span> <span class="n">Employee</span><span class="o">.</span><span class="na">createNewWithSupervisor</span><span class="o">(</span><span class="n">em1</span><span class="o">);</span>
+</code></pre>
+</div>
+
+<p>Now you don’t have to even think what does this code do - <strong>you just know it</strong>!</p>
+
+<h2 id="dont-return-null">Don’t return <em>null</em></h2>
+
+<p>This is a common thing. Personally I’ve made it a lot of such mistakes! It seems like
+a good idea - you’re implementing your super ultra mega business logic - <em>oh! If there’s
+an error I should do something… well let’s return null, that’ll do!</em></p>
+
+<p><a href="http://www.instantsfun.es/wrong/" target="_blank">WRONG!</a> By doing that, you:</p>
+
+<ol>
+  <li>Force user to immediately handle your error</li>
+  <li>Prevent yourself from discovering the source of error</li>
+</ol>
+
+<p>As for first point - better solution would be to <strong>use exceptions</strong>, so the user can create
+more readable code himself.</p>
+
+<p>The second point is more serious, simply because by returning null you have no idea 
+what went wrong. What if your function can fail because of two reasons? From the
+outside, nobody can tell the difference and choose the best way to fix that.</p>
+
+<p>Additionally - <strong>null doesn’t have a descriptive name</strong>, so it’s easy to to introduce
+misleading ifs:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>if (gameBoard.getTileState(x, y) == null) {
+    ...
+}
+</code></pre>
+</div>
+
+<p>What does this null actually represents? Some kind of neutral state? Maybe clear tile
+or something? You have to check the other end of the project for that to know.</p>
+
+<h2 id="side-effects">Side effects</h2>
+
+<p>If you’re programming for a few years, you for sure spent lots of hours hunting this
+nasty little bug in your code. At the end you probably shouted something like this:
+<em>Oh my god! it’s because this function changes this field and after that… bla bla bla</em>
+Sound familiar?</p>
+
+<p>Those are <strong>side effects</strong>. If function changes state of something outside like a field or global
+variable (yuk!) this is a side effect.</p>
+
+<p>You probably can’t eliminate them all, as they’re not a bug or something, but for sure you can eliminate a lot of problems with them. Good thing to bear in mind is that you should <strong>avoid them
+as much as you can</strong> - instead of creating 5 methods, each changing your object, create 4 methods
+calculating/processing something and 1 method changing the state. What is more, remember to <strong>give
+this method a proper name!</strong> This way others can understand <em>oh! this method has some side effects</em>.</p>
+
+<p>Bad code example:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">checkUsernameAndPassword</span><span class="p">(</span><span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">correctPassword</span> <span class="o">=</span> <span class="n">getPassword</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">correctPassword</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">password</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">createSession</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Aaaand boom, checkCredentials has a side effect of creating session. You wouldn’t realise that
+checking the implementation. Good code example:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">correctPassword</span> <span class="o">=</span> <span class="n">getPassword</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">correctPassword</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">password</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">createSession</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>   
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Simply by <strong>changing name</strong> you can alarm user that you’ll probably do something more than merely
+checking password - you’re creating session!</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>The most crucial points from today are:</p>
+
+<ol>
+  <li>Consider replacing complex/not obvious constructors with Factory Methods</li>
+  <li>Think twice before returning plain null</li>
+  <li>Avoid side effects and explicitly signal them.</li>
+</ol>
+
+<p>I hope this comes in handy for you! Let me know what do you think and what are your ways of
+maintaining readable code? See you soon!</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
 	  <title>Clean code - Functions - Part 1</title>
 	  <link>//clean-code-functions</link>
 	  <author>Łukasz Chrząszcz</author>
@@ -20,7 +169,7 @@
 	  <description><![CDATA[
 	     <p>Functions! Good old functions… Your first thought after hearing “readable code”
 was probably functions, methods, etc. In fact you were right. Those little things
-diving our code into reusable blocks are the most crucial when it comes to cleaning
+dividing our code into reusable blocks are the most crucial when it comes to cleaning
 codebase.</p>
 
 <p>But let’s get back to the beginning - how was it in good old DOS Age? Your application
@@ -41,18 +190,18 @@ in fact your methods should do just one task, no more, no less, but we will get 
 
 <p>To illustrate that point let consider code below:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void isPasswordCorrect(String username, String password) {
-    String correctPassword = getPasswordFromDatabase(username);
-    if (correctPassword.equals(password) {
-        updateUserSuccessfulLoginTimestamp(username);
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">isPasswordCorrect</span><span class="p">(</span><span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">correctPassword</span> <span class="o">=</span> <span class="n">getPasswordFromDatabase</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">correctPassword</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">updateUserSuccessfulLoginTimestamp</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
         
-        Session session = createNewSession(username);
-        registerSession(session);
+        <span class="n">Session</span> <span class="n">session</span> <span class="o">=</span> <span class="n">createNewSession</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+        <span class="n">registerSession</span><span class="o">(</span><span class="n">session</span><span class="o">);</span>
         
-        return true;
-    }
-    return false;
-}
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
@@ -62,8 +211,8 @@ this will create a session for user and register it somewhere. Everyone would be
 example looks a bit exaggerated, but actually I spent a loooot of time debugging a bug
 that was caused by Wicket sessions.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Session session = getSessionForUser(username); // different user than current one
-session.invalidateNow();
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="n">Session</span> <span class="n">session</span> <span class="o">=</span> <span class="n">getSessionForUser</span><span class="o">(</span><span class="n">username</span><span class="o">);</span> <span class="c1">// different user than current one</span>
+<span class="n">session</span><span class="o">.</span><span class="na">invalidateNow</span><span class="o">();</span>
 </code></pre>
 </div>
 
@@ -79,46 +228,46 @@ function does after you implemented it.</p>
 
 <p>This point is the most important one - functions should be kept as small as possible
 and they should be delegated to do one thing only. You may ask - <em>how is that possible?
-My application is more complicated than yours n00b!</em> Let me explain - what I meant was
+My application is more complicated than yours n00b</em> Let me explain - what I meant was
 that you should make your function do one thing at some given abstraction level.
 For example if you need to write something to a file, you could do it that way:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void writeToFile(String filepath, String content) {
-    try {
-        BufferedWriter writer = new itWouldBeTooLong();
-        writer.writer("This will be a file");
-        writer.writer("Delimiter");
-        writer.writer(content);
-        writer.writer("That was it");
-        writer.close();
-    } catch (FileNotFoundException ex) {
-
-    }
-}
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">writeToFile</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">getWriter</span><span class="o">(</span><span class="n">filepath</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"This will be a file"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"Delimiter"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"That was it"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">FileNotFoundException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// lala lala lalala</span>
+    <span class="o">}</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
 <p>In this case it’s not so bad after all, but consider this:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void writerToFile(String filepath, String content) {
-    try {
-        openAndWriteToFile(filepath, content);
-    } catch (FileNotFoundException ex) {
-        // 
-    }
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">writerToFile</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">openAndWriteToFile</span><span class="o">(</span><span class="n">filepath</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">FileNotFoundException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// </span>
+    <span class="o">}</span>
     
-private void openFileAndWriteString(String filepath, String content) throws ... {
-    BufferedWriter writer = new itWouldBeTooLong();
-    writeStringToFile(writer, content);
-    writer.close();
-}
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">openFileAndWriteString</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="kd">throws</span> <span class="o">...</span> <span class="o">{</span>
+    <span class="n">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">getWriter</span><span class="o">(</span><span class="n">filepath</span><span class="o">);</span>
+    <span class="n">writeStringToFile</span><span class="o">(</span><span class="n">writer</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+<span class="o">}</span>
 
-private void writeStringToWriter(BufferedWriter writer, String content) {
-    writer.writer("This will be a file");
-    writer.writer("Delimiter");
-    writer.writer(content);
-    writer.writer("That was it");
-}
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">writeStringToWriter</span><span class="p">(</span><span class="n">BufferedWriter</span> <span class="n">writer</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"This will be a file"</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"Delimiter"</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"That was it"</span><span class="o">);</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 

@@ -124,7 +124,7 @@
             
             <p>Functions! Good old functions… Your first thought after hearing “readable code”
 was probably functions, methods, etc. In fact you were right. Those little things
-diving our code into reusable blocks are the most crucial when it comes to cleaning
+dividing our code into reusable blocks are the most crucial when it comes to cleaning
 codebase.</p>
 
 <p>But let’s get back to the beginning - how was it in good old DOS Age? Your application
@@ -145,18 +145,18 @@ in fact your methods should do just one task, no more, no less, but we will get 
 
 <p>To illustrate that point let consider code below:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void isPasswordCorrect(String username, String password) {
-    String correctPassword = getPasswordFromDatabase(username);
-    if (correctPassword.equals(password) {
-        updateUserSuccessfulLoginTimestamp(username);
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">isPasswordCorrect</span><span class="p">(</span><span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">correctPassword</span> <span class="o">=</span> <span class="n">getPasswordFromDatabase</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">correctPassword</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">updateUserSuccessfulLoginTimestamp</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
         
-        Session session = createNewSession(username);
-        registerSession(session);
+        <span class="n">Session</span> <span class="n">session</span> <span class="o">=</span> <span class="n">createNewSession</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+        <span class="n">registerSession</span><span class="o">(</span><span class="n">session</span><span class="o">);</span>
         
-        return true;
-    }
-    return false;
-}
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
@@ -166,8 +166,8 @@ this will create a session for user and register it somewhere. Everyone would be
 example looks a bit exaggerated, but actually I spent a loooot of time debugging a bug
 that was caused by Wicket sessions.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Session session = getSessionForUser(username); // different user than current one
-session.invalidateNow();
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="n">Session</span> <span class="n">session</span> <span class="o">=</span> <span class="n">getSessionForUser</span><span class="o">(</span><span class="n">username</span><span class="o">);</span> <span class="c1">// different user than current one</span>
+<span class="n">session</span><span class="o">.</span><span class="na">invalidateNow</span><span class="o">();</span>
 </code></pre>
 </div>
 
@@ -183,46 +183,46 @@ function does after you implemented it.</p>
 
 <p>This point is the most important one - functions should be kept as small as possible
 and they should be delegated to do one thing only. You may ask - <em>how is that possible?
-My application is more complicated than yours n00b!</em> Let me explain - what I meant was
+My application is more complicated than yours n00b</em> Let me explain - what I meant was
 that you should make your function do one thing at some given abstraction level.
 For example if you need to write something to a file, you could do it that way:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void writeToFile(String filepath, String content) {
-    try {
-        BufferedWriter writer = new itWouldBeTooLong();
-        writer.writer("This will be a file");
-        writer.writer("Delimiter");
-        writer.writer(content);
-        writer.writer("That was it");
-        writer.close();
-    } catch (FileNotFoundException ex) {
-
-    }
-}
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">writeToFile</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">getWriter</span><span class="o">(</span><span class="n">filepath</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"This will be a file"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"Delimiter"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"That was it"</span><span class="o">);</span>
+        <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">FileNotFoundException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// lala lala lalala</span>
+    <span class="o">}</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
 <p>In this case it’s not so bad after all, but consider this:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public void writerToFile(String filepath, String content) {
-    try {
-        openAndWriteToFile(filepath, content);
-    } catch (FileNotFoundException ex) {
-        // 
-    }
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">writerToFile</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">openAndWriteToFile</span><span class="o">(</span><span class="n">filepath</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">FileNotFoundException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// </span>
+    <span class="o">}</span>
     
-private void openFileAndWriteString(String filepath, String content) throws ... {
-    BufferedWriter writer = new itWouldBeTooLong();
-    writeStringToFile(writer, content);
-    writer.close();
-}
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">openFileAndWriteString</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="kd">throws</span> <span class="o">...</span> <span class="o">{</span>
+    <span class="n">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">getWriter</span><span class="o">(</span><span class="n">filepath</span><span class="o">);</span>
+    <span class="n">writeStringToFile</span><span class="o">(</span><span class="n">writer</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+<span class="o">}</span>
 
-private void writeStringToWriter(BufferedWriter writer, String content) {
-    writer.writer("This will be a file");
-    writer.writer("Delimiter");
-    writer.writer(content);
-    writer.writer("That was it");
-}
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">writeStringToWriter</span><span class="p">(</span><span class="n">BufferedWriter</span> <span class="n">writer</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"This will be a file"</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"Delimiter"</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">writer</span><span class="o">(</span><span class="s">"That was it"</span><span class="o">);</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
@@ -323,6 +323,13 @@ more in next post. See you soon!</p>
 <aside class="read-next">
 
     <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover13.jpg)" href="/clean-code-functions-part2">
+            <section class="post">
+                <h2>Clean code - Functions - Part 2</h2>
+                <p>Let's continue our journey through cleaning dusty functions! Today we'll talk about **constructors, side effects,...</p>
+            </section>
+        </a>
     
     <!-- [[! /next_post ]] -->
     <!-- [[! prev_post ]] -->
