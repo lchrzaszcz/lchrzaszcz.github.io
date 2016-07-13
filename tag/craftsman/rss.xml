@@ -5,7 +5,7 @@
    
       <title>Theer108.github.io/</title>
    
-   <link>http://theer108.github.io/</link>
+   <link>https://theer108.github.io/</link>
    <description>Passionate view on Computer Science, IT and nerdy things</description>
    <language>en-uk</language>
    <managingEditor> Łukasz Chrząszcz</managingEditor>
@@ -127,7 +127,7 @@ this method a proper name!</strong> This way others can understand <em>oh! this 
 </code></pre>
 </div>
 
-<p>Aaaand boom, checkCredentials has a side effect of creating session. You wouldn’t realise that
+<p>Aaaand boom, checkUsernameAndPassword has a side effect of creating session. You wouldn’t realise that
 checking the implementation. Good code example:</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
@@ -251,14 +251,14 @@ For example if you need to write something to a file, you could do it that way:<
 
 <div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">writerToFile</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
     <span class="k">try</span> <span class="o">{</span>
-        <span class="n">openAndWriteToFile</span><span class="o">(</span><span class="n">filepath</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+        <span class="n">openFileAndWriteString</span><span class="o">(</span><span class="n">filepath</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
     <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">FileNotFoundException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
         <span class="c1">// </span>
     <span class="o">}</span>
     
 <span class="kd">private</span> <span class="kt">void</span> <span class="nf">openFileAndWriteString</span><span class="p">(</span><span class="n">String</span> <span class="n">filepath</span><span class="o">,</span> <span class="n">String</span> <span class="n">content</span><span class="o">)</span> <span class="kd">throws</span> <span class="o">...</span> <span class="o">{</span>
     <span class="n">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">getWriter</span><span class="o">(</span><span class="n">filepath</span><span class="o">);</span>
-    <span class="n">writeStringToFile</span><span class="o">(</span><span class="n">writer</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+    <span class="n">writeStringToWriter</span><span class="o">(</span><span class="n">writer</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
     <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
 <span class="o">}</span>
 
