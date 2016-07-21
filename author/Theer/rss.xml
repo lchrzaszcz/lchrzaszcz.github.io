@@ -12,6 +12,112 @@
    <atom:link href="rss" rel="self" type="application/rss+xml" />
    
 	<item>
+	  <title>Increase productivity in IntelliJ IDEA</title>
+	  <link>//productivity-in-intellij</link>
+	  <author>Łukasz Chrząszcz</author>
+	  <pubDate>2016-07-18T20:10:00+02:00</pubDate>
+	  <guid>//productivity-in-intellij</guid>
+	  <description><![CDATA[
+	     <p>Have you ever wondered how to be more efficient while coding? For sure you’re using
+some kind of IDE, and while IDEA gets more and more popular it is highly probable that
+you’re actually using it already, but do you think you’re using it <strong>the hardcore way</strong>?</p>
+
+<p>If you have a <strong>spare evening</strong> grab a beer and join me on an adventure! Let’s improve
+your productivity!</p>
+
+<h2 id="invert-your-thinking">Invert your thinking</h2>
+
+<p>If you’re designing a new piece of code then you probably need to introduce new variables classes, field, methods, etc. Problem is that it’s really distracting and at the same time
+you probably had to struggle moving around in your editor, creating new class, naming it. Don’t do that, <strong>just write your code first!</strong> you’ll solve missing references later.</p>
+
+<p>For example, if you want to use a new class, just write something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="n">Application</span> <span class="n">app</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Application</span><span class="o">();</span>
+</code></pre>
+</div>
+
+<p>Now your IDE will probably complain about not knowing the class <em>Application</em>. <strong>Move your cursor to Application, press Alt+Enter and select “Create class Application”</strong>. Simple as that and you didn’t touch the mouse. Easy, fast, efficient!</p>
+
+<p><img src="assets/images/idea/1.png" alt="NewClass" /></p>
+
+<p>After using shortcut:</p>
+
+<p><img src="assets/images/idea/2.png" alt="NewClass2" /></p>
+
+<h2 id="lets-generate">Let’s generate!</h2>
+
+<p>I have to break it to you - our code is totally NOT unique in biggest part of it, sad but true.
+However - if it’s not unique, then maybe we can spare some time writing highly repeatable code?
+Let’s get to it!</p>
+
+<p>Alright! You have your super fast, super clean coded, super newly created class! Have you started
+typing the following?</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="n">Appl</span><span class="o">...</span>
+</code></pre>
+</div>
+
+<p>You guessed it - you don’t need to type constructor by hand - <strong>generate it!</strong> Place cursor inside Application class and press <em>Alt+Insert</em> select Constructor and that’s it! :)</p>
+
+<p><img src="assets/images/idea/3.png" alt="Constructor" /></p>
+
+<p>The same way you can generate other things - go play with this menu, try overriding some methods.</p>
+
+<p>By the way speaking of <em>Alt+Insert</em> - you can actually altinsert almost <strong>everything everywhere</strong>. Check what happens if you press it while having focus in project view - try creating some new files :)</p>
+
+<h2 id="refactoring">Refactoring</h2>
+
+<p>Ok, we have a new class so we might want to introduce new fields, methods, etc. As stated above
+you can just write a code which uses not existing method and then press Alt+Enter and your IDE
+will guide you, so you can go check it out, but in this section I’d like to focus on <strong>refactoring
+superpowers.</strong></p>
+
+<h3 id="extracting-variable">Extracting variable</h3>
+
+<p>Remember a point about <strong>self-commenting variables</strong> from previous posts? So here’s the simplest way to achieve that! There’s a magical shortcut: Ctrl+Alt+V, just select a code fragment you want
+to extract and press it, type your intuitive variable name and you’re done.</p>
+
+<p>Before:</p>
+
+<p><img src="assets/images/idea/4.png" alt="Variable" /></p>
+
+<p>After:</p>
+
+<p><img src="assets/images/idea/5.png" alt="Variable2" /></p>
+
+<p>Now you get the idea of extracting things, so you should definitely test variations of this shortcut like: Ctrl+Alt+F (new field), Ctrl+Alt+C (new constant), Ctrl+Alt+P (new parameter).
+I don’t want to describe everything here, I’m just teasing/inspiring you ;)</p>
+
+<p>Apart from variety of variables you can also extract methods and actually it’s super-effective.
+Try selecting bunch of lines you feel that should go to other function, press Ctrl+Alt+M, give
+it a proper name (remember, remember, the clean code November) and you have your shiny new function - go drink a coffee, you deserved it!</p>
+
+<h2 id="deep-debugging">Deep debugging</h2>
+
+<p>I guess you’re pretty tired of all those shortcuts, so this tip won’t be about any keyboard usage. Everyone had a chance to debug something, jumping between lines of code, inserting breakpoints, etc. You probably wonder - what can be improved in that? Well what if I tell you
+that you can delete the last execution frame a.k.a. go back in time to the point before function call? Look at the pictures below.</p>
+
+<p>Here you are inside a function, and you for example went one line too far and want to start again.</p>
+
+<p><img src="assets/images/idea/6.png" alt="Debugging" /></p>
+
+<p>In the Debug window you can select last frame, right click it and drop it. Boooom you’re in main function before calling setNewField method.</p>
+
+<p><img src="assets/images/idea/7.png" alt="Debugging1" /></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>This post might seem to be a little short, but I hope that I inspired you to move on and play around with things I showed you. There’s still much to learn my young padawan and for sure I’ll write more about utilising programmers’ tools to improve performance :)</p>
+
+<p>Do you have any thrilling feature that I’ve missed and is a real time-saver for nerdy geeks like
+us? Share it in the comments or let me know! :) We all love shiny tips and tricks.</p>
+
+<p>See you later!</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
 	  <title>Clean code - Functions - Part 2</title>
 	  <link>//clean-code-functions-part2</link>
 	  <author>Łukasz Chrząszcz</author>

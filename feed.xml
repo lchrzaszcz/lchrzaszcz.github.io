@@ -8,6 +8,114 @@
     
       
       <item>
+        <title>Increase productivity in IntelliJ IDEA</title>
+        
+          <description>&lt;p&gt;Have you ever wondered how to be more efficient while coding? For sure you’re using
+some kind of IDE, and while IDEA gets more and more popular it is highly probable that
+you’re actually using it already, but do you think you’re using it &lt;strong&gt;the hardcore way&lt;/strong&gt;?&lt;/p&gt;
+
+&lt;p&gt;If you have a &lt;strong&gt;spare evening&lt;/strong&gt; grab a beer and join me on an adventure! Let’s improve
+your productivity!&lt;/p&gt;
+
+&lt;h2 id=&quot;invert-your-thinking&quot;&gt;Invert your thinking&lt;/h2&gt;
+
+&lt;p&gt;If you’re designing a new piece of code then you probably need to introduce new variables classes, field, methods, etc. Problem is that it’s really distracting and at the same time
+you probably had to struggle moving around in your editor, creating new class, naming it. Don’t do that, &lt;strong&gt;just write your code first!&lt;/strong&gt; you’ll solve missing references later.&lt;/p&gt;
+
+&lt;p&gt;For example, if you want to use a new class, just write something like this:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Application&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Application&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Now your IDE will probably complain about not knowing the class &lt;em&gt;Application&lt;/em&gt;. &lt;strong&gt;Move your cursor to Application, press Alt+Enter and select “Create class Application”&lt;/strong&gt;. Simple as that and you didn’t touch the mouse. Easy, fast, efficient!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/1.png&quot; alt=&quot;NewClass&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After using shortcut:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/2.png&quot; alt=&quot;NewClass2&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;lets-generate&quot;&gt;Let’s generate!&lt;/h2&gt;
+
+&lt;p&gt;I have to break it to you - our code is totally NOT unique in biggest part of it, sad but true.
+However - if it’s not unique, then maybe we can spare some time writing highly repeatable code?
+Let’s get to it!&lt;/p&gt;
+
+&lt;p&gt;Alright! You have your super fast, super clean coded, super newly created class! Have you started
+typing the following?&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Appl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;You guessed it - you don’t need to type constructor by hand - &lt;strong&gt;generate it!&lt;/strong&gt; Place cursor inside Application class and press &lt;em&gt;Alt+Insert&lt;/em&gt; select Constructor and that’s it! :)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/3.png&quot; alt=&quot;Constructor&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The same way you can generate other things - go play with this menu, try overriding some methods.&lt;/p&gt;
+
+&lt;p&gt;By the way speaking of &lt;em&gt;Alt+Insert&lt;/em&gt; - you can actually altinsert almost &lt;strong&gt;everything everywhere&lt;/strong&gt;. Check what happens if you press it while having focus in project view - try creating some new files :)&lt;/p&gt;
+
+&lt;h2 id=&quot;refactoring&quot;&gt;Refactoring&lt;/h2&gt;
+
+&lt;p&gt;Ok, we have a new class so we might want to introduce new fields, methods, etc. As stated above
+you can just write a code which uses not existing method and then press Alt+Enter and your IDE
+will guide you, so you can go check it out, but in this section I’d like to focus on &lt;strong&gt;refactoring
+superpowers.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;extracting-variable&quot;&gt;Extracting variable&lt;/h3&gt;
+
+&lt;p&gt;Remember a point about &lt;strong&gt;self-commenting variables&lt;/strong&gt; from previous posts? So here’s the simplest way to achieve that! There’s a magical shortcut: Ctrl+Alt+V, just select a code fragment you want
+to extract and press it, type your intuitive variable name and you’re done.&lt;/p&gt;
+
+&lt;p&gt;Before:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/4.png&quot; alt=&quot;Variable&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/5.png&quot; alt=&quot;Variable2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now you get the idea of extracting things, so you should definitely test variations of this shortcut like: Ctrl+Alt+F (new field), Ctrl+Alt+C (new constant), Ctrl+Alt+P (new parameter).
+I don’t want to describe everything here, I’m just teasing/inspiring you ;)&lt;/p&gt;
+
+&lt;p&gt;Apart from variety of variables you can also extract methods and actually it’s super-effective.
+Try selecting bunch of lines you feel that should go to other function, press Ctrl+Alt+M, give
+it a proper name (remember, remember, the clean code November) and you have your shiny new function - go drink a coffee, you deserved it!&lt;/p&gt;
+
+&lt;h2 id=&quot;deep-debugging&quot;&gt;Deep debugging&lt;/h2&gt;
+
+&lt;p&gt;I guess you’re pretty tired of all those shortcuts, so this tip won’t be about any keyboard usage. Everyone had a chance to debug something, jumping between lines of code, inserting breakpoints, etc. You probably wonder - what can be improved in that? Well what if I tell you
+that you can delete the last execution frame a.k.a. go back in time to the point before function call? Look at the pictures below.&lt;/p&gt;
+
+&lt;p&gt;Here you are inside a function, and you for example went one line too far and want to start again.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/6.png&quot; alt=&quot;Debugging&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In the Debug window you can select last frame, right click it and drop it. Boooom you’re in main function before calling setNewField method.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/idea/7.png&quot; alt=&quot;Debugging1&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+
+&lt;p&gt;This post might seem to be a little short, but I hope that I inspired you to move on and play around with things I showed you. There’s still much to learn my young padawan and for sure I’ll write more about utilising programmers’ tools to improve performance :)&lt;/p&gt;
+
+&lt;p&gt;Do you have any thrilling feature that I’ve missed and is a real time-saver for nerdy geeks like
+us? Share it in the comments or let me know! :) We all love shiny tips and tricks.&lt;/p&gt;
+
+&lt;p&gt;See you later!&lt;/p&gt;
+</description>
+        
+        <pubDate>Mon, 18 Jul 2016 20:10:00 +0200</pubDate>
+        <link>
+        https://theer108.github.io//productivity-in-intellij</link>
+        <guid isPermaLink="true">https://theer108.github.io//productivity-in-intellij</guid>
+      </item>
+      
+    
+      
+      <item>
         <title>Clean code - Functions - Part 2</title>
         
           <description>&lt;p&gt;Let’s continue our journey through cleaning dusty functions! Today we’ll talk 
