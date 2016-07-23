@@ -66,7 +66,7 @@ superpowers.&lt;/strong&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;extracting-variable&quot;&gt;Extracting variable&lt;/h3&gt;
 
-&lt;p&gt;Remember a point about &lt;strong&gt;self-commenting variables&lt;/strong&gt; from previous posts? So here’s the simplest way to achieve that! There’s a magical shortcut: Ctrl+Alt+V, just select a code fragment you want
+&lt;p&gt;Remember a point about &lt;strong&gt;self-commenting variables&lt;/strong&gt; from previous &lt;a href=&quot;/clean-code&quot;&gt;post&lt;/a&gt;? So here’s the simplest way to achieve that! There’s a magical shortcut: Ctrl+Alt+V, just select a code fragment you want
 to extract and press it, type your intuitive variable name and you’re done.&lt;/p&gt;
 
 &lt;p&gt;Before:&lt;/p&gt;
@@ -99,10 +99,11 @@ that you can delete the last execution frame a.k.a. go back in time to the point
 
 &lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
 
-&lt;p&gt;This post might seem to be a little short, but I hope that I inspired you to move on and play around with things I showed you. There’s still much to learn my young padawan and for sure I’ll write more about utilising programmers’ tools to improve performance :)&lt;/p&gt;
+&lt;p&gt;That’s all for today! I hope you’ve enjoyed those tips &amp;amp; tricks and I’m pretty sure they’ll come
+in handy after you master them :). However, there’s still much to learn my young padawan and for sure I’ll write more about utilising programmers’ tools to improve performance :)&lt;/p&gt;
 
 &lt;p&gt;Do you have any thrilling feature that I’ve missed and is a real time-saver for nerdy geeks like
-us? Share it in the comments or let me know! :) We all love shiny tips and tricks.&lt;/p&gt;
+us? Share it in the comments and let me know! :) We all love shiny life and code hacks.&lt;/p&gt;
 
 &lt;p&gt;See you later!&lt;/p&gt;
 </description>
