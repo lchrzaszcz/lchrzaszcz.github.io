@@ -1,0 +1,3 @@
+[submodule "chrzaszcz.dev/themes/hugo-theme-cleanwhite"]
+	path = chrzaszcz.dev/themes/hugo-theme-cleanwhite
+	url = https://github.com/zhaohuabing/hugo-theme-cleanwhite.git

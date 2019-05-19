@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="NerdyGeek">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="http://chrzaszcz.dev/images/home-background-keyboard.jpg">
+    <meta property="twitter:image" content="http://chrzaszcz.dev/images/home-background-keyboard.jpg" />
+    
+
+    
+    <meta name="title" content="Introduction to Docker" />
+    <meta property="og:title" content="Introduction to Docker" />
+    <meta property="twitter:title" content="Introduction to Docker" />
+    
+
+    
+    <meta name="description" content="Grasp the idea of what Docker is and how it works. We&#39;ll setup basic container with Ubuntu and run some commands on it.">
+    <meta property="og:description" content="Grasp the idea of what Docker is and how it works. We&#39;ll setup basic container with Ubuntu and run some commands on it." />
+    <meta property="twitter:description" content="Grasp the idea of what Docker is and how it works. We&#39;ll setup basic container with Ubuntu and run some commands on it." />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>Introduction to Docker-Nerdy Geek Blog</title>
+
+    <link rel="canonical" href="/2019/05/19/introduction-to-docker/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+	
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/docco.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</head>
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">NerdyGeek</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+		    
+                        <li><a href="/top/about/">ABOUT</a></li>
+                    
+
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/images/post-bg-2019-05-18-introduction-to-docker.png')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                    </div>
+                    <h1>Introduction to Docker</h1>
+                    <h2 class="subheading">Docker in 5 minutes</h2>
+                    <span class="meta">
+			Posted by 
+			
+			    Łukasz Chrząszcz
+			 
+			on 
+			Saturday, May 18, 2019
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <header>
+                    <h2>TOC</h2>
+                </header>
+                <nav id="TableOfContents">
+<ul>
+<li><a href="#image-vs-container">Image vs container</a></li>
+<li><a href="#hands-on-cowsay-on-ubuntu">Hands on - cowsay on Ubuntu</a></li>
+<li><a href="#what-more-can-docker-do">What more can Docker do?</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</nav>
+                
+                
+
+<p>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with a problem of installing new software just for <strong>trying something out</strong>? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with <a href="https://pl.wikipedia.org/wiki/LAMP">LAMP</a>). Maybe you are the one who want to create <strong>easy to deploy software</strong>? Among others these are the reasons to consider <strong>Docker</strong>. In this post I’ll give a quick introduction to this tool so you can get a gist of an idea in one evening. Let’s get started!</p>
+
+<p>What is a Docker? It is so popular that you probably know more or less what it is - anyway - according to documentation Docker is a <strong>platform for developing, shipping and running applications</strong>. So what’s the deal? Isolation! Docker uses features like <a href="https://en.wikipedia.org/wiki/Cgroups">cgroups</a>, <a href="https://en.wikipedia.org/wiki/Linux_namespaces">namespaces</a>, <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities</a> and other Linux kernel stuff to lock down your process in a “software cage” by limiting resources like CPU, memory as well as ability to see other things in the system like processes or files. If you’re interested go check those mechanisms, but I think you can imagine how Docker might work under the hood using them.</p>
+
+<p>Before we go further be sure to have Docker installed - installation process is fairly simple and you can follow the instructions for Ubuntu <a href="https://docs.docker.com/engine/installation/linux/ubuntulinux/">here</a>.</p>
+
+<h1 id="image-vs-container">Image vs container</h1>
+
+<p>Two most important things in Docker world are image and container. You can thing of an <strong>image</strong> as a some kind of ISO image or CD disk with your favorite system installation. In particular, docker image contains all things that are required to create a running thing - <strong>container</strong>. Container is much like a living thing inside your OS, process, or something. You can start it, stop it, change it, save it.</p>
+
+<h1 id="hands-on-cowsay-on-ubuntu">Hands on - cowsay on Ubuntu</h1>
+
+<p>I’ll show you a quick thing you can do with Docker - install random software and check it out. In our example it’ll be popular <strong>cowsay in Ubuntu environment</strong>.
+Let’s get started with running Ubuntu container - remember you’re not installing a virtual machine with ubuntu, but creating <strong>“isolated box” with environment just like ubuntu</strong> (libraries, tools, binaries, whatever, etc.).</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker run -t -i ubuntu
+</code></pre></div>
+
+<p>It’ll take a while at the beginning - why? Docker checks if you have already downloaded Ubuntu images and if you don’t then downloads it from <a href="https://hub.docker.com/">repository</a>. If you happen to run ubuntu again later then it’ll be much quicker.</p>
+
+<p>Anyway, you’ll end up in a prompt within your <strong>new ubuntu environment</strong>, you can fool around, install something - let’s install cowsay! Execute this command from within your container:</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>apt-get update
+apt-get install cowsay
+/usr/games/cowsay <span style="color: #e6db74">&#39;I like Nerdy Geek!&#39;</span>
+</code></pre></div>
+
+<p>Don’t leave your container just yet - open up a new terminal and execute:</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker ps
+</code></pre></div>
+
+<p>You’ll see your container running (see a funny name generated for it? 😄 Mine was ‘gigantic-panini’). This command give you a <strong>list of all running containers</strong>.</p>
+
+<p>You can now hit Ctrl+C to leave your container. Actually you’ve just stopped it - execute ps command once again - it’s not there. You can fix it by adding –all option</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker ps --all
+</code></pre></div>
+
+<p>There - you should see your container. You probably think - oh my god this sucks! <strong>I want my cowsay back!</strong> Fear not! The thing is that you ran ubuntu in interactive mode in which container automatically stops after you leave shell (more or less). Let’s bring back your ubuntu to life. Replace <em>funny-name</em> with the name of your stopped container.</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker start &lt;funny-name&gt;
+</code></pre></div>
+
+<p>Ok, your ubuntu should be <strong>running in the background</strong> right now - check it with ps command. Now if you want to execute cowsay again you can do it easily by connecting to your container.</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker <span style="color: #f8f8f2">exec</span> -ti &lt;funny-name&gt; bash
+/usr/games/cowsay <span style="color: #e6db74">&#39;Actually I love NerdyGeek!&#39;</span>
+</code></pre></div>
+
+<p>When you’re done with your container you can stop it with:</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker stop &lt;funny-name&gt;
+</code></pre></div>
+
+<p>That’s it! You’ve just created <strong>your first Ubuntu container</strong>, customized it and stopped it - you can always start it again and add something more, test something else, etc.</p>
+
+<p>The last thing missing is - <strong>what about image?</strong> Well Ubuntu image you’ve downloaded from Docker hub wasn’t changed. In fact Docker is “layer-oriented” as one might say. Image has some layers in it and by running and changing container you’re introducing brand new layer on top of it, which - let’s say - has a higher priority over the image ones. Every change you make in container is saved to this new layer. Question here is - <strong>can I persist this layer somehow for the future? Can I save my container to be an image and why would I want to do that?</strong> Of course you can - this is so called “commit” and you can do it like that:</p>
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker commit &lt;funny-name&gt; nerdy-geek-ubuntu
+</code></pre></div>
+
+<p>What docker did is that it applied your changes (your new layer) to the image so that when you <strong>run container from newly created image</strong> then:</p>
+
+<ul>
+<li>You already have cowsay installed</li>
+<li>New layer is created just above your previous one</li>
+<li>You can create many containers from your new images and for example install fortune on one of them and postgres (why not?) on the other one</li>
+<li>You can commit those new containers and get 2 new images with cowsay and fortune as well as cowsay and postgres.</li>
+<li>You can easily share your new super awesome image with others</li>
+</ul>
+
+<h1 id="what-more-can-docker-do">What more can Docker do?</h1>
+
+<p>What I described is just a small part of Docker functionality and I’ll for sure write more about it, but to give you an idea of <strong>what can be done</strong> you have to be aware of the following:</p>
+
+<ul>
+<li>You can manage <strong>networks</strong> - a.k.a. put a few containers in common network, and others in other - isolated network</li>
+<li>You can <strong>map ports</strong> from container to your host system (access postgres running within container from your colleague’s computer)</li>
+<li>Manage <strong>data volumes</strong> - persistent storage which can be accessed by many containers - for example postgres data folder.</li>
+<li>Create more advanced images with <strong>Dockerfile</strong> - i.e. instruct Docker to install cowsay while creating container so it’ll be up-to-date not the version when you created your image.</li>
+<li>Much more!</li>
+</ul>
+
+<h1 id="summary">Summary</h1>
+
+<p>Docker is awesome and I’m pretty sure that you are now hyped about it as well! Go check the official documentation for more awesome things you can do. Soon I’ll write post about utilizing Docker in a development cycle and an example on running a real software like elasticsearch. Stay tuned and see you soon!</p>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "lukasz" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                   <li>
+                       <a href="" rel="alternate" type="application/rss+xml" title="NerdyGeek" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fa fa-circle fa-stack-2x"></i>
+                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+                   
+                    
+                    
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; NerdyGeek 2019
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+
+</body>
+</html>
