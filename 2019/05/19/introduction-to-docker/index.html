@@ -47,10 +47,13 @@
     <link rel="stylesheet" href="/css/hux-blog.min.css">
 
     
-    <link rel="stylesheet" href="/css/syntax.css">
+
 
     
     <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link rel="stylesheet" href="/css/main.css">
 
     
     <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
@@ -64,10 +67,6 @@
     
     <script src="/js/hux-blog.min.js"></script>
 	
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/docco.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
 </head>
 
 
@@ -210,46 +209,30 @@
 
 <p>I’ll show you a quick thing you can do with Docker - install random software and check it out. In our example it’ll be popular <strong>cowsay in Ubuntu environment</strong>.
 Let’s get started with running Ubuntu container - remember you’re not installing a virtual machine with ubuntu, but creating <strong>“isolated box” with environment just like ubuntu</strong> (libraries, tools, binaries, whatever, etc.).</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker run -t -i ubuntu
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -t -i ubuntu</code></pre></div>
 <p>It’ll take a while at the beginning - why? Docker checks if you have already downloaded Ubuntu images and if you don’t then downloads it from <a href="https://hub.docker.com/">repository</a>. If you happen to run ubuntu again later then it’ll be much quicker.</p>
 
 <p>Anyway, you’ll end up in a prompt within your <strong>new ubuntu environment</strong>, you can fool around, install something - let’s install cowsay! Execute this command from within your container:</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>apt-get update
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update
 apt-get install cowsay
-/usr/games/cowsay <span style="color: #e6db74">&#39;I like Nerdy Geek!&#39;</span>
-</code></pre></div>
-
+/usr/games/cowsay <span style="color:#e6db74">&#39;I like Nerdy Geek!&#39;</span></code></pre></div>
 <p>Don’t leave your container just yet - open up a new terminal and execute:</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker ps
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps</code></pre></div>
 <p>You’ll see your container running (see a funny name generated for it? 😄 Mine was ‘gigantic-panini’). This command give you a <strong>list of all running containers</strong>.</p>
 
 <p>You can now hit Ctrl+C to leave your container. Actually you’ve just stopped it - execute ps command once again - it’s not there. You can fix it by adding –all option</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker ps --all
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps --all</code></pre></div>
 <p>There - you should see your container. You probably think - oh my god this sucks! <strong>I want my cowsay back!</strong> Fear not! The thing is that you ran ubuntu in interactive mode in which container automatically stops after you leave shell (more or less). Let’s bring back your ubuntu to life. Replace <em>funny-name</em> with the name of your stopped container.</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker start &lt;funny-name&gt;
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker start &lt;funny-name&gt;</code></pre></div>
 <p>Ok, your ubuntu should be <strong>running in the background</strong> right now - check it with ps command. Now if you want to execute cowsay again you can do it easily by connecting to your container.</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker <span style="color: #f8f8f2">exec</span> -ti &lt;funny-name&gt; bash
-/usr/games/cowsay <span style="color: #e6db74">&#39;Actually I love NerdyGeek!&#39;</span>
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -ti &lt;funny-name&gt; bash
+/usr/games/cowsay <span style="color:#e6db74">&#39;Actually I love NerdyGeek!&#39;</span></code></pre></div>
 <p>When you’re done with your container you can stop it with:</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker stop &lt;funny-name&gt;
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop &lt;funny-name&gt;</code></pre></div>
 <p>That’s it! You’ve just created <strong>your first Ubuntu container</strong>, customized it and stopped it - you can always start it again and add something more, test something else, etc.</p>
 
 <p>The last thing missing is - <strong>what about image?</strong> Well Ubuntu image you’ve downloaded from Docker hub wasn’t changed. In fact Docker is “layer-oriented” as one might say. Image has some layers in it and by running and changing container you’re introducing brand new layer on top of it, which - let’s say - has a higher priority over the image ones. Every change you make in container is saved to this new layer. Question here is - <strong>can I persist this layer somehow for the future? Can I save my container to be an image and why would I want to do that?</strong> Of course you can - this is so called “commit” and you can do it like that:</p>
-<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><code class="language-bash" data-lang="bash"><span></span>docker commit &lt;funny-name&gt; nerdy-geek-ubuntu
-</code></pre></div>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker commit &lt;funny-name&gt; nerdy-geek-ubuntu</code></pre></div>
 <p>What docker did is that it applied your changes (your new layer) to the image so that when you <strong>run container from newly created image</strong> then:</p>
 
 <ul>
@@ -282,6 +265,11 @@ apt-get install cowsay
                 <hr>
                 <ul class="pager">
                     
+                    
+                    <li class="next">
+                        <a href="/2019/05/26/kafka-101/" data-toggle="tooltip" data-placement="top" title="Kafka 101">Next
+                            Post &rarr;</a>
+                    </li>
                     
                 </ul>
 

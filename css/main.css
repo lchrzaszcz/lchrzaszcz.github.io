@@ -1,0 +1,16 @@
+
+pre {
+    border: 0px !important;
+    margin: 0px;
+}
+
+.table th, .table td {
+    border: 0px !important;
+}
+
+.table {
+    border-radius: 4px;
+}
+.highlight > div {
+    border-radius: 4px;
+}

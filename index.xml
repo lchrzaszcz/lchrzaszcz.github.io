@@ -6,10 +6,20 @@
     <description>Recent content on NerdyGeek</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 18 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 26 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Kafka 101</title>
+      <link>http://chrzaszcz.dev/2019/05/26/kafka-101/</link>
+      <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/05/26/kafka-101/</guid>
+      <description>What is Kafka? Kafka is a popular stream-processing platform. What does it mean? You can think of it as a service that takes messages from one place and put it in another. It allows you to construct asynchronous processing of events, create pub-sub mechanism or distribute work evenly among worker services - the are many use cases for it.
+Whatever your use case is, you need to know a few basic ideas about Kafka.</description>
+    </item>
     
     <item>
       <title>Introduction to Docker</title>
