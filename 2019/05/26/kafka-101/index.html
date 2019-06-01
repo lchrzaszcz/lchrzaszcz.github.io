@@ -216,13 +216,13 @@
 
 <h2 id="producer-and-consumer">Producer and Consumer</h2>
 
-<p>Kafka has a notion of producer and consumer. First one pushes messages to kafka, while the lather one fetches them.</p>
+<p>Kafka has a notion of producer and consumer. First one pushes messages to kafka, while the second one fetches them.</p>
 
 <p>Many messages might be passing through Kafka, so to distinguish between them and allow you to isolate different processing contexts, Kafka groups messages into Topics.</p>
 
-<p>Every producer that is trying to publish something has to provide topic name.</p>
+<p>Every producer that is trying to publish something has to provide a topic name.</p>
 
-<p>On the other hand consumers subscribe for a set of topics (there might be many of them at the same time) and later on consumes messages from those topics.</p>
+<p>On the other hand consumers subscribe for a set of topics (there might be many of them at the same time) and later on consume messages from those topics.</p>
 
 <p><img src="/img/2019-05-26-kafka-101/kafka-basics.png" alt="kafka consumers and producers" /></p>
 
@@ -232,7 +232,7 @@
 
 <p>Basically you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
 
-<p>Each message from each topic is sent to every consumer group, but within this consumer group it is sent to only one consumer (the rest of the group does not now anything about that message)</p>
+<p>Each message from each topic is sent to every consumer group, but within this consumer group it is sent to only one consumer (the rest of the group does not know anything about that message)</p>
 
 <p>Here you see that message ends up in exactly one consumer from each consumer group.</p>
 
@@ -246,7 +246,7 @@
 
 <p>When producer sends a message it provides both key and value of the message. Value is your data that describes anything you want to send. Key can also be used to pass data, however it is also leveraged as a partition key. Producer calculates hash of the key and decides to which partition it should go. That means if you want two different messages to go to the same partition you should provide the same key for both of them.</p>
 
-<p>So far so good. We know how producer works with partitions, but what about consumers? Consumer upon subscribing to topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition has exactly one consumer and every consumer can have multiple partition (or zero if for example there are more consumers than partitions).</p>
+<p>So far so good. We know how producer works with partitions, but what about consumers? Consumer upon subscribing to topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition is subscribed by exactly one consumer and every consumer can subscribe to multiple partitions (or zero if for example there are more consumers than partitions).</p>
 
 <p><img src="/img/2019-05-26-kafka-101/kafka-partitions.png" alt="kafka partitions" /></p>
 
