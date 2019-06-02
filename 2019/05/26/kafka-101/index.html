@@ -228,7 +228,7 @@
 
 <h2 id="consumer-group">Consumer group</h2>
 
-<p>In real world scenarios you&rsquo;d require every service interested, to receive every message from particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
+<p>In a real-world scenarios you&rsquo;d require every service interested, to receive every message from particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
 
 <p>Basically you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
 
@@ -252,7 +252,7 @@
 
 <p>Diving even deeper into partitions you will see that Kafka guarantees order of messages in each partition. If <em>message A</em> with key <em>Alex</em> is published to topic and after that <em>message B</em> also with key <em>Alex</em> is published, then consumer will receive message in exactly that order - first <em>message A</em> and then <em>message B</em>. This is only valid for single partition. Messages from different partitions might be delivered in any order.</p>
 
-<p>Under the hood, partition is nothing more than an append only log, that&rsquo;s why the order is guaranteed. On the other hand different partitions are different shards of data thus no order can be ensured.</p>
+<p>Under the hood, partition is nothing more than an append-only log, that&rsquo;s why the order is guaranteed. On the other hand different partitions are different shards of data thus no order can be ensured.</p>
 
 <p>As a graphical explanation, here producer published 3 messages - <em>A</em>, <em>B</em> and <em>C</em> - all with the same key. Partition will look like this:</p>
 
@@ -262,7 +262,7 @@
 
 <h2 id="offset">Offset</h2>
 
-<p>Now you might ask how does your application track which message has been processed and which message will be fetched next. Due to the linear structure of message log in Kafka, every message in partition is assigned a deterministic offset. First ever message in a partition has offset of 0, next one 1 and so on.</p>
+<p>Now you might ask how does your application track, which message has been processed and which message will be fetched next. Due to the linear structure of message log in Kafka, every message in partition is assigned a deterministic offset. First ever message in a partition has offset of 0, next one 1 and so on.</p>
 
 <p>Based on that, every message in kafka can be uniquely identified by topic name, partition number and offset.</p>
 
@@ -270,11 +270,11 @@
 
 <h3 id="committed-offset">Committed offset</h3>
 
-<p>The first kind of offset - the one that is used to remember where your consumers left off in case of crash - is a committed offset.</p>
+<p>The first kind of offset - used to remember where your consumers left off in case of crash - is a committed offset.</p>
 
-<p>As an example, assume your consumer just freshly started consuming new topic. It fetched 10 messages starting from offset 0. After processing them it want to mark those as &ldquo;processed&rdquo; and notify Kafka about that. This process is called committing. Simply speaking consumer is telling cluster to remember that it ended up processing on offset 10.</p>
+<p>As an example, assume your consumer just freshly started consuming new topic. It fetched 10 messages starting from offset 0. After processing them it wants to mark those as &ldquo;processed&rdquo; and notify Kafka about that. This process is called committing. Simply speaking consumer is telling cluster to remember that it ended up processing on offset 10.</p>
 
-<p>Now, even in face of serious crash, after recovery, new consumer comes in and starts processing at offset 10.</p>
+<p>Now, even in the face of serious crash, after recovery, new consumer comes in and starts processing at offset 10.</p>
 
 <p>Committed offset is stored persistently in Kafka and can be change only by committing. Consumer fetches this offset when it connects to cluster to get to know where previous consumer finished.</p>
 
@@ -293,27 +293,27 @@ consumer.seekToBeginning(somePartitions)
 consumer.seekToEnd(somePartitions)</code></pre></div>
 <p>The last thing is&hellip; What is the initial offset? If you introduce new consumer group then it has no committed offset, so how does it work?</p>
 
-<p>Kafka allows you to choose from several strategies. Keep in mind that this setting is taken into account only if there is no offset committed. If there is an offset then this strategy is ignored. Anyway, you can one of those:</p>
+<p>Kafka allows you to choose from several strategies. Keep in mind that this setting is taken into account only if there is no offset committed. Remember that if committed offset already exists in Kafka then consumer will use saved offset rather than apply this strategy. Anyway, you can choose one of those:</p>
 
 <ul>
-<li>Earliest - offset will be set to the lowest/earliest offset available</li>
-<li>Latest - offset will be set to the greatest/latest offset available</li>
-<li>None - exception will be thrown, so you can handle this manually</li>
+<li><em>Earliest</em> - offset will be set to the lowest/earliest offset available</li>
+<li><em>Latest</em> - offset will be set to the greatest/latest offset available</li>
+<li><em>None</em> - exception will be thrown, so you can handle this manually</li>
 </ul>
 
 <h1 id="let-s-setup-kafka">Let&rsquo;s setup Kafka!</h1>
 
 <p>Enough theory! Let&rsquo;s spin our single node Kafka cluster and give it a try!</p>
 
-<p>The easiest way to setup Kafka just to mess around locally is to use Docker. There are many Docker Images with Kafka, however the easiest one to use (a little outdated though) is <a href="https://hub.docker.com/r/spotify/kafka">spotify/kafka</a>, so let&rsquo;s get started and run it.</p>
+<p>The easiest way to set up Kafka just to mess around locally is to use Docker. There are many Docker Images with Kafka, however the easiest one to use (a little outdated though) is <a href="https://hub.docker.com/r/spotify/kafka">spotify/kafka</a>, so let&rsquo;s get started and run it.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name kafka spotify/kafka</code></pre></div>
-<p>Let the command finish and your Kafka should be up-and-running. If you see your new container after issuing command below, then everything seems to work fine and you can go on and start producing messages.</p>
+<p>Let the command finish, and your Kafka should be up-and-running. If you see your new container after issuing command below, then everything seems to work fine, and you can go on and start producing messages.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span> % docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                NAMES
 b52fc6d41375        spotify/kafka       <span style="color:#e6db74">&#34;supervisord -n&#34;</span>    <span style="color:#ae81ff">8</span> hours ago         Up <span style="color:#ae81ff">8</span> hours          <span style="color:#ae81ff">2181</span>/tcp, <span style="color:#ae81ff">9092</span>/tcp   kafka</code></pre></div>
 <h2 id="producing-message">Producing message</h2>
 
-<p>Let&rsquo;s try and send some messages. We will use console clients that are shipped with Kafka. To do so we need to get into our container:</p>
+<p>Let&rsquo;s try sending some messages. We will use console clients that are shipped with Kafka. To access them, we need to get into our container:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span> % docker exec -it kafka bash
 root@b52fc6d41375:/# cd /opt/kafka_2.11-0.10.1.0/bin/</code></pre></div>
 <p>If you list content of current directory you will be presented with various handy tools to access Kafka. However, we will focus right now on <em>kafka-console-producer.sh</em> in particular. Leveraging it you can send some data to Kafka:</p>
@@ -340,12 +340,12 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin#</code></pre></td></tr></table>
 <p>We sent two messages: <em>my first message</em> and <em>my second message</em>. In first line I have specified kafka location - <em>localhost:9092</em> and to which topic I want to produce my messages - <em>myTestTopic</em>. After that, each consecutive line is a separate message - until I press Ctrl+C.</p>
 
 <blockquote>
-<p>Don&rsquo;t mind the warn in line 3. It&rsquo;s because of <em>myTestTopic</em> being a new topic, and Kafka has to create it first, so there is no leader for it, hence &ldquo;LEADER_NOT_AVAILABLE&rdquo; error. I will explain this in detail in future posts.</p>
+<p>Don&rsquo;t mind the warning in line 3. It&rsquo;s because of <em>myTestTopic</em> being a new topic, and Kafka has to create it first, so there is no leader for it, hence &ldquo;LEADER_NOT_AVAILABLE&rdquo; error. I will explain this in detail in future posts.</p>
 </blockquote>
 
 <h2 id="consuming-message">Consuming message</h2>
 
-<p>Right now Kafka has 2 messages, so let&rsquo;s try and consume them. To do so we will use similar script as above - <em>kafka-console-consumer.sh</em>.</p>
+<p>Right now Kafka has 2 messages, so let&rsquo;s try consuming them. We will use similar script as aforementioned <em>kafka-console-consumer.sh</em>.</p>
 
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
@@ -364,7 +364,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 </div>
 </div>
 
-<p>As you see we received aforementioned messages. Same as previously in first line I have specified Kafka location and topic, but I also had to specify option <em>&ndash;from-beginning</em>.</p>
+<p>As you see we received aforementioned messages. Same as previously, in first line I have specified Kafka location and topic, but I also had to specify option <em>&ndash;from-beginning</em>.</p>
 
 <p>What does option <em>&ndash;from-beginning</em> do? The consumer group for console clients is randomized on each run, so there is no initial offset for it. Due to the fact that we have just started consumers (while messages are already in Kafka) we have to start reading from beginning, hence <em>&ndash;from-beginning</em> option. It makes consumer to start from the earliest message available.</p>
 
@@ -387,12 +387,12 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 <h1 id="summary">Summary</h1>
 
-<p>We dug into basics of Kafka. It is a basis for future, more advanced posts in which we will touch rebalancing, java consumers, replication and many more. Anyway, for this post summary we can learned that:</p>
+<p>We dug into basics of Kafka. It is a basis for future, more advanced posts in which we will touch rebalancing, java consumers, replication and many more. Anyway, for this post summary we learned that:</p>
 
 <ul>
 <li><p><strong>Producers</strong> publish messages to the cluster and how <strong>consumers</strong> fetch them.</p></li>
 
-<li><p>Consumers and producers work on group of messages called <strong>topic</strong>. It allows you to isolate different kinds of messages.</p></li>
+<li><p>Consumers and producers work on a group of messages called <strong>topic</strong>. It allows you to isolate different kinds of messages.</p></li>
 
 <li><p>Consumers are grouped into <strong>consumer groups</strong> that allow you to spread the workload into different instances of your consumers that are in the same group.</p></li>
 
@@ -400,7 +400,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 <li><p>Each message is uniquely identified by topic name, partition number and <strong>offset</strong>. Offset is a message number from the beginning of existence of topic and partition.</p></li>
 
-<li><p><strong>Committed offset</strong> is an offset stored in Kafka and is used to resume processing after consumer crash or restart.</p></li>
+<li><p><strong>Committed offset</strong> is the offset stored in Kafka and is used to resume processing after consumer crash or restart.</p></li>
 
 <li><p><strong>Consumer position</strong> is an offset used internally by consumer to track what messages to fetch on next <em>poll</em>.</p></li>
 
