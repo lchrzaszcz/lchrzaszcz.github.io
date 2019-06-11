@@ -22,6 +22,16 @@ Whatever your use case is, you need to know a few basic ideas about Kafka.</desc
     </item>
     
     <item>
+      <title>Kafka Rebalancing</title>
+      <link>http://chrzaszcz.dev/2019/05/26/kafka-101/</link>
+      <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/05/26/kafka-101/</guid>
+      <description>Recap In previous post (todo wstaw linka) we discussed what Kafka is and how to interact with it. We explored consumers a little bit, how they subscribe to topic and consume messages from it. We know that consumers form a group called consumer group and that Kafka divide messages among members of consumer group.
+In this post we&amp;rsquo;ll discover how exactly does Kafka assign partitions to consumers and what we can change about it.</description>
+    </item>
+    
+    <item>
       <title>Introduction to Docker</title>
       <link>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</link>
       <pubDate>Sat, 18 May 2019 00:00:00 +0000</pubDate>
