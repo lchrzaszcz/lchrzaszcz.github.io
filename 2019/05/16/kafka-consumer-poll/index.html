@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="NerdyGeek">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="http://chrzaszcz.dev/img/home-background-keyboard.jpg">
+    <meta property="twitter:image" content="http://chrzaszcz.dev/img/home-background-keyboard.jpg" />
+    
+
+    
+    <meta name="title" content="What happens when you call poll on Kafka Consumer?" />
+    <meta property="og:title" content="What happens when you call poll on Kafka Consumer?" />
+    <meta property="twitter:title" content="What happens when you call poll on Kafka Consumer?" />
+    
+
+    
+    <meta name="description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step">
+    <meta property="og:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step" />
+    <meta property="twitter:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>What happens when you call poll on Kafka Consumer?-Nerdy Geek Blog</title>
+
+    <link rel="canonical" href="/2019/05/16/kafka-consumer-poll/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link rel="stylesheet" href="/css/main.css">
+
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+	
+</head>
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">NerdyGeek</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+		    
+                        <li><a href="/top/about/">ABOUT</a></li>
+                    
+
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/2019-06-kafka-consumer-poll/background.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                    </div>
+                    <h1>What happens when you call poll on Kafka Consumer?</h1>
+                    <h2 class="subheading">Internals of Kafka consumer initialization and first fetch</h2>
+                    <span class="meta">
+			Posted by 
+			
+			    Łukasz Chrząszcz
+			 
+			on 
+			Sunday, June 16, 2019
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <header>
+                    <h2>TOC</h2>
+                </header>
+                <nav id="TableOfContents">
+<ul>
+<li><a href="#recap">Recap</a></li>
+<li><a href="#samples-and-setup">Samples and setup</a></li>
+<li><a href="#how-does-sample-consumer-workflow-look-like">How does sample consumer workflow look like?</a></li>
+<li><a href="#what-happens-when-you-create-consumer">What happens when you create consumer?</a></li>
+<li><a href="#what-happens-when-you-subscribe-to-the-topic">What happens when you subscribe to the topic?</a></li>
+<li><a href="#what-happens-when-you-call-first-poll">What happens when you call first poll?</a></li>
+<li><a href="#updating-assignment">Updating assignment</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</nav>
+                
+                
+
+<h1 id="recap">Recap</h1>
+
+<p><a href="/2019/05/26/kafka-101">In the previous post</a> we&rsquo;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called <em>consumer group</em> and that Kafka split messages among members of the consumer group.</p>
+
+<p>That&rsquo;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll? We&rsquo;ll discover internals of it in this post.</p>
+
+<h1 id="samples-and-setup">Samples and setup</h1>
+
+<p>We will investigate some code today, so if you want to check the examples be sure to head to the <a href="https://github.com/lchrzaszcz/kafka-examples" target="_blank">GitHub repo</a>. You will find there some Kotlin code with a simple producer that sends a few messages to Kafka, as well as simple consumer that continuously fetches records from Kafka and prints them to the console.</p>
+
+<p>To make setup easier I&rsquo;ve included docker-compose file, so you can make your kafka cluster up and running in seconds. Just run the following command from the repository directory:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">docker-compose up</code></pre></div>
+<p>After that, you can run one of the main methods - one for a producer, and the second one for consumer - preferably in debug, so you can jump straight to the Kafka code by yourself. Anyway, I will cite crucial code, so you can go on and read without cloning the repository.</p>
+
+<h1 id="how-does-sample-consumer-workflow-look-like">How does sample consumer workflow look like?</h1>
+
+<p>Using Kafka consumer usually follows few simple steps.</p>
+
+<ul>
+<li>Create consumer providing some configuration,</li>
+<li>Choose topics you are interested in</li>
+<li>Poll messages in some kind of loop.</li>
+</ul>
+
+<p>If you head over to <em>Consumer</em> class in the sample repository, you&rsquo;ll find that the run method does exactly that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">run</span>() {
+    <span style="color:#66d9ef">val</span> kafkaConsumer = createKafkaConsumer()
+    kafkaConsumer.subscribe(listOf(TOPIC))
+    kafkaConsumer.use { fetchContinuously(kafkaConsumer) }
+}</code></pre></div>
+<p>Let&rsquo;s break down every step and see what is done underneath.</p>
+
+<h1 id="what-happens-when-you-create-consumer">What happens when you create consumer?</h1>
+
+<p>To start using consumer you have to instantiate your consumer. Pretty obvious right? As easy as it sounds, you have to set at least a few options to get it working. Let&rsquo;s head over to <em>Consumer</em> class and check how to create our first consumer.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">kafkaConsumer</span>(): KafkaConsumer&lt;String, String&gt; {
+    <span style="color:#66d9ef">val</span> properties = Properties()
+
+    properties<span style="color:#a6e22e">[&#34;bootstrap.servers&#34;]</span> = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
+    properties<span style="color:#a6e22e">[&#34;group.id&#34;]</span> = <span style="color:#e6db74">&#34;kafka-example&#34;</span>
+    properties<span style="color:#a6e22e">[&#34;key.deserializer&#34;]</span> = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+    properties<span style="color:#a6e22e">[&#34;value.deserializer&#34;]</span> = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+
+    <span style="color:#66d9ef">return</span> KafkaConsumer(properties)
+}</code></pre></div>
+<p>We set 4 properties. All of them are necessary - in fact, you&rsquo;ll get exception if you don&rsquo;t set them!</p>
+
+<ul>
+<li><strong>bootstrap.servers</strong> - First Kafka servers the consumer should contact to fetch cluster configuration. Here we&rsquo;re pointing it to our docker container with Kafka.</li>
+<li><strong>group.id</strong> - Consumer group ID. Specify the same value for a few consumers to balance workload among them. Here we&rsquo;re using <em>kafka-example</em>.</li>
+<li><strong>key.deserializer</strong> - Every record fetched from Kafka broker is basically a bunch of bytes, so you have to specify how to deserialize them. This option applies to the <em>key</em> part of the record. Here we&rsquo;re using <em>StringDeserializer</em> so we&rsquo;ll get strings decoded from bytes (default encoding is UTF-8)</li>
+<li><strong>value.deserializer</strong> - Same as <em>key.deserializer</em> but for <em>value</em> part.</li>
+</ul>
+
+<p>Ok, so we instantiated a new consumer. What happened under-the-hood of this simple constructor? Well&hellip; not gonna lie to you - nothing happened. We just created a whole tree of objects behind the scenes, but nothing extraordinary has been done apart from validation.</p>
+
+<h1 id="what-happens-when-you-subscribe-to-the-topic">What happens when you subscribe to the topic?</h1>
+
+<p>After creating the consumer, second thing we do is subscribing to set of topics. In the example we subscribe to one topic <em>kafka-example-topic</em>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaConsumer.subscribe(listOf(TOPIC))</code></pre></div>
+<p>What happened here? Nothing much! Just a few values set here and there.</p>
+
+<blockquote>
+<p>This part is more compelling if you have live consumer that is already subscribed to something and is already fetching something. However, we&rsquo;ve just created consumer so nothing really happens.</p>
+</blockquote>
+
+<h1 id="what-happens-when-you-call-first-poll">What happens when you call first poll?</h1>
+
+<p>Here things become serious! As they say, code is worth a thousand words, so we will look into the code of Kafka Consumer (version: 2.2.0, you can access it on <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1179" target="_blank">Github</a>). For the sake of readability I&rsquo;ve skipped some comments to focus on the important parts.</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> ConsumerRecords<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    acquireAndEnsureOpen<span style="color:#f92672">();</span>
+    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+
+        <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
+            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">();</span>
+
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)))</span> <span style="color:#f92672">{</span>
+                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">);</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+
+            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;&gt;&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
+                <span style="color:#f92672">}</span>
+
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;(</span>records<span style="color:#f92672">));</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">());</span>
+
+        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
+        release<span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span></code></pre></td></tr></table>
+</div>
+</div>
+
+<p>Ok so what&rsquo;s going on here? Basically:</p>
+
+<ul>
+<li><p><strong>Line 2</strong> - Due to the fact that consumer is not thread-safe, it has to ensure that only one thread at the time can access it, hence acquiring lock here.</p></li>
+
+<li><p><strong>Line 4</strong> - Consumer validates if it has any subscription. It does not make sense to poll records if you don&rsquo;t specify any topics, does it?</p></li>
+
+<li><p><strong>Line 8</strong> - Start a record-fetching loop until poll timeout doesn&rsquo;t expire or consumer receives some records.</p></li>
+
+<li><p><strong>Line 9</strong> - You can interrupt consumer in the middle of polling if you want to shut it down. This is especially important if you specify long timeout. This line checks proper flags and throws an exception.</p></li>
+
+<li><p><strong>Line 11</strong> - Here is an interesting fragment! Depending, which <em>poll</em> you call - the one taking <em>long</em> or <em>Duration</em> as parameter it will wait for synchronization with Kafka Cluster indefinitely or for a limited amount of time. The newer one, with <em>Duration</em> as parameter will return empty set of records after certain time, while the other one (which is deprecated by the way) will spin indefinitely waiting for cluster metadata. This is extremely counter-intuitive if you&rsquo;re using deprecated poll signature as even though you&rsquo;ve specified timeout, the call might still block indefinitely! Anyway, in both cases consumer calls method <em>updateAssignmentMetadataIfNeeded</em> which we will dig into in a minute.</p></li>
+
+<li><p><strong>Line 21</strong> - Consumer actually fetches records from Kafka</p></li>
+
+<li><p><strong>Line 22</strong> - Here is a smart optimization. If fetch from line above returned some records, then consumer sends next fetch requests ahead of time, so while your application processes new records, in the background, consumer is already waiting for the next batch for you, so you don&rsquo;t block on IO.</p></li>
+
+<li><p><strong>Line 27</strong> - Consumer passes all fetched records through interceptors chain and returns its result. Interceptors are plugins allowing you to intercept and modify incoming records. Mainly they&rsquo;re used for logging or monitoring.</p></li>
+</ul>
+
+<p>A lot is happening here! Nevertheless, important things poll method does are:</p>
+
+<ul>
+<li><p>Synchronize Consumer and Cluster - <em>updateAssignmentMetadataIfNeeded</em> method</p></li>
+
+<li><p>Fetch data - <em>pollForFetches</em> method</p></li>
+</ul>
+
+<p>Let&rsquo;s jump to <em>updateAssignmentMetadataIfNeeded</em> implementation!</p>
+
+<h1 id="updating-assignment">Updating assignment</h1>
+
+<p><em>updateAssignmentMetadataIfNeeded</em> method (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1225" target="_blank">source code</a>) is quite simple and basically it delegates stuff to the coordinator (which is one of the classes in Kafka Consumer).</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span></code></pre></div>
+<p>Here are two main points:</p>
+
+<ul>
+<li><p>Polling coordinator for updates - ensure we&rsquo;re up-to-date with our group&rsquo;s coordinator.</p></li>
+
+<li><p>Updating fetch positions - ensure every partition assigned to this consumer has a fetch position. If it is missing then consumer uses <em>auto.offset.reset</em> value to set it (set it to earliest, latest or throw exception).</p></li>
+</ul>
+
+<p>Updating positions is pretty straightforward, so let&rsquo;s skip this part and focus on updating coordinator. Let&rsquo;s jump down to implementation. What does the coordinator&rsquo;s poll do? Code cited below (with comments removed for enhanced readability). Original source code is <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310" target="_blank">here</a></p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">();</span>
+
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">())</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">();</span>
+                <span style="color:#f92672">}</span>
+
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span></code></pre></td></tr></table>
+</div>
+</div>
+
+<p>What happened?</p>
+
+<ul>
+<li><p>Line 4 - Check if consumer is using automatic or manual assignment (a.k.a. did you explicitly say that this consumer should be assigned to partition number - let&rsquo;s say - 1?). I&rsquo;m ignoring manual assignment in this post and assuming we have an automatic one.</p></li>
+
+<li><p>Line 5 - Check status of heartbeat thread and report poll call. On the first call there&rsquo;s no heartbeat thread so this method does nothing. However, in most future calls there&rsquo;ll be a heartbeat thread, so status of this thread will be checked, errors will be thrown, and poll will report that it has been called.</p></li>
+</ul>
+
+<blockquote>
+<p>You may wonder, why should consumer report that? In fact, calling <em>poll</em> method is your responsibility and Kafka doesn&rsquo;t trust you (no way 😱!). As a precaution, Consumer tracks how often you call <em>poll</em> and if you exceed some specified time (<em>max.poll.interval.ms</em>), then it leaves the group, so other consumers can move processing further. You&rsquo;re still asking why? Imagine your processing thread has thrown an exception and died, but the whole application is still alive - you would stall some partitions by still sending heartbeat in the background. The only solution would be to restart the application! In fact that&rsquo;s something I did, but more on that in different post.</p>
+</blockquote>
+
+<ul>
+<li>Line 6 - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it&rsquo;s group (see <em>group.id</em> setting) and establishes connection to it. If all of that went well then we have live connection to <em>our</em> coordinator and can move on.</li>
+</ul>
+
+<blockquote>
+<p>* Not exactly random, but that&rsquo;s far from crucial here.</p>
+</blockquote>
+
+<ul>
+<li><p>Line 10 - Check if consumer needs to join the group. Obviously it needs to do so as this is the first run. However, later on it can be true if you for example change the subscription.</p></li>
+
+<li><p>Line 11 - This is optimization in case you&rsquo;re using pattern subscriptions - you&rsquo;ve specified topic to subscribe to using regex like &ldquo;my-kafka-topic-*&rdquo; and any topic that&rsquo;ll match this regex will be automatically subscribed by your consumer. I&rsquo;m ignoring this right now as we don&rsquo;t use pattern subscription.</p></li>
+
+<li><p>Line 21 - This is it! We&rsquo;re actually joining the group!</p></li>
+</ul>
+
+<p>There is even more happening here than in Consumer&rsquo;s <em>poll</em>. However key points are:</p>
+
+<ul>
+<li><p>We&rsquo;ve a connection to our group coordinator</p></li>
+
+<li><p>We&rsquo;ve joined the group</p></li>
+</ul>
+
+<p>There is a small but important detail about <em>ensureActiveGroup</em> method. It starts a heartbeat thread! <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336" target="_blank">Code</a>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
+    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span></code></pre></td></tr></table>
+</div>
+</div></p>
+
+<p>If that method finishes successfully, the consumer is fully initialized and is ready to fetch records. On every poll this process is repeated if it&rsquo;s needed - for example we&rsquo;ve dropped out of group or lost connection, etc.</p>
+
+<h1 id="summary">Summary</h1>
+
+<p>We&rsquo;ve ran through Kafka Consumer code to explore mechanics of the first poll. Let&rsquo;s wrap up the whole process. Below is the sequence of steps to fetch the first batch of records. As you see in the first poll we fetch cluster topology, discover our group coordinator, ask it to join the group, start heartbeat thread, initialize offsets and finally fetch the records.</p>
+
+<p><img src="/img/2019-06-kafka-consumer-poll/consumer-first-poll.png" alt="consumer-first-poll" /></p>
+
+<p>What can we conclude from inspecting the first poll of Kafka consumer?</p>
+
+<ul>
+<li><p>Instantiating a new consumer and subscribing for topics does not create any new connection or thread.</p></li>
+
+<li><p>Every consumer ensures its initialization on every poll. It creates any threads necessary, connects to servers, joins the group, etc.</p></li>
+
+<li><p>Consumer is not thread safe - you can&rsquo;t call its methods from different threads at the same time or else you&rsquo;ll get an exception.</p></li>
+
+<li><p>You have to call poll once in a while to ensure it is alive and connected to Kafka.</p></li>
+
+<li><p>There is a heartbeat thread that notifies cluster about consumer liveness. It is created within <em>poll</em> method if it does not exist.</p></li>
+</ul>
+
+<p>What is missing from our journey and what I&rsquo;ve explicitly omitted is:</p>
+
+<ul>
+<li><p>How exactly does consumer join the group along with rebalancing?</p></li>
+
+<li><p>What does heartbeat thread do?</p></li>
+</ul>
+
+<p>Both require separate post, so I&rsquo;ll cover those in the future posts, so stay tuned 😄. However, for now we know how consumer makes first connection to the cluster and what it has to initialize to do so.</p>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/05/26/kafka-101/" data-toggle="tooltip" data-placement="top" title="Kafka 101">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "theer108" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                   <li>
+                       <a href="" rel="alternate" type="application/rss+xml" title="NerdyGeek" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fa fa-circle fa-stack-2x"></i>
+                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+                   
+                    
+                    
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; NerdyGeek 2019
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+
+</body>
+</html>
