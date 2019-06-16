@@ -13,10 +13,10 @@
     
     <item>
       <title>What happens when you call poll on Kafka Consumer?</title>
-      <link>http://chrzaszcz.dev/2019/05/16/kafka-consumer-poll/</link>
+      <link>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</link>
       <pubDate>Sun, 16 Jun 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/05/16/kafka-consumer-poll/</guid>
+      <guid>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</guid>
       <description>Recap In the previous post we&amp;rsquo;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called consumer group and that Kafka split messages among members of the consumer group.
 That&amp;rsquo;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll?</description>
     </item>
