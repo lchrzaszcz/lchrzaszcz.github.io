@@ -263,9 +263,7 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaConsumer.subscribe(listOf(TOPIC))</code></pre></div>
 <p>What happened here? Nothing much! Just a few values set here and there.</p>
 
-<blockquote>
 <p>This part is more compelling if you have live consumer that is already subscribed to something and is already fetching something. However, we&rsquo;ve just created consumer so nothing really happens.</p>
-</blockquote>
 
 <h1 id="what-happens-when-you-call-first-poll">What happens when you call first poll?</h1>
 
@@ -351,7 +349,7 @@
 <p>Ok so what&rsquo;s going on here? Basically:</p>
 
 <ul>
-<li><p><strong>Line 2</strong> - Due to the fact that consumer is not thread-safe, it has to ensure that only one thread at the time can access it, hence acquiring lock here.</p></li>
+<li><p><strong>Line 2</strong> - Due to the fact that consumer <strong>internally</strong> is not thread-safe, so it ensures that only one thread at the time can access it, hence acquiring lock here. In case you call methods from different threads, you&rsquo;ll get an exception in 0one of them.</p></li>
 
 <li><p><strong>Line 4</strong> - Consumer validates if it has any subscription. It does not make sense to poll records if you don&rsquo;t specify any topics, does it?</p></li>
 
@@ -479,17 +477,21 @@
 <li><p><strong>Line 5</strong> - Check status of heartbeat thread and report poll call. On the first call there&rsquo;s no heartbeat thread so this method does nothing. However, in most future calls there&rsquo;ll be a heartbeat thread, so status of this thread will be checked, errors will be thrown, and poll will report that it has been called.</p></li>
 </ul>
 
-<blockquote>
+<hr />
+
 <p>You may wonder, why should consumer report that? In fact, calling <em>poll</em> method is your responsibility and Kafka doesn&rsquo;t trust you (no way 😱!). As a precaution, Consumer tracks how often you call <em>poll</em> and if you exceed some specified time (<em>max.poll.interval.ms</em>), then it leaves the group, so other consumers can move processing further. You&rsquo;re still asking why? Imagine your processing thread has thrown an exception and died, but the whole application is still alive - you would stall some partitions by still sending heartbeat in the background. The only solution would be to restart the application! In fact that&rsquo;s something I did, but more on that in different post.</p>
-</blockquote>
+
+<hr />
 
 <ul>
 <li><strong>Line 6</strong> - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it&rsquo;s group (see <em>group.id</em> setting) and establishes connection to it. If all of that went well then we have live connection to <em>our</em> coordinator and can move on.</li>
 </ul>
 
-<blockquote>
+<hr />
+
 <p>* Not exactly random, but that&rsquo;s far from crucial here.</p>
-</blockquote>
+
+<hr />
 
 <ul>
 <li><p><strong>Line 10</strong> - Check if consumer needs to join the group. Obviously it needs to do so as this is the first run. However, later on it can be true if you for example change the subscription.</p></li>
