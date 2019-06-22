@@ -6,10 +6,21 @@
     <description>Recent content on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 16 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 22 Jun 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>What does heartbeat thread do in Kafka Consumer?</title>
+      <link>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</link>
+      <pubDate>Sat, 22 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</guid>
+      <description>Recap In the previous post we&amp;rsquo;ve discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.
+Remember what I&amp;rsquo;ve intentionally omitted from previous post? That&amp;rsquo;s right! Heartbeat thread. We will investigate what it does exactly and how it works in general.
+Samples and setup If you want to run some samples on debug to discover heartbeat code by yourself, please by all means use my simple project on this GitHub repo.</description>
+    </item>
     
     <item>
       <title>What happens when you call poll on Kafka Consumer?</title>

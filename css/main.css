@@ -11,6 +11,11 @@ pre {
 .table {
     border-radius: 4px;
 }
+
 .highlight > div {
+    border-radius: 4px;
+}
+
+img[src$="avatar"] {
     border-radius: 4px;
 }

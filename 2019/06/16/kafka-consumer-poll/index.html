@@ -21,9 +21,9 @@
     
 
     
-    <meta name="description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step">
-    <meta property="og:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step" />
-    <meta property="twitter:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step" />
+    <meta name="description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step.">
+    <meta property="og:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step." />
+    <meta property="twitter:description" content="We will create a new consumer, subscribe to a topic and execute first poll, describing what happens step by step." />
     
 
     
@@ -349,7 +349,7 @@
 <p>Ok so what&rsquo;s going on here? Basically:</p>
 
 <ul>
-<li><p><strong>Line 2</strong> - Due to the fact that consumer <strong>internally</strong> is not thread-safe, so it ensures that only one thread at the time can access it, hence acquiring lock here. In case you call methods from different threads, you&rsquo;ll get an exception in 0one of them.</p></li>
+<li><p><strong>Line 2</strong> - Due to the fact that consumer <strong>internally</strong> is not thread-safe, so it ensures that only one thread at the time can access it, hence acquiring lock here. In case you call methods from different threads, you&rsquo;ll get an exception in one of them.</p></li>
 
 <li><p><strong>Line 4</strong> - Consumer validates if it has any subscription. It does not make sense to poll records if you don&rsquo;t specify any topics, does it?</p></li>
 
@@ -577,6 +577,11 @@
                     </li>
                     
                     
+                    <li class="next">
+                        <a href="/2019/06/kafka-heartbeat-thread/" data-toggle="tooltip" data-placement="top" title="What does heartbeat thread do in Kafka Consumer?">Next
+                            Post &rarr;</a>
+                    </li>
+                    
                 </ul>
 
                 
@@ -728,20 +733,6 @@
 </script>
 
 
-
-
-
-
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-80545838-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
 
 
 
