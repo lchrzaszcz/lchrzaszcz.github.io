@@ -219,9 +219,9 @@
 
 <h1 id="what-is-a-heartbeat">What is a heartbeat?</h1>
 
-<p>We&rsquo;re working in a distributed system. We have our business application working on one server and Kafka is running on a different server. In such a configuration how can Kafka say if your application with consumer is still working? If it isn&rsquo;t, maybe coordinator should evict consumer from the group to give some partitions to the rest of the consumer, so the processing can go on?</p>
+<p>We&rsquo;re working in a distributed system. We have our business application working on one server and Kafka is running on a different server. In such a configuration how can Kafka tell if your application with consumer is still working? If it isn&rsquo;t, maybe coordinator should evict consumer from the group to give some partitions to the rest of the consumers, so the processing can go on?</p>
 
-<p>Obviously the easiest solution is to send some status updates via network saying that we&rsquo;re still alive and evict sides based on some sort of timeouts. So if consumer didn&rsquo;t contact Kafka in time then let&rsquo;s assume it&rsquo;s dead, otherwise it is still up and running and is a valid member of its consumer group. This is called heartbeat.</p>
+<p>Obviously the easiest solution is to send some status updates via network saying that we&rsquo;re still alive and evict each other based on some sort of timeouts. So if consumer didn&rsquo;t contact Kafka in time then let&rsquo;s assume it is dead, otherwise it is still up and running and is a valid member of its consumer group. This is called heartbeat.</p>
 
 <p>Back in old days and old Kafka versions there used to be a simple heartbeat mechanism that was triggered when you called your <em>poll</em> method. In other words, heartbeat was sent only when you called poll.</p>
 
@@ -231,7 +231,7 @@
 
 <p>As easy as it sounds, it might be a little bit tricky. If your processing takes a lot of time, then you have to specify long timeout, and you end up with a system that takes minutes to detect failure and recover from it. It has to work like that, since the system is not sure if you&rsquo;re dead, or you&rsquo;re just processing records longer.</p>
 
-<p>That&rsquo;s why in <a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread" target="_blank">KIP-63</a>, the background thread has been introduced. So instead of waiting for you to call poll, this thread takes care of notifying Kafka we&rsquo;re working just fine. So if your whole process dies along with heartbeat thread, then Kafka will quickly discover that, and it is no longer affected by the time you spend on processing records, since the heartbeat is sent asynchronously and more often  - awesome!</p>
+<p>That&rsquo;s why in <a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread" target="_blank">KIP-62</a>, the background thread has been introduced. So instead of waiting for you to call poll, this thread takes care of notifying Kafka we&rsquo;re working just fine. So if your whole process dies along with heartbeat thread, then Kafka will quickly discover that, and it is no longer affected by the time you spend on processing records, since the heartbeat is sent asynchronously and more often  - awesome!</p>
 
 <p><img src="/img/2019-06-kafka-heartbeat-thread/heartbeat-new-way.png" alt="kafka consumers and producers" /></p>
 
@@ -470,7 +470,7 @@
 <ul>
 <li><p><strong>Line 1</strong> - Should the heartbeat thread quit? This is the case if you&rsquo;re closing your consumer.</p></li>
 
-<li><p><strong>Line 4</strong> - Consumer can selectively disable and enable the heartbeat without killing the thread. This is done if we&rsquo;re joining the group, or the group unstable. In fact this is the place where thread will block after the start until consumer successfully joins the group (<em>enabled</em> field is false at first).</p></li>
+<li><p><strong>Line 4</strong> - Consumer can selectively disable and enable the heartbeat without killing the thread. This is done if we&rsquo;re joining the group, or the group is unstable. In fact this is the place where thread will block after the start until consumer successfully joins the group (<em>enabled</em> field is false at first).</p></li>
 
 <li><p><strong>Line 9</strong> - Heartbeat thread should do something only when the group is stable (a.k.a. consumer have joined it), so if it is not stable then heartbeat disables itself. It&rsquo;s enabled in one situation only, and it is when consumer receives a successful join group response (it can fetch records)</p></li>
 </ul>
