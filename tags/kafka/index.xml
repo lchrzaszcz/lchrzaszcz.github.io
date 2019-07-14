@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Łukasz Chrząszcz</title>
-    <link>http://chrzaszcz.dev/</link>
-    <description>Recent content on Łukasz Chrząszcz</description>
+    <title>kafka on Łukasz Chrząszcz</title>
+    <link>http://chrzaszcz.dev/tags/kafka/</link>
+    <description>Recent content in kafka on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 14 Jul 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://chrzaszcz.dev/tags/kafka/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -50,27 +50,6 @@ That&amp;rsquo;s of course after the initialization is finished, but what exactl
       <guid>http://chrzaszcz.dev/2019/05/26/kafka-101/</guid>
       <description>What is Kafka? Kafka is a popular stream-processing platform. What does it mean? You can think of it as a service that takes messages from one place and put it in another. It allows you to construct asynchronous processing of events, create pub-sub mechanism or distribute work evenly among worker services - the are many use cases for it.
 Whatever your use case is, you need to know a few basic ideas about Kafka.</description>
-    </item>
-    
-    <item>
-      <title>Introduction to Docker</title>
-      <link>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</link>
-      <pubDate>Sat, 18 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</guid>
-      <description>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with a problem of installing new software just for trying something out? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with LAMP).</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>http://chrzaszcz.dev/top/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://chrzaszcz.dev/top/about/</guid>
-      <description>Hi!
-I am a software engineer - since I was 9 😄.
-What can I say about myself? I always want to reach deeper understanding of the stuff I am dealing with. How exactly is rebalancing in Kafka implemented? How does Zookeeper reach its consensus? Those are the questions that inspire me to dig in the code and share my findings with others.
-In my opinion the most important virtue of a software engineer is eagerness to understand the principles that drive almost all technologies, since libraries, frameworks, and databases come and go, but principles last forever.</description>
     </item>
     
   </channel>

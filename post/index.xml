@@ -6,10 +6,20 @@
     <description>Recent content in Posts on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 22 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jul 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>What happens when a new consumer joins the group in Kafka?</title>
+      <link>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</link>
+      <pubDate>Sun, 14 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</guid>
+      <description>What is a rebalancing? As you know, all messages on a topic are spread out among the members of consumer group. Every consumer has its set of partitions assigned exclusively to it and rebalancing is all about maintaining all partitions assigned to active consumers.
+When one consumer dies Kafka needs to reassign orphaned partitions to the rest of the consumers. Similarly, when a new consumer joins the group Kafka needs to free up some partitions and assign them to the new consumers (if it can).</description>
+    </item>
     
     <item>
       <title>What does heartbeat thread do in Kafka Consumer?</title>

@@ -4,19 +4,36 @@
   
   <url>
     <loc>http://chrzaszcz.dev/post/</loc>
-    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-14T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/tags/</loc>
+    <lastmod>2019-07-14T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</loc>
+    <lastmod>2019-07-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/tags/kafka/</loc>
+    <lastmod>2019-07-14T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/</loc>
+    <lastmod>2019-07-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</loc>
     <lastmod>2019-06-22T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://chrzaszcz.dev/</loc>
-    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
-    <priority>0</priority>
   </url>
   
   <url>
@@ -35,17 +52,18 @@
   </url>
   
   <url>
+    <loc>http://chrzaszcz.dev/tags/docker/</loc>
+    <lastmod>2019-05-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://chrzaszcz.dev/top/about/</loc>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/categories/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://chrzaszcz.dev/tags/</loc>
     <priority>0</priority>
   </url>
   
