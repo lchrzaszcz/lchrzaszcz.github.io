@@ -22,7 +22,7 @@ When one consumer dies Kafka needs to reassign orphaned partitions to the rest o
     </item>
     
     <item>
-      <title>What does heartbeat thread do in Kafka Consumer?</title>
+      <title>What does the heartbeat thread do in Kafka Consumer?</title>
       <link>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</link>
       <pubDate>Sat, 22 Jun 2019 00:00:00 +0000</pubDate>
       
