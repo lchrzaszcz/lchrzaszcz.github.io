@@ -205,7 +205,7 @@
 <li><strong>Stable</strong> - The rebalancing already took place and consumers are happily consuming.</li>
 <li><strong>PreparingRebalance</strong> - Something has changed, and it requires the reassignment of partitions, so Kafka is the middle of rebalancing.</li>
 <li><strong>CompletingRebalance</strong> - Kafka is still rebalancing the group. Why there are 2 states for that? More on that in a minute.</li>
-<li><strong>Dead</strong> - The group is going to be removed from this Kafka node soon. It might be due to the inactivity, or the group is migrated to different group coordinator.</li>
+<li><strong>Dead</strong> - The group is going to be removed from this Kafka node soon. It might be due to the inactivity, or the group is being migrated to different group coordinator.</li>
 </ul>
 
 <p>Let&rsquo;s forget for a minute about two states in rebalancing and treat it like one state - simply <em>rebalancing</em> state. The transitions of consumer group are easy to depict on a state graph (duh!).</p>

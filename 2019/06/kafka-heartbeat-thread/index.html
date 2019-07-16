@@ -680,9 +680,9 @@
 
 <p>I used to have an application that was spawning a consumer at the start to fetch some records from kafka. It was a constant stream of records, so I didn&rsquo;t care about closing the consumer.</p>
 
-<p>On the other hand I had integration tests that restarted spring context between suites, but all within the same process. Due to the asynchronous nature of Kafka processing, my tests heavily relied on awaitility and proper timeouts.</p>
+<p>On the other hand I had the integration tests that restarted spring context between suites, but all within the same process. Due to the asynchronous nature of Kafka processing, my tests heavily relied on awaitility and proper timeouts.</p>
 
-<p>At first there was no problem. Tests were running just fine. However, after adding <em>n-th</em> test I&rsquo;ve spotted that I&rsquo;m getting random build fails, which where caused by random test failures.</p>
+<p>At first there was no problem. Tests were running just fine. However, after adding <em>n-th</em> test I&rsquo;ve spotted that I&rsquo;m getting random build fails, which were caused by random test failures.</p>
 
 <p>After a lot of debugging, I&rsquo;ve realized that tests are running fine if I increase the timeouts to ridiculous value like 40-50 seconds.</p>
 
@@ -701,7 +701,7 @@
 <ul>
 <li><p>Heartbeat thread is responsible for sending heartbeat messages to Kafka, informing about consumer liveness as well as monitoring liveness of the remote coordinator.</p></li>
 
-<li><p>Heartbeat thread does something only when the group stable. If it isn&rsquo;t stable then thread disables itself and until group is stable again.</p></li>
+<li><p>Heartbeat thread does something only when the group is stable. If it isn&rsquo;t stable then thread disables itself and waits until group is stable again.</p></li>
 
 <li><p>Heartbeats are sent every <em>heartbeat.interval.ms</em></p></li>
 
