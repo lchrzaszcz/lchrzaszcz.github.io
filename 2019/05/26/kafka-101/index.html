@@ -196,21 +196,21 @@
 
 <h2 id="producer-and-consumer">Producer and Consumer</h2>
 
-<p>Kafka has a notion of producer and consumer. First one pushes messages to kafka, while the second one fetches them.</p>
+<p>Kafka has a notion of producer and consumer. The first one pushes messages to Kafka, while the second one fetches them.</p>
 
 <p>Many messages might be passing through Kafka, so to distinguish between them and allow you to isolate different processing contexts, Kafka groups messages into Topics.</p>
 
 <p>Every producer that is trying to publish something has to provide a topic name.</p>
 
-<p>On the other hand consumers subscribe for a set of topics (there might be many of them at the same time) and later on consume messages from those topics.</p>
+<p>On the other hand, consumers subscribe to a set of topics (there might be many of them at the same time) and later on consume messages from those topics.</p>
 
 <p><img src="/img/2019-05-26-kafka-101/kafka-basics.png" alt="kafka consumers and producers" /></p>
 
 <h2 id="consumer-group">Consumer group</h2>
 
-<p>In a real-world scenarios you&rsquo;d require every service interested, to receive every message from particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
+<p>In real-world scenarios you&rsquo;d require every service interested, to receive every message from a particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
 
-<p>Basically you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
+<p>Basically, you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
 
 <p>Each message from each topic is sent to every consumer group, but within this consumer group it is sent to only one consumer (the rest of the group does not know anything about that message)</p>
 
@@ -220,21 +220,21 @@
 
 <h2 id="partitions">Partitions</h2>
 
-<p>Let&rsquo;s focus now on <strong>single</strong> consumer group. Assuming you have <em>EmailGroup</em> with 3 consumers in it, how does Kafka decide which message goes to which consumer?</p>
+<p>Let&rsquo;s focus now on a <strong>single</strong> consumer group. Assuming you have <em>EmailGroup</em> with 3 consumers in it, how does Kafka decide which message goes to which consumer?</p>
 
-<p>Internally every topic is divided into multiple partitions. Partition is a separate portion of data - basically it&rsquo;s a shard. Each message is in only one partition, while partition contains many messages.</p>
+<p>Internally every topic is divided into multiple partitions. Partition is a separate portion of data - basically, it&rsquo;s a shard. Each message is in only one partition, while partition contains many messages.</p>
 
-<p>When producer sends a message it provides both key and value of the message. Value is your data that describes anything you want to send. Key can also be used to pass data, however it is also leveraged as a partition key. Producer calculates hash of the key and decides to which partition it should go. That means if you want two different messages to go to the same partition you should provide the same key for both of them.</p>
+<p>When the producer sends a message it provides both key and value of the message. Value is your data that describes anything you want to send. Key can also be used to pass data, however, it is also leveraged as a partition key. Producer calculates hash of the key and decides to which partition it should go. That means if you want two different messages to go to the same partition you should provide the same key for both of them.</p>
 
-<p>So far so good. We know how producer works with partitions, but what about consumers? Consumer upon subscribing to topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition is subscribed by exactly one consumer and every consumer can subscribe to multiple partitions (or zero if for example there are more consumers than partitions).</p>
+<p>So far so good. We know how the producer works with partitions, but what about consumers? Consumer upon subscribing to a topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition is subscribed by exactly one consumer and every consumer can subscribe to multiple partitions (or zero if for example there are more consumers than partitions).</p>
 
 <p><img src="/img/2019-05-26-kafka-101/kafka-partitions.png" alt="kafka partitions" /></p>
 
-<p>Diving even deeper into partitions you will see that Kafka guarantees order of messages in each partition. If <em>message A</em> with key <em>Alex</em> is published to topic and after that <em>message B</em> also with key <em>Alex</em> is published, then consumer will receive message in exactly that order - first <em>message A</em> and then <em>message B</em>. This is only valid for single partition. Messages from different partitions might be delivered in any order.</p>
+<p>Diving even deeper into partitions you will see that Kafka guarantees the order of messages in each partition. If <em>message A</em> with key <em>Alex</em> is published to a topic and after that <em>message B</em> also with key <em>Alex</em> is published, then the consumer will receive the messages in exactly that order - first <em>message A</em> and then <em>message B</em>. This is only valid for a single partition. Messages from different partitions might be delivered in any order.</p>
 
-<p>Under the hood, partition is nothing more than an append-only log, that&rsquo;s why the order is guaranteed. On the other hand different partitions are different shards of data thus no order can be ensured.</p>
+<p>Under the hood, the partition is nothing more than an append-only log, that&rsquo;s why the order is guaranteed. On the other hand, different partitions are different shards of data thus no order can be ensured.</p>
 
-<p>As a graphical explanation, here producer published 3 messages - <em>A</em>, <em>B</em> and <em>C</em> - all with the same key. Partition will look like this:</p>
+<p>As a graphical explanation, here the producer published 3 messages - <em>A</em>, <em>B</em> and <em>C</em> - all with the same key. The partition will look like this:</p>
 
 <p><img src="/img/2019-05-26-kafka-101/kafka-partitions-order.png" alt="kafka order" /></p>
 
@@ -242,15 +242,15 @@
 
 <h2 id="offset">Offset</h2>
 
-<p>Now you might ask how does your application track, which message has been processed and which message will be fetched next. Due to the linear structure of message log in Kafka, every message in partition is assigned a deterministic offset. First ever message in a partition has offset of 0, next one 1 and so on.</p>
+<p>Now you might ask how does your application track, which message has been processed and which message will be fetched next. Due to the linear structure of the message log in Kafka, every message in a partition is assigned a deterministic offset. First-ever message in a partition has an offset of 0, the next one 1 and so on.</p>
 
-<p>Based on that, every message in kafka can be uniquely identified by topic name, partition number and offset.</p>
+<p>Based on that, every message in Kafka can be uniquely identified by topic name, partition number and offset.</p>
 
-<p>Consumers use offsets to specify their position in log. In fact there are two different kinds of offsets. One is persistently stored in Kafka and is used to survive consumer crash while the other one is locally remembered by consumer to coordinate consecutive polls.</p>
+<p>Consumers use offsets to specify their position in a log. In fact, there are two different kinds of offsets. One is persistently stored in Kafka and is used to survive consumer crash while the other one is locally remembered by the consumer to coordinate consecutive polls.</p>
 
 <h3 id="committed-offset">Committed offset</h3>
 
-<p>The first kind of offset - used to remember where your consumers left off in case of crash - is a committed offset.</p>
+<p>The first kind of offset - used to remember where your consumers left off in case of a crash - is a committed offset.</p>
 
 <p>As an example, assume your consumer just freshly started consuming new topic. It fetched 10 messages starting from offset 0. After processing them it wants to mark those as &ldquo;processed&rdquo; and notify Kafka about that. This process is called committing. Simply speaking consumer is telling cluster to remember that it ended up processing on offset 10.</p>
 
