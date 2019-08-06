@@ -273,28 +273,28 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendJoinGroupRequest</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendJoinGroupRequest</span>() {
+    <span style="color:#66d9ef">if</span> (coordinatorUnknown())
+        <span style="color:#66d9ef">return</span> RequestFuture.<span style="color:#a6e22e">coordinatorNotAvailable</span>();
 
     <span style="color:#75715e">// send a join group request to the coordinator
-</span><span style="color:#75715e"></span>    log<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;(Re-)joining group&#34;</span><span style="color:#f92672">);</span>
-    JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
-            groupId<span style="color:#f92672">,</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutMs</span><span style="color:#f92672">,</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span><span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
-            protocolType<span style="color:#f92672">(),</span>
-            metadata<span style="color:#f92672">()).</span><span style="color:#a6e22e">setRebalanceTimeout</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">rebalanceTimeoutMs</span><span style="color:#f92672">);</span>
+</span><span style="color:#75715e"></span>    log.<span style="color:#a6e22e">info</span>(<span style="color:#e6db74">&#34;(Re-)joining group&#34;</span>);
+    JoinGroupRequest.<span style="color:#a6e22e">Builder</span> <span style="color:#a6e22e">requestBuilder</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JoinGroupRequest.<span style="color:#a6e22e">Builder</span>(
+            groupId,
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">sessionTimeoutMs</span>,
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">generation</span>.<span style="color:#a6e22e">memberId</span>,
+            protocolType(),
+            metadata()).<span style="color:#a6e22e">setRebalanceTimeout</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">rebalanceTimeoutMs</span>);
 
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending JoinGroup ({}) to coordinator {}&#34;</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">);</span>
+    log.<span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#34;Sending JoinGroup ({}) to coordinator {}&#34;</span>, requestBuilder, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">coordinator</span>);
 
     <span style="color:#75715e">// Note that we override the request timeout using the rebalance timeout since that is the
 </span><span style="color:#75715e"></span>    <span style="color:#75715e">// maximum time that it may block on the coordinator. We add an extra 5 seconds for small delays.
 </span><span style="color:#75715e"></span>
-    <span style="color:#66d9ef">int</span> joinGroupTimeoutMs <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>rebalanceTimeoutMs<span style="color:#f92672">,</span> rebalanceTimeoutMs <span style="color:#f92672">+</span> 5000<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> joinGroupTimeoutMs<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> JoinGroupResponseHandler<span style="color:#f92672">());</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">joinGroupTimeoutMs</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">max</span>(rebalanceTimeoutMs, rebalanceTimeoutMs <span style="color:#f92672">+</span> 5000);
+    <span style="color:#66d9ef">return</span> client.<span style="color:#a6e22e">send</span>(coordinator, requestBuilder, joinGroupTimeoutMs)
+            .<span style="color:#a6e22e">compose</span>(<span style="color:#66d9ef">new</span> JoinGroupResponseHandler());
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -366,25 +366,25 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">handle</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">,</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> future<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    Errors error <span style="color:#f92672">=</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        sensors<span style="color:#f92672">.</span><span style="color:#a6e22e">joinLatency</span><span style="color:#f92672">.</span><span style="color:#a6e22e">record</span><span style="color:#f92672">(</span>response<span style="color:#f92672">.</span><span style="color:#a6e22e">requestLatencyMs</span><span style="color:#f92672">());</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> handle(JoinGroupResponse <span style="color:#a6e22e">joinResponse</span>, RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">future</span>) {
+    Errors <span style="color:#a6e22e">error</span> <span style="color:#f92672">=</span> joinResponse.<span style="color:#a6e22e">error</span>();
+    <span style="color:#66d9ef">if</span> (error <span style="color:#f92672">==</span> Errors.<span style="color:#a6e22e">NONE</span>) {
+        sensors.<span style="color:#a6e22e">joinLatency</span>.<span style="color:#a6e22e">record</span>(response.<span style="color:#a6e22e">requestLatencyMs</span>());
 
-        <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">REBALANCING</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                future<span style="color:#f92672">.</span><span style="color:#a6e22e">raise</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> UnjoinedGroupException<span style="color:#f92672">());</span>
-            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Generation<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">(),</span>
-                        joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">groupProtocol</span><span style="color:#f92672">());</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">isLeader</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                    onJoinLeader<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">).</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    onJoinFollower<span style="color:#f92672">().</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">//</span> a lot of error handling</code></pre></td></tr></table>
+        <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+            <span style="color:#66d9ef">if</span> (state <span style="color:#f92672">!=</span> MemberState.<span style="color:#a6e22e">REBALANCING</span>) {
+                future.<span style="color:#a6e22e">raise</span>(<span style="color:#66d9ef">new</span> UnjoinedGroupException());
+            } <span style="color:#66d9ef">else</span> {
+                AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">generation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Generation(joinResponse.<span style="color:#a6e22e">generationId</span>(),
+                        joinResponse.<span style="color:#a6e22e">memberId</span>(), joinResponse.<span style="color:#a6e22e">groupProtocol</span>());
+                <span style="color:#66d9ef">if</span> (joinResponse.<span style="color:#a6e22e">isLeader</span>()) {
+                    onJoinLeader(joinResponse).<span style="color:#a6e22e">chain</span>(future);
+                } <span style="color:#66d9ef">else</span> {
+                    onJoinFollower().<span style="color:#a6e22e">chain</span>(future);
+                }
+            }
+        }
+    } <span style="color:#66d9ef">else</span> <span style="color:#f92672">//</span> a <span style="color:#a6e22e">lot</span> of <span style="color:#a6e22e">error</span> handling</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -406,14 +406,14 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinFollower</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> <span style="color:#a6e22e">RequestFuture</span><span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinFollower</span>() {
     <span style="color:#75715e">// send follower&#39;s sync group with an empty assignment
-</span><span style="color:#75715e"></span>    SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
-            <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
-                    Collections<span style="color:#f92672">.&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span>emptyMap<span style="color:#f92672">());</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending follower SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+</span><span style="color:#75715e"></span>    SyncGroupRequest.<span style="color:#a6e22e">Builder</span> <span style="color:#a6e22e">requestBuilder</span> <span style="color:#f92672">=</span>
+            <span style="color:#66d9ef">new</span> SyncGroupRequest.<span style="color:#a6e22e">Builder</span>(groupId, generation.<span style="color:#a6e22e">generationId</span>, generation.<span style="color:#a6e22e">memberId</span>,
+                    Collections.<span style="color:#f92672">&lt;</span>String, ByteBuffer<span style="color:#f92672">&gt;</span>emptyMap());
+    log.<span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#34;Sending follower SyncGroup to coordinator {}: {}&#34;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">coordinator</span>, requestBuilder);
+    <span style="color:#66d9ef">return</span> sendSyncGroupRequest(requestBuilder);
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -429,12 +429,12 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendSyncGroupRequest</span><span style="color:#f92672">(</span>SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupResponseHandler<span style="color:#f92672">());</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> <span style="color:#a6e22e">RequestFuture</span><span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendSyncGroupRequest</span>(SyncGroupRequest.<span style="color:#a6e22e">Builder</span> <span style="color:#a6e22e">requestBuilder</span>) {
+    <span style="color:#66d9ef">if</span> (coordinatorUnknown())
+        <span style="color:#66d9ef">return</span> RequestFuture.<span style="color:#a6e22e">coordinatorNotAvailable</span>();
+    <span style="color:#66d9ef">return</span> client.<span style="color:#a6e22e">send</span>(coordinator, requestBuilder)
+            .<span style="color:#a6e22e">compose</span>(<span style="color:#66d9ef">new</span> SyncGroupResponseHandler());
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -487,35 +487,35 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinLeader</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> <span style="color:#a6e22e">RequestFuture</span><span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinLeader</span>(JoinGroupResponse <span style="color:#a6e22e">joinResponse</span>) {
+    <span style="color:#66d9ef">try</span> {
         <span style="color:#75715e">// perform the leader synchronization and send back the assignment for the group
-</span><span style="color:#75715e"></span>        Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> groupAssignment <span style="color:#f92672">=</span> performAssignment<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">leader</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">protocolName</span><span style="color:#f92672">(),</span>
-                joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">members</span><span style="color:#f92672">());</span>
+</span><span style="color:#75715e"></span>        Map<span style="color:#f92672">&lt;</span>String, ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">groupAssignment</span> <span style="color:#f92672">=</span> performAssignment(joinResponse.<span style="color:#a6e22e">data</span>().<span style="color:#a6e22e">leader</span>(), joinResponse.<span style="color:#a6e22e">data</span>().<span style="color:#a6e22e">protocolName</span>(),
+                joinResponse.<span style="color:#a6e22e">data</span>().<span style="color:#a6e22e">members</span>());
 
-        List<span style="color:#f92672">&lt;</span>SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">&gt;</span> groupAssignmentList <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;&gt;();</span>
-        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Map<span style="color:#f92672">.</span><span style="color:#a6e22e">Entry</span><span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> assignment <span style="color:#f92672">:</span> groupAssignment<span style="color:#f92672">.</span><span style="color:#a6e22e">entrySet</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            groupAssignmentList<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">()</span>
-                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getKey</span><span style="color:#f92672">())</span>
-                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignment</span><span style="color:#f92672">(</span>Utils<span style="color:#f92672">.</span><span style="color:#a6e22e">toArray</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getValue</span><span style="color:#f92672">()))</span>
-            <span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
+        List<span style="color:#f92672">&lt;</span>SyncGroupRequestData.<span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">groupAssignmentList</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;&gt;</span>();
+        <span style="color:#66d9ef">for</span> (Map.<span style="color:#a6e22e">Entry</span><span style="color:#f92672">&lt;</span>String, ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">assignment</span> <span style="color:#f92672">:</span> groupAssignment.<span style="color:#a6e22e">entrySet</span>()) {
+            groupAssignmentList.<span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">new</span> SyncGroupRequestData.<span style="color:#a6e22e">SyncGroupRequestAssignment</span>()
+                    .<span style="color:#a6e22e">setMemberId</span>(assignment.<span style="color:#a6e22e">getKey</span>())
+                    .<span style="color:#a6e22e">setAssignment</span>(Utils.<span style="color:#a6e22e">toArray</span>(assignment.<span style="color:#a6e22e">getValue</span>()))
+            );
+        }
 
-        SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
-                <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
-                        <span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">()</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupId</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupInstanceId</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">groupInstanceId</span><span style="color:#f92672">.</span><span style="color:#a6e22e">orElse</span><span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">))</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGenerationId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignments</span><span style="color:#f92672">(</span>groupAssignmentList<span style="color:#f92672">)</span>
-                <span style="color:#f92672">);</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending leader SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">failure</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+        SyncGroupRequest.<span style="color:#a6e22e">Builder</span> <span style="color:#a6e22e">requestBuilder</span> <span style="color:#f92672">=</span>
+                <span style="color:#66d9ef">new</span> SyncGroupRequest.<span style="color:#a6e22e">Builder</span>(
+                        <span style="color:#66d9ef">new</span> SyncGroupRequestData()
+                                .<span style="color:#a6e22e">setGroupId</span>(groupId)
+                                .<span style="color:#a6e22e">setMemberId</span>(generation.<span style="color:#a6e22e">memberId</span>)
+                                .<span style="color:#a6e22e">setGroupInstanceId</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">groupInstanceId</span>.<span style="color:#a6e22e">orElse</span>(<span style="color:#66d9ef">null</span>))
+                                .<span style="color:#a6e22e">setGenerationId</span>(generation.<span style="color:#a6e22e">generationId</span>)
+                                .<span style="color:#a6e22e">setAssignments</span>(groupAssignmentList)
+                );
+        log.<span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#34;Sending leader SyncGroup to coordinator {}: {}&#34;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">coordinator</span>, requestBuilder);
+        <span style="color:#66d9ef">return</span> sendSyncGroupRequest(requestBuilder);
+    } <span style="color:#66d9ef">catch</span> (RuntimeException <span style="color:#a6e22e">e</span>) {
+        <span style="color:#66d9ef">return</span> RequestFuture.<span style="color:#a6e22e">failure</span>(e);
+    }
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -583,6 +583,11 @@
                             Previous Post</a>
                     </li>
                     
+                    
+                    <li class="next">
+                        <a href="/2019/08/kafka-streams/" data-toggle="tooltip" data-placement="top" title="How to use Kafka Streams to process events from one topic to another?">Next
+                            Post &rarr;</a>
+                    </li>
                     
                 </ul>
 

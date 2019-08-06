@@ -228,10 +228,10 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">kafkaConsumer</span>(): KafkaConsumer&lt;String, String&gt; {
     <span style="color:#66d9ef">val</span> properties = Properties()
 
-    properties<span style="color:#a6e22e">[&#34;bootstrap.servers&#34;]</span> = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
-    properties<span style="color:#a6e22e">[&#34;group.id&#34;]</span> = <span style="color:#e6db74">&#34;kafka-example&#34;</span>
-    properties<span style="color:#a6e22e">[&#34;key.deserializer&#34;]</span> = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
-    properties<span style="color:#a6e22e">[&#34;value.deserializer&#34;]</span> = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+    properties[<span style="color:#e6db74">&#34;bootstrap.servers&#34;</span>] = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
+    properties[<span style="color:#e6db74">&#34;group.id&#34;</span>] = <span style="color:#e6db74">&#34;kafka-example&#34;</span>
+    properties[<span style="color:#e6db74">&#34;key.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+    properties[<span style="color:#e6db74">&#34;value.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
 
     <span style="color:#66d9ef">return</span> KafkaConsumer(properties)
 }</code></pre></div>
@@ -297,41 +297,41 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> ConsumerRecords<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    acquireAndEnsureOpen<span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> <span style="color:#a6e22e">ConsumerRecords</span><span style="color:#f92672">&lt;</span>K, V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span>(<span style="color:#66d9ef">final</span> <span style="color:#a6e22e">Timer</span> timer, <span style="color:#66d9ef">final</span> <span style="color:#a6e22e">boolean</span> includeMetadataInTimeout) {
+    acquireAndEnsureOpen();
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscriptions</span>.<span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span>()) {
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException(<span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span>);
+        }
 
-        <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">do</span> {
+            client.<span style="color:#a6e22e">maybeTriggerWakeup</span>();
 
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)))</span> <span style="color:#f92672">{</span>
-                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
+            <span style="color:#66d9ef">if</span> (includeMetadataInTimeout) {
+                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>updateAssignmentMetadataIfNeeded(timer)) {
+                    <span style="color:#66d9ef">return</span> ConsumerRecords.<span style="color:#a6e22e">empty</span>();
+                }
+            } <span style="color:#66d9ef">else</span> {
+                <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>updateAssignmentMetadataIfNeeded(time.<span style="color:#a6e22e">timer</span>(Long.<span style="color:#a6e22e">MAX_VALUE</span>))) {
+                    log.<span style="color:#a6e22e">warn</span>(<span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span>);
+                }
+            }
 
-            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;&gt;&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
+            <span style="color:#66d9ef">final</span> <span style="color:#a6e22e">Map</span><span style="color:#f92672">&lt;</span>TopicPartition, List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K, V<span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#a6e22e">records</span> <span style="color:#f92672">=</span> pollForFetches(timer);
+            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>records.<span style="color:#a6e22e">isEmpty</span>()) {
+                <span style="color:#66d9ef">if</span> (fetcher.<span style="color:#a6e22e">sendFetches</span>() <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> client.<span style="color:#a6e22e">hasPendingRequests</span>()) {
+                    client.<span style="color:#a6e22e">pollNoWakeup</span>();
+                }
 
-                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;(</span>records<span style="color:#f92672">));</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">());</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">interceptors</span>.<span style="color:#a6e22e">onConsume</span>(<span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;</span>(records));
+            }
+        } <span style="color:#66d9ef">while</span> (timer.<span style="color:#a6e22e">notExpired</span>());
 
-        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
-        release<span style="color:#f92672">();</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+        <span style="color:#66d9ef">return</span> ConsumerRecords.<span style="color:#a6e22e">empty</span>();
+    } <span style="color:#66d9ef">finally</span> {
+        release();
+    }
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -368,13 +368,13 @@
 <h1 id="updating-assignment">Updating assignment</h1>
 
 <p><em>updateAssignmentMetadataIfNeeded</em> method (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1225" target="_blank">source code</a>) is quite simple and basically it delegates stuff to the coordinator (which is one of the classes in Kafka Consumer).</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span>(<span style="color:#66d9ef">final</span> <span style="color:#a6e22e">Timer</span> timer) {
+    <span style="color:#66d9ef">if</span> (coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator.<span style="color:#a6e22e">poll</span>(timer)) {
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+    }
 
-    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></div>
+    <span style="color:#66d9ef">return</span> updateFetchPositions(timer);
+}</code></pre></div>
 <p>Here are two main points:</p>
 
 <ul>
@@ -422,39 +422,39 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">();</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#a6e22e">boolean</span> poll(Timer <span style="color:#a6e22e">timer</span>) {
+    invokeCompletedOffsetCommitCallbacks();
 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-        <span style="color:#f92672">}</span>
+    <span style="color:#66d9ef">if</span> (subscriptions.<span style="color:#a6e22e">partitionsAutoAssigned</span>()) {
+        pollHeartbeat(timer.<span style="color:#a6e22e">currentTimeMs</span>());
+        <span style="color:#66d9ef">if</span> (coordinatorUnknown() <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady(timer)) {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+        }
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">())</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">if</span> (rejoinNeededOrPending()) {
+            <span style="color:#66d9ef">if</span> (subscriptions.<span style="color:#a6e22e">hasPatternSubscription</span>()) {
+                <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">metadata</span>.<span style="color:#a6e22e">timeToAllowUpdate</span>(time.<span style="color:#a6e22e">milliseconds</span>()) <span style="color:#f92672">==</span> 0) {
+                    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">metadata</span>.<span style="color:#a6e22e">requestUpdate</span>();
+                }
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
+                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>client.<span style="color:#a6e22e">ensureFreshMetadata</span>(timer)) {
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+                }
+            }
 
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
+            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>ensureActiveGroup(timer)) {
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+            }
+        }
+    } <span style="color:#66d9ef">else</span> {
+        <span style="color:#66d9ef">if</span> (metadata.<span style="color:#a6e22e">updateRequested</span>() <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client.<span style="color:#a6e22e">hasReadyNodes</span>(timer.<span style="color:#a6e22e">currentTimeMs</span>())) {
+            client.<span style="color:#a6e22e">awaitMetadataUpdate</span>(timer);
+        }
+    }
 
-    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
-    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+    maybeAutoCommitOffsetsAsync(timer.<span style="color:#a6e22e">currentTimeMs</span>());
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -511,14 +511,14 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span>(<span style="color:#66d9ef">final</span> <span style="color:#a6e22e">Timer</span> timer) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>ensureCoordinatorReady(timer)) {
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+    }
 
-    startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+    startHeartbeatThreadIfNeeded();
+    <span style="color:#66d9ef">return</span> joinGroupIfNeeded(timer);
+}</code></pre></td></tr></table>
 </div>
 </div></p>
 

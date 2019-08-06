@@ -225,31 +225,31 @@
 <p>You can recollect from previous post that we already spotted the starting place, but for the sake of completeness of this post let&rsquo;s cite the code again.</p>
 
 <p>Every time you call poll, consumer also polls for coordinator events, and it basically does this (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310" target="_blank">original code</a>):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            <span style="color:#f92672">...</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#a6e22e">boolean</span> poll(Timer <span style="color:#a6e22e">timer</span>) {
+        <span style="color:#66d9ef">if</span> (subscriptions.<span style="color:#a6e22e">partitionsAutoAssigned</span>()) {
+            ...
 
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                <span style="color:#f92672">...</span>
+            <span style="color:#66d9ef">if</span> (rejoinNeededOrPending()) {
+                ...
                 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-            <span style="color:#f92672">...</span>
-        <span style="color:#f92672">}</span>
-        <span style="color:#f92672">...</span>
-    <span style="color:#f92672">}</span></code></pre></div>
+                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>ensureActiveGroup(timer)) {
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+                }
+            }
+        } <span style="color:#66d9ef">else</span> {
+            ...
+        }
+        ...
+    }</code></pre></div>
 <p>So if we&rsquo;re using auto-assignment (lets assume that we do, because manual assignment is a different story), then consumer checks if it needs to rejoin the group. That might be the case if some changes were done (Kafka evicted us from consumer group, we changed the subscription for this consumer). If that&rsquo;s true then we want to ensure that the consumer&rsquo;s membership in the consumer group is active, and it is ready to fetch some records. Inside <em>ensureActiveGroup</em> method, just before joining the group, consumer starts heartbeat thread if it was dead before (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336" target="_blank">original code</a>)</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-        <span style="color:#f92672">}</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span>(<span style="color:#66d9ef">final</span> <span style="color:#a6e22e">Timer</span> timer) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>ensureCoordinatorReady(timer)) {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+        }
 
-        startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
-        <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span></code></pre></div>
+        startHeartbeatThreadIfNeeded();
+        <span style="color:#66d9ef">return</span> joinGroupIfNeeded(timer);
+    }</code></pre></div>
 <p>As you see the heartbeat thread is started upon calling poll provided there were some changes made - it might be because we changed subscription, our assignment has been changed, we were evicted from group, etc. It is also the case at the first poll.</p>
 
 <h1 id="what-does-the-heartbeat-thread-do">What does the heartbeat thread do?</h1>
@@ -334,80 +334,80 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">74
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">run</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>closed<span style="color:#f92672">)</span>
-                    <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> run() {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#66d9ef">while</span> (<span style="color:#66d9ef">true</span>) {
+            <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+                <span style="color:#66d9ef">if</span> (closed)
+                    <span style="color:#66d9ef">return</span>;
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">();</span>
-                    <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span>
+                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>enabled) {
+                    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>();
+                    <span style="color:#66d9ef">continue</span>;
+                }
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    disable<span style="color:#f92672">();</span>
-                    <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span>
+                <span style="color:#66d9ef">if</span> (state <span style="color:#f92672">!=</span> MemberState.<span style="color:#a6e22e">STABLE</span>) {
+                    disable();
+                    <span style="color:#66d9ef">continue</span>;
+                }
 
-                client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
-                <span style="color:#66d9ef">long</span> now <span style="color:#f92672">=</span> time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">();</span>
+                client.<span style="color:#a6e22e">pollNoWakeup</span>();
+                <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">now</span> <span style="color:#f92672">=</span> time.<span style="color:#a6e22e">milliseconds</span>();
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator<span style="color:#f92672">().</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">())</span>
-                        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    markCoordinatorUnknown<span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    maybeLeaveGroup<span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
+                <span style="color:#66d9ef">if</span> (coordinatorUnknown()) {
+                    <span style="color:#66d9ef">if</span> (findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator().<span style="color:#a6e22e">failed</span>())
+                        AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>(retryBackoffMs);
+                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (heartbeat.<span style="color:#a6e22e">sessionTimeoutExpired</span>(now)) {
+                    markCoordinatorUnknown();
+                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (heartbeat.<span style="color:#a6e22e">pollTimeoutExpired</span>(now)) {
+                    maybeLeaveGroup();
+                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>heartbeat.<span style="color:#a6e22e">shouldHeartbeat</span>(now)) {
+                    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>(retryBackoffMs);
+                } <span style="color:#66d9ef">else</span> {
+                    heartbeat.<span style="color:#a6e22e">sentHeartbeat</span>(now);
 
-                    sendHeartbeatRequest<span style="color:#f92672">().</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;()</span> <span style="color:#f92672">{</span>
+                    sendHeartbeatRequest().<span style="color:#a6e22e">addListener</span>(<span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span>() {
                         <span style="color:#a6e22e">@Override</span>
-                        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onSuccess</span><span style="color:#f92672">(</span>Void value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
-                            <span style="color:#f92672">}</span>
-                        <span style="color:#f92672">}</span>
+                        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> onSuccess(Void <span style="color:#a6e22e">value</span>) {
+                            <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+                                heartbeat.<span style="color:#a6e22e">receiveHeartbeat</span>();
+                            }
+                        }
 
                         <span style="color:#a6e22e">@Override</span>
-                        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onFailure</span><span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RebalanceInProgressException<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
-                                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">();</span>
+                        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> onFailure(RuntimeException <span style="color:#a6e22e">e</span>) {
+                            <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+                                <span style="color:#66d9ef">if</span> (e <span style="color:#a6e22e">instanceof</span> RebalanceInProgressException) {
+                                    heartbeat.<span style="color:#a6e22e">receiveHeartbeat</span>();
+                                } <span style="color:#66d9ef">else</span> {
+                                    heartbeat.<span style="color:#a6e22e">failHeartbeat</span>();
 
-                                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">();</span>
-                                <span style="color:#f92672">}</span>
-                            <span style="color:#f92672">}</span>
-                        <span style="color:#f92672">}</span>
-                    <span style="color:#f92672">});</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>AuthenticationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>GroupAuthorizationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>InterruptedException <span style="color:#f92672">|</span> InterruptException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">();</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Throwable e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RuntimeException<span style="color:#f92672">)</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">((</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">);</span>
+                                    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">notify</span>();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    } <span style="color:#66d9ef">catch</span> (AuthenticationException <span style="color:#a6e22e">e</span>) {
+        log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span>, e);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(e);
+    } <span style="color:#66d9ef">catch</span> (GroupAuthorizationException <span style="color:#a6e22e">e</span>) {
+        log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span>, e);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(e);
+    } <span style="color:#66d9ef">catch</span> (InterruptedException <span style="color:#f92672">|</span> InterruptException <span style="color:#a6e22e">e</span>) {
+        Thread.<span style="color:#a6e22e">interrupted</span>();
+        log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span>, e);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(<span style="color:#66d9ef">new</span> RuntimeException(e));
+    } <span style="color:#66d9ef">catch</span> (Throwable <span style="color:#a6e22e">e</span>) {
+        log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span>, e);
+        <span style="color:#66d9ef">if</span> (e <span style="color:#a6e22e">instanceof</span> RuntimeException)
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>((RuntimeException) e);
         <span style="color:#66d9ef">else</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(<span style="color:#66d9ef">new</span> RuntimeException(e));
+    }
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -433,18 +433,18 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>closed<span style="color:#f92672">)</span>
-    <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> (closed)
+    <span style="color:#66d9ef">return</span>;
 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span>
+<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>enabled) {
+    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>();
+    <span style="color:#66d9ef">continue</span>;
+}
 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    disable<span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+<span style="color:#66d9ef">if</span> (state <span style="color:#f92672">!=</span> MemberState.<span style="color:#a6e22e">STABLE</span>) {
+    disable();
+    <span style="color:#66d9ef">continue</span>;
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -467,7 +467,7 @@
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span></code></pre></td></tr></table>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">client.<span style="color:#a6e22e">pollNoWakeup</span>();</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -491,18 +491,18 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator<span style="color:#f92672">().</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">())</span>
-        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-    markCoordinatorUnknown<span style="color:#f92672">();</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-    maybeLeaveGroup<span style="color:#f92672">();</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> (coordinatorUnknown()) {
+    <span style="color:#66d9ef">if</span> (findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator().<span style="color:#a6e22e">failed</span>())
+        AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>(retryBackoffMs);
+} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (heartbeat.<span style="color:#a6e22e">sessionTimeoutExpired</span>(now)) {
+    markCoordinatorUnknown();
+} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (heartbeat.<span style="color:#a6e22e">pollTimeoutExpired</span>(now)) {
+    maybeLeaveGroup();
+} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>heartbeat.<span style="color:#a6e22e">shouldHeartbeat</span>(now)) {
+    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">wait</span>(retryBackoffMs);
+} <span style="color:#66d9ef">else</span> {
     <span style="color:#75715e">// Send heartbeat. Described in next section.
-</span><span style="color:#75715e"></span><span style="color:#f92672">}</span></code></pre></td></tr></table>
+</span><span style="color:#75715e"></span>}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -549,31 +549,31 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">} <span style="color:#66d9ef">else</span> {
+    heartbeat.<span style="color:#a6e22e">sentHeartbeat</span>(now);
 
-    sendHeartbeatRequest<span style="color:#f92672">().</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;()</span> <span style="color:#f92672">{</span>
+    sendHeartbeatRequest().<span style="color:#a6e22e">addListener</span>(<span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span>() {
         <span style="color:#a6e22e">@Override</span>
-        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onSuccess</span><span style="color:#f92672">(</span>Void value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> onSuccess(Void <span style="color:#a6e22e">value</span>) {
+            <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+                heartbeat.<span style="color:#a6e22e">receiveHeartbeat</span>();
+            }
+        }
 
         <span style="color:#a6e22e">@Override</span>
-        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onFailure</span><span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RebalanceInProgressException<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">void</span> onFailure(RuntimeException <span style="color:#a6e22e">e</span>) {
+            <span style="color:#66d9ef">synchronized</span> (AbstractCoordinator.<span style="color:#a6e22e">this</span>) {
+                <span style="color:#66d9ef">if</span> (e <span style="color:#a6e22e">instanceof</span> RebalanceInProgressException) {
+                    heartbeat.<span style="color:#a6e22e">receiveHeartbeat</span>();
+                } <span style="color:#66d9ef">else</span> {
+                    heartbeat.<span style="color:#a6e22e">failHeartbeat</span>();
 
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">});</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+                    AbstractCoordinator.<span style="color:#a6e22e">this</span>.<span style="color:#a6e22e">notify</span>();
+                }
+            }
+        }
+    });
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -613,25 +613,25 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>AuthenticationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>GroupAuthorizationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>InterruptedException <span style="color:#f92672">|</span> InterruptException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">();</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Throwable e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RuntimeException<span style="color:#f92672">)</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">((</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">);</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">} <span style="color:#66d9ef">catch</span> (AuthenticationException <span style="color:#a6e22e">e</span>) {
+    log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span>, e);
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(e);
+} <span style="color:#66d9ef">catch</span> (GroupAuthorizationException <span style="color:#a6e22e">e</span>) {
+    log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span>, e);
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(e);
+} <span style="color:#66d9ef">catch</span> (InterruptedException <span style="color:#f92672">|</span> InterruptException <span style="color:#a6e22e">e</span>) {
+    Thread.<span style="color:#a6e22e">interrupted</span>();
+    log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span>, e);
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(<span style="color:#66d9ef">new</span> RuntimeException(e));
+} <span style="color:#66d9ef">catch</span> (Throwable <span style="color:#a6e22e">e</span>) {
+    log.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span>, e);
+    <span style="color:#66d9ef">if</span> (e <span style="color:#a6e22e">instanceof</span> RuntimeException)
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>((RuntimeException) e);
     <span style="color:#66d9ef">else</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread has closed&#34;</span><span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">failed</span>.<span style="color:#a6e22e">set</span>(<span style="color:#66d9ef">new</span> RuntimeException(e));
+} <span style="color:#66d9ef">finally</span> {
+    log.<span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#34;Heartbeat thread has closed&#34;</span>);
+}</code></pre></td></tr></table>
 </div>
 </div>
 
@@ -655,20 +655,20 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">pollHeartbeat</span><span style="color:#f92672">(</span><span style="color:#66d9ef">long</span> now<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">hasFailed</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            RuntimeException cause <span style="color:#f92672">=</span> heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">failureCause</span><span style="color:#f92672">();</span>
-            heartbeatThread <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
-            <span style="color:#66d9ef">throw</span> cause<span style="color:#f92672">;</span>
-        <span style="color:#f92672">}</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">protected</span> <span style="color:#a6e22e">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">pollHeartbeat</span>(<span style="color:#66d9ef">long</span> <span style="color:#a6e22e">now</span>) {
+    <span style="color:#66d9ef">if</span> (heartbeatThread <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>) {
+        <span style="color:#66d9ef">if</span> (heartbeatThread.<span style="color:#a6e22e">hasFailed</span>()) {
+            RuntimeException <span style="color:#a6e22e">cause</span> <span style="color:#f92672">=</span> heartbeatThread.<span style="color:#a6e22e">failureCause</span>();
+            heartbeatThread <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+            <span style="color:#66d9ef">throw</span> cause;
+        }
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-            notify<span style="color:#f92672">();</span>
-        <span style="color:#f92672">}</span>
-        heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
+        <span style="color:#66d9ef">if</span> (heartbeat.<span style="color:#a6e22e">shouldHeartbeat</span>(now)) {
+            notify();
+        }
+        heartbeat.<span style="color:#a6e22e">poll</span>(now);
+    }
+}</code></pre></td></tr></table>
 </div>
 </div>
 

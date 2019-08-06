@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="http://chrzaszcz.dev/img/2019-08-kafka-streams/background.jpg">
+    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2019-08-kafka-streams/background.jpg" />
+    
+
+    
+    <meta name="title" content="How to use Kafka Streams to process events from one topic to another?" />
+    <meta property="og:title" content="How to use Kafka Streams to process events from one topic to another?" />
+    <meta property="twitter:title" content="How to use Kafka Streams to process events from one topic to another?" />
+    
+
+    
+    <meta name="description" content="Kafka Streams is a high-level client library for interacting with Kafka. How does it work under-the-hood based on a simple example? Join me on a code walk-through">
+    <meta property="og:description" content="Kafka Streams is a high-level client library for interacting with Kafka. How does it work under-the-hood based on a simple example? Join me on a code walk-through" />
+    <meta property="twitter:description" content="Kafka Streams is a high-level client library for interacting with Kafka. How does it work under-the-hood based on a simple example? Join me on a code walk-through" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>How to use Kafka Streams to process events from one topic to another? - Łukasz Chrząszcz Blog</title>
+
+    <link rel="canonical" href="/2019/08/kafka-streams/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link rel="stylesheet" href="/css/main.css">
+
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+	
+</head>
+
+<body>
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+		    
+                        <li><a href="/top/about/">ABOUT</a></li>
+                    
+
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/2019-08-kafka-streams/background.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                    </div>
+                    <h1>How to use Kafka Streams to process events from one topic to another?</h1>
+                    <h2 class="subheading">Introduction to Kafka Streams</h2>
+                    <span class="meta">
+			Posted by 
+			
+			    Łukasz Chrząszcz
+			 
+			on 
+			Tuesday, August 6, 2019
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                
+
+<h1 id="what-is-kafka-streams">What is Kafka Streams?</h1>
+
+<p>We have already discussed a lot about producers and consumers. We know that we can take a consumer, poll for some messages, transform them, and finally publish the result on another topic.</p>
+
+<p>As simple as it sounds it might get boring to write yet another thread that does the fetching, processing, error handling, and again and again. Not only it is cumbersome, but also error-prone.</p>
+
+<p>Is there a better way? I guess the post title already spoiled a little on the topic 😄. Kafka Streams is a better way, as it is a client-side library to move interaction with Kafka to another level. It is useful when you are facing, both a source and a target system of your data being Kafka.</p>
+
+<p>At first sight, you might spot that the definition of processing in Kafka Streams is surprisingly similar to Stream API from Java. You just use fluent API to specify all the <em>maps</em> and <em>joins</em>. What is more, you do not have to care about the error handling of Kafka consumer or producer, as it is already built-in.</p>
+
+<p>Although it is a feature-rich library able to group, cache or join incoming events, today we will focus on the internals of a simple example taking messages from one topic and putting them to another one.</p>
+
+<h1 id="our-simple-app">Our simple app</h1>
+
+<p>The aforementioned example will fetch records from one topic, count a number of characters in each record, and produce the result to another topic. Fairly simple to start messing around with Kafka Streams.</p>
+
+<p><img src="/img/2019-08-kafka-streams/streams-setup.png" alt="streams-setup" /></p>
+
+<p>If you want to check the code by yourself please go ahead and clone the repository with the example available on <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/streams/KafkaStreamsDSL.kt" target="_blank">github</a>.</p>
+
+<p>Without further ado, this is how the crucial part looks in Kotlin:</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> props = Properties()
+props[StreamsConfig.APPLICATION_ID_CONFIG] = <span style="color:#e6db74">&#34;count-application&#34;</span>
+props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
+props[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.String().javaClass
+props[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = Serdes.String().javaClass
+
+createTopic(props)
+
+<span style="color:#66d9ef">val</span> builder = StreamsBuilder()
+<span style="color:#66d9ef">val</span> textLines = builder.stream&lt;String, String&gt;(<span style="color:#e6db74">&#34;WordsTopic&#34;</span>)
+
+wordsStream
+    .mapValues { message -&gt; message.count() }
+    .to(<span style="color:#e6db74">&#34;CountsTopic&#34;</span>, Produced.with(Serdes.String(), Serdes.Integer()))
+
+<span style="color:#66d9ef">val</span> topology = builder.build()
+
+logger.info { topology.describe() }
+    
+<span style="color:#66d9ef">val</span> streams = KafkaStreams(topology, props)
+streams.start()</code></pre></td></tr></table>
+</div>
+</div>
+
+<p>What happens here? Let&rsquo;s analyze it step by step.</p>
+
+<ul>
+<li><strong>Line 2</strong> - We are setting an application ID. This is a mandatory parameter. It is used as a base for group id for your consumers, internal topics, and a few other things.</li>
+<li><strong>Line 3</strong> - We are pointing where our Kafka is located.</li>
+<li><strong>Line 4 - 5</strong> - We are setting default serializers. If you do not override serializers or deserializers in a particular method call, then this default class will be used.</li>
+<li><strong>Line 7</strong> - Kafka Streams requires the source topic to be created up-front, otherwise you will get an exception. Thus, we are creating a <em>WordsTopic</em> here. To be honest, there is nothing extraordinary about it, so let&rsquo;s skip it.</li>
+<li><strong>Line 9</strong> - Get a <em>StreamBuilder</em> instance</li>
+<li><strong>Line 10</strong> - Start creating our first stream! We are pointing where the source of the stream is. In this case, it is a topic called <em>WordsTopic</em>.</li>
+<li><strong>Line 13</strong> - Map the value of every message in the stream to the number of characters in it.</li>
+<li><strong>Line 14</strong> - Order Kafka Streams to send the result to the <em>CountsTopic</em> serializing the key as a string and value as an integer.</li>
+<li><strong>Line 16</strong> - Complete building a stream (topology) for our stream.</li>
+<li><strong>Line 18</strong> - Print built topology for debugging purposes.</li>
+<li><strong>Line 20 - 21</strong> - What we did so far is just set some kind of blueprint describing our processing needs, but here we actually run some threads, start fetching, and processing.</li>
+</ul>
+
+<p>After running this code we can try to send some messages to the <em>WordsTopic</em> and see the result.</p>
+
+<p><img src="/img/2019-08-kafka-streams/example-clip.gif" alt="example-clip" /></p>
+
+<p>So far so good, as you see, our example works fine. It counts the number of characters and outputs it to the <em>CountsTopic</em>. How does it work exactly? First, we need to define our processing topology, and second, we have to start all the processing threads that execute our topology.</p>
+
+<p>Starting with the topology, in our example, we used API called <em>Kafka Streams DSL</em> to define the structure of our processing.</p>
+
+<h1 id="kafka-streams-dsl">Kafka Streams DSL</h1>
+
+<p>All your processing is defined as a graph. The nodes are called <em>stream processors</em>, and every stream processor can accept input records from the upstream, apply processing to them and send the result downstream.</p>
+
+<p>Obviously, there has to be some kind of start and end of the stream. Those nodes are called <em>source processor</em> and <em>sink processor</em>. We have both of them in the sample app, and one is subscribed to the <em>WordsTopic</em> and the second one publishes records to <em>CountsTopic</em>.</p>
+
+<p>Knowing that, let&rsquo;s revisit the definition of our topology.</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> builder = StreamsBuilder()
+<span style="color:#66d9ef">val</span> wordsStream = builder.stream&lt;String, String&gt;(<span style="color:#e6db74">&#34;WordsTopic&#34;</span>)
+
+wordsStream
+    .mapValues { message -&gt; message.count() }
+    .to(<span style="color:#e6db74">&#34;CountsTopic&#34;</span>, Produced.with(Serdes.String(), Serdes.Integer()))
+
+<span style="color:#66d9ef">val</span> topology = builder.build()
+
+logger.info { topology.describe() }</code></pre></td></tr></table>
+</div>
+</div>
+
+<p>As you see, lines 4 - 6 define our topology. It should contain 3 nodes</p>
+
+<ul>
+<li>Source node consuming messages</li>
+<li>Processing node counting characters</li>
+<li>Sink node publishing messages</li>
+</ul>
+
+<p>It would be great if we could check the exact structure of the topology. The good thing is that Kafka Streams allows us to do so. Take a look at line number 10 of this snippet. We are describing our topology there. While working on your topology you can debug the graph you have created using <em>describe</em> method. After you run the sample app you should find in logs this description:</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">2108.474 [main] INFO  dev.chrzaszcz.kafka.examples.streams.Main - Topologies:
+   Sub-topology: 0
+    Source: KSTREAM-SOURCE-0000000000 (topics: [WordsTopic])
+      --&gt; KSTREAM-MAPVALUES-0000000001
+    Processor: KSTREAM-MAPVALUES-0000000001 (stores: [])
+      --&gt; KSTREAM-SINK-0000000002
+      &lt;-- KSTREAM-SOURCE-0000000000
+    Sink: KSTREAM-SINK-0000000002 (topic: CountsTopic)
+      &lt;-- KSTREAM-MAPVALUES-0000000001</code></pre></td></tr></table>
+</div>
+</div>
+
+<p>You can note several points from this output:</p>
+
+<ul>
+<li><strong>Line 3</strong> - We have a source node called <em>KSTREAM-SOURCE-0000000000</em>, and it is subscribed to topic <em>WordsTopic</em>.</li>
+<li><strong>Line 4</strong> - The source node has one child named <em>KSTREAM-MAPVALUES-0000000001</em>, so it forwards all received record directly to this processing node.</li>
+<li><strong>Line 5</strong> - Here is the definition of a processor node <em>KSTREAM-MAPVALUES-0000000001</em>. It is not associated with any store (we do not use stores in this sample, but we will discuss them in future posts).</li>
+<li><strong>Line 6</strong> - Processing node sends his values to the node called <em>KSTREAM-SINK-0000000002</em>.</li>
+<li><strong>Line 7</strong> - Processing node gets his values from the source node <em>KSTREAM-SOURCE-0000000000</em>.</li>
+<li><strong>Line 8</strong> - Here is the definition of the terminal node <em>KSTREAM-SINK-0000000002</em>. You can see that it produces the records to the topic <em>CountsTopic</em>.</li>
+<li><strong>Line 9</strong> - Sink node gets his values from <em>KSTREAM-MAPVALUES-0000000001</em>, which is our processing node.</li>
+</ul>
+
+<p>How to remember the arrow direction? It is similar as in Bash, if you want to send something to your output, use <code>echo &quot;something&quot; &gt; file.txt</code>, however if you want to receive something as an input, use <code>./cmd.sh &lt; &quot;param&quot;</code>.</p>
+
+<h1 id="processor-api">Processor API</h1>
+
+<p>In the aforementioned sample app, we have used <em>Kafka Streams DSL</em>, which is one of two kinds of an interface to configure your topology. The DSL is a high-level interface, with many details hidden underneath. Another interface, however, is a low-level <em>Processor API</em>. It gives you far more grained control over the construction of topology, although, is not so neat and clean as DSL.</p>
+
+<p>If you would dig into the code of Kafka Streams DSL you would conclude that it actually uses <em>Processor API</em> to operate on a topology. To compare both interfaces let&rsquo;s rewrite our code using other API.</p>
+
+<p>In the repository, next to the previous code there is a <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/streams/ProcessorAPI.kt" target="_blank">ProcessorAPI</a> example.</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> props = Properties()
+props[StreamsConfig.APPLICATION_ID_CONFIG] = <span style="color:#e6db74">&#34;count-application&#34;</span>
+props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
+props[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.String().javaClass
+props[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = Serdes.String().javaClass
+
+createTopic(props)
+
+<span style="color:#66d9ef">val</span> topology = Topology()
+
+topology.addSource(<span style="color:#e6db74">&#34;mySource&#34;</span>, <span style="color:#e6db74">&#34;WordsTopic&#34;</span>)
+topology.addProcessor(<span style="color:#e6db74">&#34;myProcessor&#34;</span>, ProcessorSupplier { StringCounter() }, <span style="color:#e6db74">&#34;mySource&#34;</span>)
+topology.addSink(
+    <span style="color:#e6db74">&#34;mySink&#34;</span>,
+    <span style="color:#e6db74">&#34;CountsTopic&#34;</span>,
+    Serdes.String().serializer(),
+    Serdes.Integer().serializer(),
+    <span style="color:#e6db74">&#34;myProcessor&#34;</span>
+)
+
+logger.info { topology.describe() }
+
+<span style="color:#66d9ef">val</span> streams = KafkaStreams(topology, props)
+streams.start()</code></pre></td></tr></table>
+</div>
+</div>
+
+<p>Most of the code is similar, so allow me to highlight the differences</p>
+
+<ul>
+<li><strong>Line 9</strong> - Instead of using a <em>StreamsBuilder</em>, we are directly instantiating a <em>Topology</em></li>
+<li><strong>Line 11</strong> - We are creating a source node by hand, specifying the name of the node <em>mySource</em> and the source topic <em>WordsTopic</em></li>
+
+<li><p><strong>Line 12</strong> - Here we are adding our character-counting processor. Pay attention to the parameters, as we specify the node name <em>myProcessor</em>, as well as parent nodes names - in this case, <em>mySource</em>. That is how you specify relationships in the graph. Also, we are setting the operation to perform on each of the records. Here, it is a StringCounter as our custom-made processor with implementation looking like that:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">StringCounter</span>: AbstractProcessor&lt;String, String&gt;() {
+    <span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">process</span>(key: String?, value: String?) {
+        context().forward(key, value<span style="color:#f92672">?.</span>count())
+        context().commit()
+    }
+}</code></pre></div></p></li>
+
+<li><p><strong>Line 13</strong> - We are adding our terminal node that publishes records to the topic <em>CountsTopic</em></p></li>
+</ul>
+
+<p>If we run this example, the behavior is the same, and we are also presented with created topology. The only difference is with the node names since we have changed those.</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">2159.546 [main] INFO  dev.chrzaszcz.kafka.examples.streams.ProcessorAPI - Topologies:
+   Sub-topology: 0
+    Source: mySource (topics: [WordsTopic])
+      --&gt; myProcessor
+    Processor: myProcessor (stores: [])
+      --&gt; mySink
+      &lt;-- mySource
+    Sink: mySink (topic: CountsTopic)
+      &lt;-- myProcessor</code></pre></td></tr></table>
+</div>
+</div>
+
+<h1 id="a-more-complicated-topology">A more complicated topology</h1>
+
+<p>We have already tested a simple scenario of sending messages from one topic to another. I think it is beneficial to see a bit more complicated case. We will add another branch to our topology, which will be responsible for detecting an odd number of characters. The output will be 1 if the number of characters is odd, and it will be 0 if the number is even.</p>
+
+<p>The example is in the <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/streams/ComplicatedTopology.kt" target="_blank">repo</a>:
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">topology.addSource(<span style="color:#e6db74">&#34;mySource&#34;</span>, <span style="color:#e6db74">&#34;WordsTopic&#34;</span>)
+
+topology.addProcessor(<span style="color:#e6db74">&#34;myCharacterCounter&#34;</span>, ProcessorSupplier { StringCounter() }, <span style="color:#e6db74">&#34;mySource&#34;</span>)
+topology.addProcessor(<span style="color:#e6db74">&#34;myOddChecker&#34;</span>, ProcessorSupplier { OddChecker() }, <span style="color:#e6db74">&#34;mySource&#34;</span>)
+
+topology.addSink(
+    <span style="color:#e6db74">&#34;myCharacterCountSink&#34;</span>,
+    <span style="color:#e6db74">&#34;CountsTopic&#34;</span>,
+    Serdes.String().serializer(),
+    Serdes.Integer().serializer(),
+    <span style="color:#e6db74">&#34;myCharacterCounter&#34;</span>
+)
+
+topology.addSink(
+    <span style="color:#e6db74">&#34;myOddSink&#34;</span>,
+    <span style="color:#e6db74">&#34;OddTopic&#34;</span>,
+    Serdes.String().serializer(),
+    Serdes.Integer().serializer(),
+    <span style="color:#e6db74">&#34;myOddChecker&#34;</span>
+)</code></pre></td></tr></table>
+</div>
+</div></p>
+
+<p>What is different in this case?</p>
+
+<ul>
+<li><strong>Line 4</strong> - We have added a new processor <em>OddChecker</em>, and connected it to the source node</li>
+<li><strong>Line 14</strong> - Here we create a new sink, that will publish records to the new topic <em>OddTopic</em>. It will receive messages from the <em>OddChecker</em> processor.</li>
+</ul>
+
+<p>Let&rsquo;s run the application. If we inspect the logs we will see printed topology. Lines <strong>8</strong> and <strong>13</strong> are the newly added nodes.</p>
+
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">2239.650 [main] INFO  dev.chrzaszcz.kafka.examples.streams.GrandFinale - Topologies:
+   Sub-topology: 0
+    Source: mySource (topics: [WordsTopic])
+      --&gt; myCharacterCounter, myOddChecker
+    Processor: myCharacterCounter (stores: [])
+      --&gt; myCharacterCountSink
+      &lt;-- mySource
+    Processor: myOddChecker (stores: [])
+      --&gt; myOddSink
+      &lt;-- mySource
+    Sink: myCharacterCountSink (topic: CountsTopic)
+      &lt;-- myCharacterCounter
+    Sink: myOddSink (topic: OddTopic)
+      &lt;-- myOddChecker</code></pre></td></tr></table>
+</div>
+</div>
+
+<p>When the app is initialized we can try out how it works. For your convenience, here is the GIF. In the top window, I am typing records to the input topic <em>WordsTopic</em>, while the bottom-left window is an output of <em>CountsTopic</em> and bottom-right shows an <em>OddTopic</em> output.</p>
+
+<p><img src="/img/2019-08-kafka-streams/odd-even.gif" alt="example-clip" /></p>
+
+<p>As you see you can define more complicated topologies with many branches, many sources and many sinks. We could also define a few more steps in our processing, depending on the API used, either by introducing another <em>map</em> call, or by injecting processing node between old processing node and sink.</p>
+
+<h1 id="summary">Summary</h1>
+
+<p>Even though that was only a quick introduction to Kafka Streams we have touched examples leveraging two different interfaces. We have also played with our topology to make it more complicated and learned how to inspect the topology we built.</p>
+
+<p>Having touched the basics, we are ready to dig into the code of this library in future posts. There is still a long journey ahead of us and for sure we will discover more features like stores, fault-tolerance, replication along with digging into the code and architecture.</p>
+
+<p>Nevertheless, the key points you can take from this post:</p>
+
+<ul>
+<li><p>Kafka Streams is a client-side library</p></li>
+
+<li><p>You can use two different APIs to configure your streams:</p>
+
+<ul>
+<li>Kafka Streams DSL - high-level interface with <em>map</em>, <em>join</em>, and many other methods. You design your topology here using fluent API.</li>
+<li>Processing API - low-level interface with greater control, but more verbose code. Here you operate directly on a graph using node names.</li>
+</ul></li>
+
+<li><p>You do not have to create any threads, as Kafka Streams manages those by itself.</p></li>
+
+<li><p>You can debug your topology using a <em>describe</em> method and print it to logs</p></li>
+</ul>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/06/kafka-rebalancing/" data-toggle="tooltip" data-placement="top" title="What happens when a new consumer joins the group in Kafka?">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "theer108" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        <a href="/tags/docker" title="docker">
+                            docker
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                   <li>
+                       <a href="" rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fa fa-circle fa-stack-2x"></i>
+                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+                   
+                    
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/ChrzaszczL">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Łukasz Chrząszcz 2019
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+    
+        
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-80545838-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    
+
+</body>
+</html>

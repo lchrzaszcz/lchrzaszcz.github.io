@@ -6,10 +6,20 @@
     <description>Recent content on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 14 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 06 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>How to use Kafka Streams to process events from one topic to another?</title>
+      <link>http://chrzaszcz.dev/2019/08/kafka-streams/</link>
+      <pubDate>Tue, 06 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/08/kafka-streams/</guid>
+      <description>What is Kafka Streams? We have already discussed a lot about producers and consumers. We know that we can take a consumer, poll for some messages, transform them, and finally publish the result on another topic.
+As simple as it sounds it might get boring to write yet another thread that does the fetching, processing, error handling, and again and again. Not only it is cumbersome, but also error-prone.</description>
+    </item>
     
     <item>
       <title>What happens when a new consumer joins the group in Kafka?</title>
