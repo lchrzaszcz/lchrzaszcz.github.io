@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 06 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 28 Sep 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>How to count events in Kafka Streams?</title>
+      <link>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</link>
+      <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</guid>
+      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&amp;rsquo; orders in the last hour or calculate how many times did users ordered pizza in our pizzeria?</description>
+    </item>
     
     <item>
       <title>How to use Kafka Streams to process events from one topic to another?</title>
