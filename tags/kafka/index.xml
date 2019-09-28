@@ -17,7 +17,7 @@
       <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
       
       <guid>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</guid>
-      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&amp;rsquo; orders in the last hour or calculate how many times did users ordered pizza in our pizzeria?</description>
+      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&amp;rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</description>
     </item>
     
     <item>

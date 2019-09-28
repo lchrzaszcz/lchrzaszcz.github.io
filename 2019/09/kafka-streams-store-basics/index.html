@@ -190,7 +190,7 @@
 
 <h1 id="stateful">Stateful?</h1>
 
-<p><a href="/2019/08/kafka-streams/">In the previous post</a>, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&rsquo; orders in the last hour or calculate how many times did users ordered pizza in our pizzeria?</p>
+<p><a href="/2019/08/kafka-streams/">In the previous post</a>, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</p>
 
 <p>Since in Kafka we are living in an endless stream world, to achieve such aggregations we have to maintain some state to quickly apply newly arrived events and update our data. So the question is, can we introduce state to our Kafka Streams application?</p>
 
