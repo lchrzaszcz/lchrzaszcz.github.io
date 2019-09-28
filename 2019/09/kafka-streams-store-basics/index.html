@@ -202,7 +202,7 @@
 
 <p>Let&rsquo;s think of a simple scenario. You run a restaurant, and you offer your customers a selection of meals including among other pasta, burgers, and pizza. You want especially to improve your pizza delivery experience, so you thought of giving something extra for customers that order a lot of pizza in your restaurant.</p>
 
-<p>Your employees could add extra sauces, coupons, etc. to every package, but they need to know how many pizzas did the particular client ordered since the existence of your company, to treat better the regular customers.</p>
+<p>Your employees could add extra sauces, coupons, etc. to every package, but they need to know how many pizzas did the particular client order since the existence of your company, to treat better the regular customers.</p>
 
 <p>Let&rsquo;s assume we have a stream of order events. Every event contains <code>customerId</code> and <code>meal</code> (for simplicity one order is one meal). We will create a Kafka Streams application, that selects only pizza orders and counts them based on <code>customerId</code>. As a result, we expect to receive events about the current total pizza orders for each user.</p>
 
