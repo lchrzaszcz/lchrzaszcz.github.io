@@ -13,10 +13,10 @@
     
     <item>
       <title>How do transactions work in Apache Kafka?</title>
-      <link>http://chrzaszcz.dev/2019/11/kafka-transactions/</link>
+      <link>http://chrzaszcz.dev/2019/12/kafka-transactions/</link>
       <pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/11/kafka-transactions/</guid>
+      <guid>http://chrzaszcz.dev/2019/12/kafka-transactions/</guid>
       <description>When you first encounter Kafka, you will face either at-least-once, or at-most-once guarantees, depending on when you commit your offsets. This is sufficient for many or even most use cases. However, if you are processing events from one topic to another, you might worry about the duplication of your messages on the target topic, or lost events on the source topic. A solution to that problem is a transaction.
 What can we expect from Kafka&#39;s transactions?</description>
     </item>
