@@ -1,29 +1,34 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</loc>
-    <lastmod>2019-09-28T00:00:00+00:00</lastmod>
+    <loc>http://chrzaszcz.dev/2019/11/kafka-transactions/</loc>
+    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/tags/kafka/</loc>
-    <lastmod>2019-09-28T00:00:00+00:00</lastmod>
+    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/post/</loc>
-    <lastmod>2019-09-28T00:00:00+00:00</lastmod>
+    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/tags/</loc>
-    <lastmod>2019-09-28T00:00:00+00:00</lastmod>
+    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/</loc>
+    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</loc>
     <lastmod>2019-09-28T00:00:00+00:00</lastmod>
   </url>
   

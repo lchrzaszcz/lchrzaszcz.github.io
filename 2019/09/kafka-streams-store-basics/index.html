@@ -186,31 +186,19 @@
                 post-container">
 
                 
-                
-
-<h1 id="stateful">Stateful?</h1>
-
+                <h1 id="stateful">Stateful?</h1>
 <p><a href="/2019/08/kafka-streams/">In the previous post</a>, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</p>
-
 <p>Since in Kafka we are living in an endless stream world, to achieve such aggregations we have to maintain some state to quickly apply newly arrived events and update our data. So the question is, can we introduce state to our Kafka Streams application?</p>
-
 <p>Yes, we can, and <em>stores</em> is a mechanism enabling us to do so.</p>
-
 <p>Today, we will analyze an example of the Kafka Streams application that leverages stores to count how many times did each user order pizza in our imaginary restaurant.</p>
-
 <h1 id="our-app">Our App</h1>
-
-<p>Let&rsquo;s think of a simple scenario. You run a restaurant, and you offer your customers a selection of meals including among other pasta, burgers, and pizza. You want especially to improve your pizza delivery experience, so you thought of giving something extra for customers that order a lot of pizza in your restaurant.</p>
-
+<p>Let's think of a simple scenario. You run a restaurant, and you offer your customers a selection of meals including among other pasta, burgers, and pizza. You want especially to improve your pizza delivery experience, so you thought of giving something extra for customers that order a lot of pizza in your restaurant.</p>
 <p>Your employees could add extra sauces, coupons, etc. to every package, but they need to know how many pizzas did the particular client order since the existence of your company, to treat better the regular customers.</p>
-
-<p>Let&rsquo;s assume we have a stream of order events. Every event contains <code>customerId</code> and <code>meal</code> (for simplicity one order is one meal). We will create a Kafka Streams application, that selects only pizza orders and counts them based on <code>customerId</code>. As a result, we expect to receive events about the current total pizza orders for each user.</p>
-
-<p>We can achieve logic like that with just a few lines in Kafka Streams. Take a look at the snippet below. This is the code we will be dealing with today. If you want to check the whole project, head over to <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/stores/PizzaOrderCount.kt" target="_blank">Github</a>.</p>
-
+<p>Let's assume we have a stream of order events. Every event contains <code>customerId</code> and <code>meal</code> (for simplicity one order is one meal). We will create a Kafka Streams application, that selects only pizza orders and counts them based on <code>customerId</code>. As a result, we expect to receive events about the current total pizza orders for each user.</p>
+<p>We can achieve logic like that with just a few lines in Kafka Streams. Take a look at the snippet below. This is the code we will be dealing with today. If you want to check the whole project, head over to <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/stores/PizzaOrderCount.kt">Github</a>.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
@@ -229,7 +217,7 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
 </span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;">
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> builder = StreamsBuilder()
 <span style="color:#66d9ef">val</span> messagesStream = builder.stream&lt;String, Order&gt;(<span style="color:#e6db74">&#34;Orders&#34;</span>, Consumed.with(Serdes.String(), orderSerdes))
 
@@ -250,53 +238,33 @@ logger.info { topology.describe() }
 streams.start()</code></pre></td></tr></table>
 </div>
 </div>
-
-<p>What is important here? Let&rsquo;s see.</p>
-
+<p>What is important here? Let's see.</p>
 <ul>
 <li><strong>Line 1-2</strong> - We are creating a stream builder as usual. We will be fetching records from <code>Orders</code> topic. The only difference is that we have provided custom <code>Serdes</code>. The incoming events will be in JSON format, so we need a custom serializer/deserializer. It is pretty straightforward, but if you are interested in the implementation, head over to the repository and check it out.</li>
 <li><strong>Line 5</strong> - We are interested only in pizza orders, hence filtering here.</li>
-<li><strong>Line 6</strong> - All the incoming messages will be grouped based on a customer who ordered them. So all Bob&rsquo;s orders will end up in one group, while all Alice&rsquo;s orders will end up in another group.</li>
+<li><strong>Line 6</strong> - All the incoming messages will be grouped based on a customer who ordered them. So all Bob's orders will end up in one group, while all Alice's orders will end up in another group.</li>
 <li><strong>Line 7</strong> - Each group will be counted separately, and the result will be stored in a <em>store</em> called <code>TotalPizzaOrdersStore</code>. You might wonder what is with <code>.withCachingDisabled</code> method. By default, Kafka Streams uses <code>RocksDB</code> for stores, and every update requires I/O since it is stored on a disk. So to prevent the heavy load on I/O, Kafka Streams caches incoming updates on a store and occasionally flushes writes to a DB. This would result in our employees receiving an update only once in a while. We would like to receive every update immediately, so we are disabling this caching. This is also good for demonstration purposes.</li>
 <li><strong>Line 10</strong> - <code>count</code> method returns a <code>KTable</code>, so if we want to operate on a stream of updates to the table, we have to convert it to <code>KStream</code> again.</li>
 <li><strong>Line 11</strong> - We are taking our stream of pizza orders count updates and publish it to the <code>TotalPizzaOrders</code> topic.</li>
 </ul>
-
-<p>Let&rsquo;s run this example and see how it works. The short video below presents how does our application count pizza orders. In the top terminal, I am writing some orders for users Bob and Alice, and in the bottom terminal, you can see the updating pizza order count for them.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/example-clip2.gif" alt="example-clip" /></p>
-
+<p>Let's run this example and see how it works. The short video below presents how does our application count pizza orders. In the top terminal, I am writing some orders for users Bob and Alice, and in the bottom terminal, you can see the updating pizza order count for them.</p>
+<p><img src="/img/2019-09-kafka-streams-store-basics/example-clip2.gif" alt="example-clip"></p>
 <h1 id="how-does-it-work">How does it work?</h1>
-
 <p>The most important concept we are dealing with today is a store. It is a key-value store holding some aggregated data derived from a stream. In Kafka Streams, you can have 2 kinds of stores: local store, and global store.</p>
-
 <h2 id="store-types">Store types</h2>
-
 <p><strong>Local Store</strong> is a data about one particular partition from an input topic. So since every instance of your service has different partitions assigned, it has different stores with different data gathered from different partitions.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/local-store.png" alt="local-store" /></p>
-
+<p><img src="/img/2019-09-kafka-streams-store-basics/local-store.png" alt="local-store"></p>
 <p>On the other hand, there is a <strong>global store</strong>, which - as you might have guessed - is present on all Kafka Streams application instances and contains all the data across all the partitions.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/global-store.png" alt="global-store" /></p>
-
-<p>In our case, we do not need shared data between instances, so our store is a simple local store. Alice&rsquo;s data might end up in one store and Bob&rsquo;s in a totally different store.</p>
-
+<p><img src="/img/2019-09-kafka-streams-store-basics/global-store.png" alt="global-store"></p>
+<p>In our case, we do not need shared data between instances, so our store is a simple local store. Alice's data might end up in one store and Bob's in a totally different store.</p>
 <h2 id="repartitioning">Repartitioning</h2>
-
-<p>If that is the case, and the local store is closely connected to one of the input partitions, then what happens if you publish orders for Bob with different keys? You still need to count them as Bob&rsquo;s orders, but they might end up in different instances of your service. If that would happen we could not be able to count them. Look at the picture below.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-wrong.png" alt="repartitioning-wrong" /></p>
-
-<p>Each instance would know about a fraction of all Bob&rsquo;s orders, and could not say globally, how many times did he order pizza. That is why one particular user&rsquo;s order events should end up in the same instance to correctly count them, right?</p>
-
+<p>If that is the case, and the local store is closely connected to one of the input partitions, then what happens if you publish orders for Bob with different keys? You still need to count them as Bob's orders, but they might end up in different instances of your service. If that would happen we could not be able to count them. Look at the picture below.</p>
+<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-wrong.png" alt="repartitioning-wrong"></p>
+<p>Each instance would know about a fraction of all Bob's orders, and could not say globally, how many times did he order pizza. That is why one particular user's order events should end up in the same instance to correctly count them, right?</p>
 <p>To gather the same values in the same instance, Kafka Streams employs repartitioning. This is a mechanism that splits a topology in half. The first part sends records with a new key to an intermediate topic, and the second one fetches records from this topic and follows up with the rest of the logic. Doing this ensures that all the records with the same key end up in the same partition of the intermediate topic, so it is fetched by the same consumer.</p>
-
-<p>Take a look at the diagram below, where the producer publishes 3 Bob&rsquo;s orders with keys <code>111</code>, <code>222</code>, and <code>333</code>. As you see, any instance can receive Bob&rsquo;s order, but as soon as they do, they change the key to the customer name and send it back to Kafka.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-correct.png" alt="repartitioning-correct" /></p>
-
-<p>As I said above, we can split topology in half, and it is exactly what Kafka Streams does. Let&rsquo;s print the topology and find out for ourselves:</p>
+<p>Take a look at the diagram below, where the producer publishes 3 Bob's orders with keys <code>111</code>, <code>222</code>, and <code>333</code>. As you see, any instance can receive Bob's order, but as soon as they do, they change the key to the customer name and send it back to Kafka.</p>
+<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-correct.png" alt="repartitioning-correct"></p>
+<p>As I said above, we can split topology in half, and it is exactly what Kafka Streams does. Let's print the topology and find out for ourselves:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">   Sub-topology: 0
     Source: KSTREAM-SOURCE-0000000000 (topics: [Orders])
       --&gt; KSTREAM-FILTER-0000000001
@@ -322,51 +290,35 @@ streams.start()</code></pre></td></tr></table>
       --&gt; KSTREAM-SINK-0000000008
       &lt;-- KSTREAM-AGGREGATE-0000000003
     Sink: KSTREAM-SINK-0000000008 (topic: TotalPizzaOrders)
-      &lt;-- KTABLE-TOSTREAM-0000000007</code></pre></div>
-<p>At first, you see that there are two sub-topologies. As we stated previously, the first one ends up in publishing records to <code>TotalPizzaOrdersStore-repartition</code> topic, while the other one starts from fetching from <code>TotalPizzaOrdersStore-repartition</code> topic.</p>
-
-<p>Let&rsquo;s subscribe to this internal topic to have a pick at what is sent there. The internal topic&rsquo;s name is <code>store-sample-dsl-application-TotalPizzaOrdersStore-repartition</code>. Prefix <code>store-sample-dsl-application</code> is inherited from Kafka Stream&rsquo;s application name, to prevent conflicts with other application&rsquo;s topics.</p>
-
+      &lt;-- KTABLE-TOSTREAM-0000000007
+</code></pre></div><p>At first, you see that there are two sub-topologies. As we stated previously, the first one ends up in publishing records to <code>TotalPizzaOrdersStore-repartition</code> topic, while the other one starts from fetching from <code>TotalPizzaOrdersStore-repartition</code> topic.</p>
+<p>Let's subscribe to this internal topic to have a pick at what is sent there. The internal topic's name is <code>store-sample-dsl-application-TotalPizzaOrdersStore-repartition</code>. Prefix <code>store-sample-dsl-application</code> is inherited from Kafka Stream's application name, to prevent conflicts with other application's topics.</p>
 <p>Take a look at the video below to check what is being sent to the repartitioning topic. As you see it is the original event, but with a key changed to the <code>customerId</code>.</p>
-
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning.gif" alt="repartition" /></p>
-
+<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning.gif" alt="repartition"></p>
 <h2 id="what-about-memory">What about memory?</h2>
-
 <p>So far so good. We have pizza orders counts for all our users.</p>
-
 <p>Along with being enormously satisfied with what we have achieved, we should be equally worried about the whole order history fitting into our memory, right?</p>
-
 <p>Keeping everything in RAM, would not only be problematic but also wasteful, as a lot of customers order only once in a while. That is why Kafka Streams by default leverages <code>RocksDB</code> to store all the data on a disk.</p>
-
-<p>I would not be myself if I would not dig into the database itself to see what is stored there. Let&rsquo;s go there together and check!</p>
-
+<p>I would not be myself if I would not dig into the database itself to see what is stored there. Let's go there together and check!</p>
 <p>Usually Kafka Streams stores databases in <code>/tmp</code> directory. In our case, for application named <code>store-sample-dsl-application</code> all the databases are stored in <code>/tmp/kafka-streams/store-sample-dsl-application</code> directory.</p>
-
 <p>Listing all the directories there shows us all the tasks that were created for our application.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">[0] % ls /tmp/kafka-streams/store-sample-dsl-application
-1_0  1_1  1_2  1_3  1_4  1_5  1_6  1_7</code></pre></div>
-<p>We can check the content of those directories, and in my case two of them actually contained some data. That is reasonable since we have been sending orders for Alice and Bob (and those are two different keys).</p>
-
-<p>We can use an <code>ldb</code> tool shipped with <code>RocksDB</code> to scan the database. The printed values are a hex representation of order count with a timestamp. The first 8 bytes are a timestamp, and the rest is a count. If you are curious about the implementation, you can check the Kafka Streams source <a href="https://github.com/apache/kafka/blob/trunk/streams/src/main/java/org/apache/kafka/streams/state/internals/ValueAndTimestampSerializer.java" target="_blank">here</a></p>
+1_0  1_1  1_2  1_3  1_4  1_5  1_6  1_7
+</code></pre></div><p>We can check the content of those directories, and in my case two of them actually contained some data. That is reasonable since we have been sending orders for Alice and Bob (and those are two different keys).</p>
+<p>We can use an <code>ldb</code> tool shipped with <code>RocksDB</code> to scan the database. The printed values are a hex representation of order count with a timestamp. The first 8 bytes are a timestamp, and the rest is a count. If you are curious about the implementation, you can check the Kafka Streams source <a href="https://github.com/apache/kafka/blob/trunk/streams/src/main/java/org/apache/kafka/streams/state/internals/ValueAndTimestampSerializer.java">here</a></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_7/rocksdb/TotalPizzaOrdersStore
 [0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex
 Bob : 0x0000016D787ABAE80000000000000022
 
 theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_1/rocksdb/TotalPizzaOrdersStore
 [0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex 
-Alice : 0x0000016D78A7D984000000000000000C</code></pre></div>
-<p>I was playing for a while with the application, and the last update I have received for Bob was 34 and for Alice 12. This is exactly what we can see in the snippet above in an output from <code>RocksDB</code>.</p>
-
+Alice : 0x0000016D78A7D984000000000000000C
+</code></pre></div><p>I was playing for a while with the application, and the last update I have received for Bob was 34 and for Alice 12. This is exactly what we can see in the snippet above in an output from <code>RocksDB</code>.</p>
 <h2 id="durability">Durability</h2>
-
 <p>A crucial thing to remember is that <code>RocksDB</code> is not used for durability. It is entirely disposable, so if you run your services on Kubernetes or similar technology you would not have to run it as a StatefulSet or provision any shared storage.</p>
-
 <p>Does that mean in case of failure your application has to process and aggregate all events from the beginning?</p>
-
 <p>Fortunately, no. Kafka Streams sends all values from the store after to another topic. This topic is compacted, so it keeps at least the last value for each of the keys. Given that, in case of your service failure, the new instance will just scan this changelog topic and rebuild the store.</p>
-
-<p>In our case, this changelog topic is named <code>store-sample-dsl-application-TotalPizzaOrdersStore-changelog</code>. We can query it from beginning to see what has been sent there so far. Take a look at the snippet below (for readability, I skipped some parts with &ldquo;&hellip;&rdquo;).</p>
+<p>In our case, this changelog topic is named <code>store-sample-dsl-application-TotalPizzaOrdersStore-changelog</code>. We can query it from beginning to see what has been sent there so far. Take a look at the snippet below (for readability, I skipped some parts with &ldquo;&hellip;&quot;).</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">bash-4.4# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic store-sample-dsl-application-TotalPizzaOrdersStore-changelog --property print.key=true --from-beginning --value-deserializer org.apache.kafka.common.serialization.LongDeserializer
 Bob	1
 Bob	2
@@ -380,39 +332,44 @@ Alice	2
 Alice	3
 ...
 Alice	11
-Alice	12</code></pre></div>
-<p>Additionally, if you want your processing to be up-and-running even sooner, you can enable standby mode in which, every store is followed by a standby instance that is ready to take over the active one as soon as it goes down, but that is a material for future posts.</p>
-
+Alice	12
+</code></pre></div><p>Additionally, if you want your processing to be up-and-running even sooner, you can enable standby mode in which, every store is followed by a standby instance that is ready to take over the active one as soon as it goes down, but that is a material for future posts.</p>
 <h1 id="summary">Summary</h1>
-
 <p>I think we got a pretty decent grasp of how stateful processing looks like in Kafka Streams. Even though it was only a simple counting example, we could observe a lot of mechanisms underneath.</p>
-
 <p>You can achieve much more in terms of aggregation in Kafka Streams by introducing moving windowing over the stream of data or joining multiple streams. We will definitely dig into that in later posts.</p>
-
-<p>However, for today let&rsquo;s summarize what we have learned:</p>
-
+<p>However, for today let's summarize what we have learned:</p>
 <ul>
-<li><p>You can easily count everything since the beginning of your stream.</p></li>
-
-<li><p>You can receive all the updates on a particular count value on another Kafka topic.</p></li>
-
-<li><p>There are two store types: global store, and local store.</p></li>
-
-<li><p>The Global store is present in all instances and has the same data.</p></li>
-
-<li><p>The Local store is unique for every input partition, and instances have different stores, due to different partition assignment.</p></li>
-
-<li><p>Counting requires gathering all events that need to be counted together in one instance, so if the input topic has a different partitioning key than the required grouping key, Kafka Streams has to perform repartitioning.</p></li>
-
-<li><p>Repartitioning is basically just changing the key of the record to the chosen grouping key, and sending it to intermediate Kafka topic, so the events that have the same grouping key will end up on the same partition, hence the same instance.</p></li>
-
-<li><p>Stores are not stored entirely in RAM. They are stored on a disk leveraging <code>RocksDB</code>.</p></li>
-
-<li><p><code>RocksDB</code> is not used for increased durability. It is simply a way to fit the huge datasets next to the application.</p></li>
-
-<li><p>To prevent data loss, Kafka Streams sends all updates to the store value to the <code>changelog</code> topic. In case of a failure, another instance will take over the task, and restore the database from this <code>changelog</code> topic.</p></li>
+<li>
+<p>You can easily count everything since the beginning of your stream.</p>
+</li>
+<li>
+<p>You can receive all the updates on a particular count value on another Kafka topic.</p>
+</li>
+<li>
+<p>There are two store types: global store, and local store.</p>
+</li>
+<li>
+<p>The Global store is present in all instances and has the same data.</p>
+</li>
+<li>
+<p>The Local store is unique for every input partition, and instances have different stores, due to different partition assignment.</p>
+</li>
+<li>
+<p>Counting requires gathering all events that need to be counted together in one instance, so if the input topic has a different partitioning key than the required grouping key, Kafka Streams has to perform repartitioning.</p>
+</li>
+<li>
+<p>Repartitioning is basically just changing the key of the record to the chosen grouping key, and sending it to intermediate Kafka topic, so the events that have the same grouping key will end up on the same partition, hence the same instance.</p>
+</li>
+<li>
+<p>Stores are not stored entirely in RAM. They are stored on a disk leveraging <code>RocksDB</code>.</p>
+</li>
+<li>
+<p><code>RocksDB</code> is not used for increased durability. It is simply a way to fit the huge datasets next to the application.</p>
+</li>
+<li>
+<p>To prevent data loss, Kafka Streams sends all updates to the store value to the <code>changelog</code> topic. In case of a failure, another instance will take over the task, and restore the database from this <code>changelog</code> topic.</p>
+</li>
 </ul>
-
 <p>Thank you for reading the post. Please share your thoughts and comments, so I can improve future articles, and share knowledge with you in the best way I can 😄</p>
 
 
@@ -426,6 +383,11 @@ Alice	12</code></pre></div>
                             Previous Post</a>
                     </li>
                     
+                    
+                    <li class="next">
+                        <a href="/2019/11/kafka-transactions/" data-toggle="tooltip" data-placement="top" title="How do transactions work in Apache Kafka?">Next
+                            Post &rarr;</a>
+                    </li>
                     
                 </ul>
 

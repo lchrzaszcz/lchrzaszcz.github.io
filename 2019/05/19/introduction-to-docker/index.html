@@ -186,48 +186,36 @@
                 post-container">
 
                 
-                
-
-<p>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with the problem of installing new software just for <strong>trying something out</strong>? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with <a href="https://pl.wikipedia.org/wiki/LAMP">LAMP</a>). Maybe you are the one who wants to create <strong>easy to deploy software</strong>? Among others, these are the reasons to consider <strong>Docker</strong>. In this post, I’ll give a quick introduction to this tool so you can get a gist of an idea in one evening. Let’s get started!</p>
-
-<p>What is Docker? It is so popular that you probably know more or less what it is - anyway - according to documentation Docker is a <strong>platform for developing, shipping and running applications</strong>. So what’s the deal? Isolation! Docker uses features like <a href="https://en.wikipedia.org/wiki/Cgroups">cgroups</a>, <a href="https://en.wikipedia.org/wiki/Linux_namespaces">namespaces</a>, <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities</a> and other Linux kernel stuff to lock down your process in a “software cage” by limiting resources like CPU, memory as well as ability to see other things in the system like processes or files. If you’re interested go check those mechanisms, but I think you can imagine how Docker might work under the hood using them.</p>
-
-<p>Before we go further be sure to have Docker installed - the installation process is fairly simple, and you can follow the instructions for Ubuntu <a href="https://docs.docker.com/engine/installation/linux/ubuntulinux/">here</a>.</p>
-
+                <p>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with the problem of installing new software just for <!-- raw HTML omitted -->trying something out<!-- raw HTML omitted -->? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with <!-- raw HTML omitted -->LAMP<!-- raw HTML omitted -->). Maybe you are the one who wants to create <!-- raw HTML omitted -->easy to deploy software<!-- raw HTML omitted -->? Among others, these are the reasons to consider <!-- raw HTML omitted -->Docker<!-- raw HTML omitted -->. In this post, I’ll give a quick introduction to this tool so you can get a gist of an idea in one evening. Let’s get started!</p>
+<p>What is Docker? It is so popular that you probably know more or less what it is - anyway - according to documentation Docker is a <!-- raw HTML omitted -->platform for developing, shipping and running applications<!-- raw HTML omitted -->. So what’s the deal? Isolation! Docker uses features like <!-- raw HTML omitted -->cgroups<!-- raw HTML omitted -->, <!-- raw HTML omitted -->namespaces<!-- raw HTML omitted -->, <!-- raw HTML omitted -->capabilities<!-- raw HTML omitted --> and other Linux kernel stuff to lock down your process in a “software cage” by limiting resources like CPU, memory as well as ability to see other things in the system like processes or files. If you’re interested go check those mechanisms, but I think you can imagine how Docker might work under the hood using them.</p>
+<p>Before we go further be sure to have Docker installed - the installation process is fairly simple, and you can follow the instructions for Ubuntu <!-- raw HTML omitted -->here<!-- raw HTML omitted -->.</p>
 <h1 id="image-vs-container">Image vs container</h1>
-
-<p>The two most important things in Docker&rsquo;s world are image and container. You can think of an <strong>image</strong> as some kind of ISO image or CD with your favorite system installation. In particular, Docker image contains all things that are required to create a running thing - <strong>container</strong>. A container is much like a living thing inside your OS, process, or something. You can start it, stop it, change it, save it.</p>
-
-<h1 id="hands-on-cowsay-on-ubuntu">Hands-on - cowsay on Ubuntu</h1>
-
-<p>I’ll show you a quick thing you can do with Docker - install random software and check it out. In our example, it’ll be a popular <strong>cowsay in the Ubuntu environment</strong>.
-Let’s get started with running Ubuntu container - remember you’re not installing a virtual machine with Ubuntu, but creating an <strong>“isolated box” with the environment just like ubuntu</strong> (libraries, tools, binaries, whatever, etc.).</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -t -i ubuntu</code></pre></div>
-<p>It’ll take a while at the beginning - why? Docker checks if you have already downloaded Ubuntu images and if you have not then it downloads the image from the <a href="https://hub.docker.com/">repository</a>. If you happen to run ubuntu again later, then it’ll be much quicker.</p>
-
-<p>Anyway, you’ll end up in a prompt within your <strong>new ubuntu environment</strong>, you can fool around, install something - let’s install cowsay! Execute this command from within your container:</p>
+<p>The two most important things in Docker's world are image and container. You can think of an <!-- raw HTML omitted -->image<!-- raw HTML omitted --> as some kind of ISO image or CD with your favorite system installation. In particular, Docker image contains all things that are required to create a running thing - <!-- raw HTML omitted -->container<!-- raw HTML omitted -->. A container is much like a living thing inside your OS, process, or something. You can start it, stop it, change it, save it.</p>
+<h1 id="handson--cowsay-on-ubuntu">Hands-on - cowsay on Ubuntu</h1>
+<p>I’ll show you a quick thing you can do with Docker - install random software and check it out. In our example, it’ll be a popular <!-- raw HTML omitted -->cowsay in the Ubuntu environment<!-- raw HTML omitted -->.
+Let’s get started with running Ubuntu container - remember you’re not installing a virtual machine with Ubuntu, but creating an <!-- raw HTML omitted -->“isolated box” with the environment just like ubuntu<!-- raw HTML omitted --> (libraries, tools, binaries, whatever, etc.).</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -t -i ubuntu
+</code></pre></div><p>It’ll take a while at the beginning - why? Docker checks if you have already downloaded Ubuntu images and if you have not then it downloads the image from the <!-- raw HTML omitted -->repository<!-- raw HTML omitted -->. If you happen to run ubuntu again later, then it’ll be much quicker.</p>
+<p>Anyway, you’ll end up in a prompt within your <!-- raw HTML omitted -->new ubuntu environment<!-- raw HTML omitted -->, you can fool around, install something - let’s install cowsay! Execute this command from within your container:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update
 apt-get install cowsay
-/usr/games/cowsay <span style="color:#e6db74">&#39;I like Nerdy Geek!&#39;</span></code></pre></div>
-<p>Don’t leave your container just yet - open up a new terminal and execute:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps</code></pre></div>
-<p>You’ll see your container running (see a funny name generated for it? 😄 Mine was ‘gigantic-panini’). This command gives you a <strong>list of all running containers</strong>.</p>
-
+/usr/games/cowsay <span style="color:#e6db74">&#39;I like Nerdy Geek!&#39;</span>
+</code></pre></div><p>Don’t leave your container just yet - open up a new terminal and execute:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps
+</code></pre></div><p>You’ll see your container running (see a funny name generated for it? 😄 Mine was ‘gigantic-panini’). This command gives you a <!-- raw HTML omitted -->list of all running containers<!-- raw HTML omitted -->.</p>
 <p>You can now hit Ctrl+C to leave your container. Actually, you’ve just stopped it - execute ps command once again - it’s not there. You can fix it by adding –all option</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps --all</code></pre></div>
-<p>There - you should see your container. You probably think - oh my god this sucks! <strong>I want my cowsay back!</strong> Fear not! The thing is that you ran ubuntu in the interactive mode in which container automatically stops after you leave shell (more or less). Let’s bring back your ubuntu to life. Replace <em>funny-name</em> with the name of your stopped container.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker start &lt;funny-name&gt;</code></pre></div>
-<p>Ok, your ubuntu should be <strong>running in the background</strong> right now - check it with ps command. Now if you want to execute cowsay again you can do it easily by connecting to your container.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps --all
+</code></pre></div><p>There - you should see your container. You probably think - oh my god this sucks! <!-- raw HTML omitted -->I want my cowsay back!<!-- raw HTML omitted --> Fear not! The thing is that you ran ubuntu in the interactive mode in which container automatically stops after you leave shell (more or less). Let’s bring back your ubuntu to life. Replace <!-- raw HTML omitted -->funny-name<!-- raw HTML omitted --> with the name of your stopped container.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker start &lt;funny-name&gt;
+</code></pre></div><p>Ok, your ubuntu should be <!-- raw HTML omitted -->running in the background<!-- raw HTML omitted --> right now - check it with ps command. Now if you want to execute cowsay again you can do it easily by connecting to your container.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -ti &lt;funny-name&gt; bash
-/usr/games/cowsay <span style="color:#e6db74">&#39;Actually I love NerdyGeek!&#39;</span></code></pre></div>
-<p>When you’re done with your container you can stop it with:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop &lt;funny-name&gt;</code></pre></div>
-<p>That’s it! You’ve just created <strong>your first Ubuntu container</strong>, customized it and stopped it - you can always start it again and add something more, test something else, etc.</p>
-
-<p>The last thing missing is - <strong>what about image?</strong> Well, Ubuntu image you’ve downloaded from Docker hub wasn’t changed. Docker is “layer-oriented” as one might say, the image has some layers in it and by running and changing container you’re introducing a brand new layer on top of it, which - let’s say - has a higher priority over the image ones. Every change you make in the container is saved to this new layer. The question here is - <strong>can I persist this layer somehow for the future? Can I save my container to be an image and why would I want to do that?</strong> Of course, you can - this is so-called “commit” and you can do it like that:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker commit &lt;funny-name&gt; nerdy-geek-ubuntu</code></pre></div>
-<p>What docker did is that it applied your changes (your new layer) to the image so that when you <strong>run the container from newly created image</strong> then:</p>
-
+/usr/games/cowsay <span style="color:#e6db74">&#39;Actually I love NerdyGeek!&#39;</span>
+</code></pre></div><p>When you’re done with your container you can stop it with:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop &lt;funny-name&gt;
+</code></pre></div><p>That’s it! You’ve just created <!-- raw HTML omitted -->your first Ubuntu container<!-- raw HTML omitted -->, customized it and stopped it - you can always start it again and add something more, test something else, etc.</p>
+<p>The last thing missing is - <!-- raw HTML omitted -->what about image?<!-- raw HTML omitted --> Well, Ubuntu image you’ve downloaded from Docker hub wasn’t changed. Docker is “layer-oriented” as one might say, the image has some layers in it and by running and changing container you’re introducing a brand new layer on top of it, which - let’s say - has a higher priority over the image ones. Every change you make in the container is saved to this new layer. The question here is - <!-- raw HTML omitted -->can I persist this layer somehow for the future? Can I save my container to be an image and why would I want to do that?<!-- raw HTML omitted --> Of course, you can - this is so-called “commit” and you can do it like that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker commit &lt;funny-name&gt; nerdy-geek-ubuntu
+</code></pre></div><p>What docker did is that it applied your changes (your new layer) to the image so that when you <!-- raw HTML omitted -->run the container from newly created image<!-- raw HTML omitted --> then:</p>
 <ul>
 <li>You already have cowsay installed</li>
 <li>A new layer is created just above your previous one</li>
@@ -235,21 +223,16 @@ apt-get install cowsay
 <li>You can commit those new containers and get 2 new images with cowsay and fortune as well as cowsay and Postgres.</li>
 <li>You can easily share your new super awesome image with others</li>
 </ul>
-
 <h1 id="what-more-can-docker-do">What more can Docker do?</h1>
-
-<p>What I described is just a small part of Docker functionality and I’ll for sure write more about it, but to give you an idea of <strong>what can be done</strong> you have to be aware of the following:</p>
-
+<p>What I described is just a small part of Docker functionality and I’ll for sure write more about it, but to give you an idea of <!-- raw HTML omitted -->what can be done<!-- raw HTML omitted --> you have to be aware of the following:</p>
 <ul>
-<li>You can manage <strong>networks</strong> - a.k.a. put a few containers in common network, and others in other - isolated network</li>
-<li>You can <strong>map ports</strong> from the container to your host system (access Postgres running within container from your colleague’s computer)</li>
-<li>Manage <strong>data volumes</strong> - persistent storage which can be accessed by many containers - for example Postgres data folder.</li>
-<li>Create more advanced images with <strong>Dockerfile</strong> - i.e. instruct Docker to install cowsay while creating the container so it’ll be up-to-date not the version when you created your image.</li>
+<li>You can manage <!-- raw HTML omitted -->networks<!-- raw HTML omitted --> - a.k.a. put a few containers in common network, and others in other - isolated network</li>
+<li>You can <!-- raw HTML omitted -->map ports<!-- raw HTML omitted --> from the container to your host system (access Postgres running within container from your colleague’s computer)</li>
+<li>Manage <!-- raw HTML omitted -->data volumes<!-- raw HTML omitted --> - persistent storage which can be accessed by many containers - for example Postgres data folder.</li>
+<li>Create more advanced images with <!-- raw HTML omitted -->Dockerfile<!-- raw HTML omitted --> - i.e. instruct Docker to install cowsay while creating the container so it’ll be up-to-date not the version when you created your image.</li>
 <li>Much more!</li>
 </ul>
-
 <h1 id="summary">Summary</h1>
-
 <p>Docker is awesome and I’m pretty sure that you are now hyped about it as well! Go check the official documentation for more awesome things you can do. Soon I’ll write a post about utilizing Docker in a development cycle and an example of running real software like Elasticsearch. Stay tuned and see you soon!</p>
 
 
