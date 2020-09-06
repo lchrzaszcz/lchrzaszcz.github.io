@@ -3,27 +3,32 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://chrzaszcz.dev/2019/12/kafka-transactions/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <loc>http://chrzaszcz.dev/2020/08/kafka-testing/</loc>
+    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/tags/kafka/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/post/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/tags/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>http://chrzaszcz.dev/</loc>
+    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://chrzaszcz.dev/2019/12/kafka-transactions/</loc>
     <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
   
@@ -69,7 +74,6 @@
   
   <url>
     <loc>http://chrzaszcz.dev/top/about/</loc>
-    <priority>0</priority>
   </url>
   
   <url>

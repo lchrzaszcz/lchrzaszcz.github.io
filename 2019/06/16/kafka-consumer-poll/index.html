@@ -187,14 +187,14 @@
 
                 
                 <h1 id="recap">Recap</h1>
-<p><a href="/2019/05/26/kafka-101">In the previous post</a> we've discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called <em>consumer group</em> and that Kafka split messages among members of the consumer group.</p>
-<p>That's of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll? We'll discover internals of it in this post.</p>
+<p><a href="/2019/05/26/kafka-101">In the previous post</a> we&rsquo;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called <em>consumer group</em> and that Kafka split messages among members of the consumer group.</p>
+<p>That&rsquo;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll? We&rsquo;ll discover internals of it in this post.</p>
 <h1 id="samples-and-setup">Samples and setup</h1>
 <p>We will investigate some code today, so if you want to check the examples be sure to head to the <a href="https://github.com/lchrzaszcz/kafka-examples">GitHub repo</a>. You will find there some Kotlin code with a simple producer that sends a few messages to Kafka, as well as simple consumer that continuously fetches records from Kafka and prints them to the console.</p>
-<p>To make setup easier I've included docker-compose file, so you can make your kafka cluster up and running in seconds. Just run the following command from the repository directory:</p>
+<p>To make setup easier I&rsquo;ve included docker-compose file, so you can make your kafka cluster up and running in seconds. Just run the following command from the repository directory:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">docker-compose up
 </code></pre></div><p>After that, you can run one of the main methods - one for a producer, and the second one for consumer - preferably in debug, so you can jump straight to the Kafka code by yourself. Anyway, I will cite crucial code, so you can go on and read without cloning the repository.</p>
-<p>For better understanding I'll cite some Apache Kafka code. You can find it on their <a href="https://github.com/apache/kafka/tree/2.2">github</a>.</p>
+<p>For better understanding I&rsquo;ll cite some Apache Kafka code. You can find it on their <a href="https://github.com/apache/kafka/tree/2.2">github</a>.</p>
 <h1 id="how-does-sample-consumer-workflow-look-like">How does sample consumer workflow look like?</h1>
 <p>Using Kafka consumer usually follows few simple steps.</p>
 <ul>
@@ -202,15 +202,15 @@
 <li>Choose topics you are interested in</li>
 <li>Poll messages in some kind of loop.</li>
 </ul>
-<p>If you head over to <em>Consumer</em> class in the sample repository, you'll find that the run method does exactly that:</p>
+<p>If you head over to <em>Consumer</em> class in the sample repository, you&rsquo;ll find that the run method does exactly that:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">run</span>() {
     <span style="color:#66d9ef">val</span> kafkaConsumer = createKafkaConsumer()
     kafkaConsumer.subscribe(listOf(TOPIC))
     kafkaConsumer.use { fetchContinuously(kafkaConsumer) }
 }
-</code></pre></div><p>Let's break down every step and see what is done underneath.</p>
+</code></pre></div><p>Let&rsquo;s break down every step and see what is done underneath.</p>
 <h1 id="what-happens-when-you-create-consumer">What happens when you create consumer?</h1>
-<p>To start using consumer you have to instantiate your consumer. Pretty obvious right? As easy as it sounds, you have to set at least a few options to get it working. Let's head over to <em>Consumer</em> class and check how to create our first consumer.</p>
+<p>To start using consumer you have to instantiate your consumer. Pretty obvious right? As easy as it sounds, you have to set at least a few options to get it working. Let&rsquo;s head over to <em>Consumer</em> class and check how to create our first consumer.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">kafkaConsumer</span>(): KafkaConsumer&lt;String, String&gt; {
     <span style="color:#66d9ef">val</span> properties = Properties()
 
@@ -221,11 +221,11 @@
 
     <span style="color:#66d9ef">return</span> KafkaConsumer(properties)
 }
-</code></pre></div><p>We set 4 properties. All of them are necessary - in fact, you'll get exception if you don't set them!</p>
+</code></pre></div><p>We set 4 properties. All of them are necessary - in fact, you&rsquo;ll get exception if you don&rsquo;t set them!</p>
 <ul>
-<li><strong>bootstrap.servers</strong> - First Kafka servers the consumer should contact to fetch cluster configuration. Here we're pointing it to our docker container with Kafka.</li>
-<li><strong>group.id</strong> - Consumer group ID. Specify the same value for a few consumers to balance workload among them. Here we're using <em>kafka-example</em>.</li>
-<li><strong>key.deserializer</strong> - Every record fetched from Kafka broker is basically a bunch of bytes, so you have to specify how to deserialize them. This option applies to the <em>key</em> part of the record. Here we're using <em>StringDeserializer</em> so we'll get strings decoded from bytes (default encoding is UTF-8)</li>
+<li><strong>bootstrap.servers</strong> - First Kafka servers the consumer should contact to fetch cluster configuration. Here we&rsquo;re pointing it to our docker container with Kafka.</li>
+<li><strong>group.id</strong> - Consumer group ID. Specify the same value for a few consumers to balance workload among them. Here we&rsquo;re using <em>kafka-example</em>.</li>
+<li><strong>key.deserializer</strong> - Every record fetched from Kafka broker is basically a bunch of bytes, so you have to specify how to deserialize them. This option applies to the <em>key</em> part of the record. Here we&rsquo;re using <em>StringDeserializer</em> so we&rsquo;ll get strings decoded from bytes (default encoding is UTF-8)</li>
 <li><strong>value.deserializer</strong> - Same as <em>key.deserializer</em> but for <em>value</em> part.</li>
 </ul>
 <p>Ok, so we instantiated a new consumer. What happened under-the-hood of this simple constructor? Well&hellip; not gonna lie to you - nothing happened. We just created a whole tree of objects behind the scenes, but nothing extraordinary has been done apart from validation.</p>
@@ -233,9 +233,9 @@
 <p>After creating the consumer, second thing we do is subscribing to set of topics. In the example we subscribe to one topic <em>kafka-example-topic</em>.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaConsumer.subscribe(listOf(TOPIC))
 </code></pre></div><p>What happened here? Nothing much! Just a few values set here and there.</p>
-<p>This part is more compelling if you have live consumer that is already subscribed to something and is already fetching something. However, we've just created consumer so nothing really happens.</p>
+<p>This part is more compelling if you have live consumer that is already subscribed to something and is already fetching something. However, we&rsquo;ve just created consumer so nothing really happens.</p>
 <h1 id="what-happens-when-you-call-first-poll">What happens when you call first poll?</h1>
-<p>Here things become serious! As they say, code is worth a thousand words, so we will look into the code of Kafka Consumer (version: 2.2.0, you can access it on <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1179">Github</a>). For the sake of readability I've skipped some comments to focus on the important parts.</p>
+<p>Here things become serious! As they say, code is worth a thousand words, so we will look into the code of Kafka Consumer (version: 2.2.0, you can access it on <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1179">Github</a>). For the sake of readability I&rsquo;ve skipped some comments to focus on the important parts.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -276,67 +276,67 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> ConsumerRecords<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    acquireAndEnsureOpen<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    acquireAndEnsureOpen<span style="color:#f92672">();</span>
     <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">);</span>
         <span style="color:#f92672">}</span>
 
         <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">();</span>
 
             <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)))</span> <span style="color:#f92672">{</span>
+                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">);</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span>
 
-            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">|</span><span style="color:#f92672">|</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;&gt;&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
                 <span style="color:#f92672">}</span>
 
-                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span>records<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;(</span>records<span style="color:#f92672">));</span>
             <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">());</span>
 
-        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
-        release<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        release<span style="color:#f92672">();</span>
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>Ok so what's going on here? Basically:</p>
+<p>Ok so what&rsquo;s going on here? Basically:</p>
 <ul>
 <li>
-<p><strong>Line 2</strong> - Due to the fact that consumer <strong>internally</strong> is not thread-safe, so it ensures that only one thread at the time can access it, hence acquiring lock here. In case you call methods from different threads, you'll get an exception in one of them.</p>
+<p><strong>Line 2</strong> - Due to the fact that consumer <strong>internally</strong> is not thread-safe, so it ensures that only one thread at the time can access it, hence acquiring lock here. In case you call methods from different threads, you&rsquo;ll get an exception in one of them.</p>
 </li>
 <li>
-<p><strong>Line 4</strong> - Consumer validates if it has any subscription. It does not make sense to poll records if you don't specify any topics, does it?</p>
+<p><strong>Line 4</strong> - Consumer validates if it has any subscription. It does not make sense to poll records if you don&rsquo;t specify any topics, does it?</p>
 </li>
 <li>
-<p><strong>Line 8</strong> - Start a record-fetching loop until poll timeout doesn't expire or consumer receives some records.</p>
+<p><strong>Line 8</strong> - Start a record-fetching loop until poll timeout doesn&rsquo;t expire or consumer receives some records.</p>
 </li>
 <li>
 <p><strong>Line 9</strong> - You can interrupt consumer in the middle of polling if you want to shut it down. This is especially important if you specify long timeout. This line checks proper flags and throws an exception.</p>
 </li>
 <li>
-<p><strong>Line 11</strong> - Here is an interesting fragment! Depending, which <em>poll</em> you call - the one taking <em>long</em> or <em>Duration</em> as parameter it will wait for synchronization with Kafka Cluster indefinitely or for a limited amount of time. The newer one, with <em>Duration</em> as parameter will return empty set of records after certain time, while the other one (which is deprecated by the way) will spin indefinitely waiting for cluster metadata. This is extremely counter-intuitive if you're using deprecated poll signature as even though you've specified timeout, the call might still block indefinitely! Anyway, in both cases consumer calls method <em>updateAssignmentMetadataIfNeeded</em> which we will dig into in a minute.</p>
+<p><strong>Line 11</strong> - Here is an interesting fragment! Depending, which <em>poll</em> you call - the one taking <em>long</em> or <em>Duration</em> as parameter it will wait for synchronization with Kafka Cluster indefinitely or for a limited amount of time. The newer one, with <em>Duration</em> as parameter will return empty set of records after certain time, while the other one (which is deprecated by the way) will spin indefinitely waiting for cluster metadata. This is extremely counter-intuitive if you&rsquo;re using deprecated poll signature as even though you&rsquo;ve specified timeout, the call might still block indefinitely! Anyway, in both cases consumer calls method <em>updateAssignmentMetadataIfNeeded</em> which we will dig into in a minute.</p>
 </li>
 <li>
 <p><strong>Line 21</strong> - Consumer actually fetches records from Kafka</p>
 </li>
 <li>
-<p><strong>Line 22</strong> - Here is a smart optimization. If fetch from line above returned some records, then consumer sends next fetch requests ahead of time, so while your application processes new records, in the background, consumer is already waiting for the next batch for you, so you don't block on IO.</p>
+<p><strong>Line 22</strong> - Here is a smart optimization. If fetch from line above returned some records, then consumer sends next fetch requests ahead of time, so while your application processes new records, in the background, consumer is already waiting for the next batch for you, so you don&rsquo;t block on IO.</p>
 </li>
 <li>
-<p><strong>Line 27</strong> - Consumer passes all fetched records through interceptors chain and returns its result. Interceptors are plugins allowing you to intercept and modify incoming records. Mainly they're used for logging or monitoring.</p>
+<p><strong>Line 27</strong> - Consumer passes all fetched records through interceptors chain and returns its result. Interceptors are plugins allowing you to intercept and modify incoming records. Mainly they&rsquo;re used for logging or monitoring.</p>
 </li>
 </ul>
 <p>A lot is happening here! Nevertheless, important things poll method does are:</p>
@@ -348,26 +348,26 @@
 <p>Fetch data - <em>pollForFetches</em> method</p>
 </li>
 </ul>
-<p>Let's jump to <em>updateAssignmentMetadataIfNeeded</em> implementation!</p>
+<p>Let&rsquo;s jump to <em>updateAssignmentMetadataIfNeeded</em> implementation!</p>
 <h1 id="updating-assignment">Updating assignment</h1>
 <p><em>updateAssignmentMetadataIfNeeded</em> method (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1225">source code</a>) is quite simple and basically it delegates stuff to the coordinator (which is one of the classes in Kafka Consumer).</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
         <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
     <span style="color:#f92672">}</span>
 
-    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span>
 </code></pre></div><p>Here are two main points:</p>
 <ul>
 <li>
-<p>Polling coordinator for updates - ensure we're up-to-date with our group's coordinator.</p>
+<p>Polling coordinator for updates - ensure we&rsquo;re up-to-date with our group&rsquo;s coordinator.</p>
 </li>
 <li>
 <p>Updating fetch positions - ensure every partition assigned to this consumer has a fetch position. If it is missing then consumer uses <em>auto.offset.reset</em> value to set it (set it to earliest, latest or throw exception).</p>
 </li>
 </ul>
-<p>Updating positions is pretty straightforward, so let's skip this part and focus on updating coordinator. Let's jump down to implementation. What does the coordinator's poll do? Code cited below (with comments removed for enhanced readability). Original source code is <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310">here</a></p>
+<p>Updating positions is pretty straightforward, so let&rsquo;s skip this part and focus on updating coordinator. Let&rsquo;s jump down to implementation. What does the coordinator&rsquo;s poll do? Code cited below (with comments removed for enhanced readability). Original source code is <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310">here</a></p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -406,36 +406,36 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">();</span>
 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
         <span style="color:#f92672">}</span>
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">())</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">();</span>
                 <span style="color:#f92672">}</span>
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
                     <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span>
 
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
                 <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
         <span style="color:#f92672">}</span>
     <span style="color:#f92672">}</span>
 
-    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
     <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
@@ -443,39 +443,39 @@
 <p>What happened?</p>
 <ul>
 <li>
-<p><strong>Line 4</strong> - Check if consumer is using automatic or manual assignment (a.k.a. did you explicitly say that this consumer should be assigned to partition number - let's say - 1?). I'm ignoring manual assignment in this post and assuming we have an automatic one.</p>
+<p><strong>Line 4</strong> - Check if consumer is using automatic or manual assignment (a.k.a. did you explicitly say that this consumer should be assigned to partition number - let&rsquo;s say - 1?). I&rsquo;m ignoring manual assignment in this post and assuming we have an automatic one.</p>
 </li>
 <li>
-<p><strong>Line 5</strong> - Check status of heartbeat thread and report poll call. On the first call there's no heartbeat thread so this method does nothing. However, in most future calls there'll be a heartbeat thread, so status of this thread will be checked, errors will be thrown, and poll will report that it has been called.</p>
+<p><strong>Line 5</strong> - Check status of heartbeat thread and report poll call. On the first call there&rsquo;s no heartbeat thread so this method does nothing. However, in most future calls there&rsquo;ll be a heartbeat thread, so status of this thread will be checked, errors will be thrown, and poll will report that it has been called.</p>
 </li>
 </ul>
 <hr>
-<p>You may wonder, why should consumer report that? In fact, calling <em>poll</em> method is your responsibility and Kafka doesn't trust you (no way 😱!). As a precaution, Consumer tracks how often you call <em>poll</em> and if you exceed some specified time (<em>max.poll.interval.ms</em>), then it leaves the group, so other consumers can move processing further. You're still asking why? Imagine your processing thread has thrown an exception and died, but the whole application is still alive - you would stall some partitions by still sending heartbeat in the background. The only solution would be to restart the application! In fact that's something I did, but more on that in different post.</p>
+<p>You may wonder, why should consumer report that? In fact, calling <em>poll</em> method is your responsibility and Kafka doesn&rsquo;t trust you (no way 😱!). As a precaution, Consumer tracks how often you call <em>poll</em> and if you exceed some specified time (<em>max.poll.interval.ms</em>), then it leaves the group, so other consumers can move processing further. You&rsquo;re still asking why? Imagine your processing thread has thrown an exception and died, but the whole application is still alive - you would stall some partitions by still sending heartbeat in the background. The only solution would be to restart the application! In fact that&rsquo;s something I did, but more on that in different post.</p>
 <hr>
 <ul>
-<li><strong>Line 6</strong> - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it's group (see *group.id* setting) and establishes connection to it. If all of that went well then we have live connection to *our* coordinator and can move on.</li>
+<li><strong>Line 6</strong> - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it&rsquo;s group (see *group.id* setting) and establishes connection to it. If all of that went well then we have live connection to *our* coordinator and can move on.</li>
 </ul>
 <hr>
-<p>* Not exactly random, but that's far from crucial here.</p>
+<p>* Not exactly random, but that&rsquo;s far from crucial here.</p>
 <hr>
 <ul>
 <li>
 <p><strong>Line 10</strong> - Check if consumer needs to join the group. Obviously it needs to do so as this is the first run. However, later on it can be true if you for example change the subscription.</p>
 </li>
 <li>
-<p><strong>Line 11</strong> - This is optimization in case you're using pattern subscriptions - you've specified topic to subscribe to using regex like &ldquo;my-kafka-topic-*&rdquo; and any topic that'll match this regex will be automatically subscribed by your consumer. I'm ignoring this right now as we don't use pattern subscription.</p>
+<p><strong>Line 11</strong> - This is optimization in case you&rsquo;re using pattern subscriptions - you&rsquo;ve specified topic to subscribe to using regex like &ldquo;my-kafka-topic-*&rdquo; and any topic that&rsquo;ll match this regex will be automatically subscribed by your consumer. I&rsquo;m ignoring this right now as we don&rsquo;t use pattern subscription.</p>
 </li>
 <li>
-<p><strong>Line 21</strong> - This is it! We're actually joining the group!</p>
+<p><strong>Line 21</strong> - This is it! We&rsquo;re actually joining the group!</p>
 </li>
 </ul>
-<p>There is even more happening here than in Consumer's <em>poll</em>. However key points are:</p>
+<p>There is even more happening here than in Consumer&rsquo;s <em>poll</em>. However key points are:</p>
 <ul>
 <li>
-<p>We've a connection to our group coordinator</p>
+<p>We&rsquo;ve a connection to our group coordinator</p>
 </li>
 <li>
-<p>We've joined the group</p>
+<p>We&rsquo;ve joined the group</p>
 </li>
 </ul>
 <p>There is a small but important detail about <em>ensureActiveGroup</em> method. It starts a heartbeat thread! <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336">Code</a>
@@ -492,18 +492,18 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
         <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
     <span style="color:#f92672">}</span>
 
-    startHeartbeatThreadIfNeeded<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
+    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div></p>
-<p>If that method finishes successfully, the consumer is fully initialized and is ready to fetch records. On every poll this process is repeated if it's needed - for example we've dropped out of group or lost connection, etc.</p>
+<p>If that method finishes successfully, the consumer is fully initialized and is ready to fetch records. On every poll this process is repeated if it&rsquo;s needed - for example we&rsquo;ve dropped out of group or lost connection, etc.</p>
 <h1 id="summary">Summary</h1>
-<p>We've ran through Kafka Consumer code to explore mechanics of the first poll. Let's wrap up the whole process. Below is the sequence of steps to fetch the first batch of records. As you see in the first poll we fetch cluster topology, discover our group coordinator, ask it to join the group, start heartbeat thread, initialize offsets and finally fetch the records.</p>
+<p>We&rsquo;ve ran through Kafka Consumer code to explore mechanics of the first poll. Let&rsquo;s wrap up the whole process. Below is the sequence of steps to fetch the first batch of records. As you see in the first poll we fetch cluster topology, discover our group coordinator, ask it to join the group, start heartbeat thread, initialize offsets and finally fetch the records.</p>
 <p><img src="/img/2019-06-kafka-consumer-poll/consumer-first-poll.png" alt="consumer-first-poll"></p>
 <p>What can we conclude from inspecting the first poll of Kafka consumer?</p>
 <ul>
@@ -514,7 +514,7 @@
 <p>Every consumer ensures its initialization on every poll. It creates any threads necessary, connects to servers, joins the group, etc.</p>
 </li>
 <li>
-<p>Consumer is not thread safe - you can't call its methods from different threads at the same time or else you'll get an exception.</p>
+<p>Consumer is not thread safe - you can&rsquo;t call its methods from different threads at the same time or else you&rsquo;ll get an exception.</p>
 </li>
 <li>
 <p>You have to call poll once in a while to ensure it is alive and connected to Kafka.</p>
@@ -523,7 +523,7 @@
 <p>There is a heartbeat thread that notifies cluster about consumer liveness. It is created within <em>poll</em> method if it does not exist.</p>
 </li>
 </ul>
-<p>What is missing from our journey and what I've explicitly omitted is:</p>
+<p>What is missing from our journey and what I&rsquo;ve explicitly omitted is:</p>
 <ul>
 <li>
 <p>How exactly does consumer join the group along with rebalancing?</p>
@@ -532,7 +532,7 @@
 <p>What does heartbeat thread do?</p>
 </li>
 </ul>
-<p>Both require separate post, so I'll cover those in the future posts, so stay tuned 😄. However, for now we know how consumer makes first connection to the cluster and what it has to initialize to do so.</p>
+<p>Both require separate post, so I&rsquo;ll cover those in the future posts, so stay tuned 😄. However, for now we know how consumer makes first connection to the cluster and what it has to initialize to do so.</p>
 
 
                 
@@ -677,7 +677,7 @@
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

@@ -6,10 +6,20 @@
     <description>Recent content in Posts on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 01 Dec 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>How to test the application&#39;s integration with Kafka?</title>
+      <link>http://chrzaszcz.dev/2020/08/kafka-testing/</link>
+      <pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2020/08/kafka-testing/</guid>
+      <description>Every application needs proper tests. We can write them on many levels ranging from unit tests, through integration tests to performance tests. When it comes to integrating our applications with Kafka it is easy to make mistakes and introduce bugs in the code, so it is crucial to write proper tests checking this integration.
+To write true integration tests you need a real-life Kafka working somewhere to test how your application cooperates with it.</description>
+    </item>
     
     <item>
       <title>How do transactions work in Apache Kafka?</title>
@@ -18,7 +28,7 @@
       
       <guid>http://chrzaszcz.dev/2019/12/kafka-transactions/</guid>
       <description>When you first encounter Kafka, you will face either at-least-once, or at-most-once guarantees, depending on when you commit your offsets. This is sufficient for many or even most use cases. However, if you are processing events from one topic to another, you might worry about the duplication of your messages on the target topic, or lost events on the source topic. A solution to that problem is a transaction.
-What can we expect from Kafka&#39;s transactions?</description>
+What can we expect from Kafka&amp;rsquo;s transactions?</description>
     </item>
     
     <item>
@@ -57,8 +67,8 @@ When one consumer dies Kafka needs to reassign orphaned partitions to the rest o
       <pubDate>Sat, 22 Jun 2019 00:00:00 +0000</pubDate>
       
       <guid>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</guid>
-      <description>Recap In the previous post we&#39;ve discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.
-Remember what I&#39;ve intentionally omitted from previous post? That&#39;s right! Heartbeat thread. We will investigate what it does exactly and how it works in general.
+      <description>Recap In the previous post we&amp;rsquo;ve discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.
+Remember what I&amp;rsquo;ve intentionally omitted from previous post? That&amp;rsquo;s right! Heartbeat thread. We will investigate what it does exactly and how it works in general.
 Samples and setup If you want to run some samples on debug to discover heartbeat code by yourself, please by all means use my simple project on this GitHub repo.</description>
     </item>
     
@@ -68,8 +78,8 @@ Samples and setup If you want to run some samples on debug to discover heartbeat
       <pubDate>Sun, 16 Jun 2019 00:00:00 +0000</pubDate>
       
       <guid>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</guid>
-      <description>Recap In the previous post we&#39;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called consumer group and that Kafka split messages among members of the consumer group.
-That&#39;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll?</description>
+      <description>Recap In the previous post we&amp;rsquo;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called consumer group and that Kafka split messages among members of the consumer group.
+That&amp;rsquo;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll?</description>
     </item>
     
     <item>

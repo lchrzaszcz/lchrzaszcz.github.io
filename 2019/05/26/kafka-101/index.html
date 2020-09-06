@@ -196,22 +196,22 @@
 <p>On the other hand, consumers subscribe to a set of topics (there might be many of them at the same time) and later on consume messages from those topics.</p>
 <p><img src="/img/2019-05-26-kafka-101/kafka-basics.png" alt="kafka consumers and producers"></p>
 <h2 id="consumer-group">Consumer group</h2>
-<p>In real-world scenarios you'd require every service interested, to receive every message from a particular topic, while at the same time you'd like your message to be delivered to exactly one instance of each service. That's were consumer groups come in.</p>
+<p>In real-world scenarios you&rsquo;d require every service interested, to receive every message from a particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
 <p>Basically, you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
 <p>Each message from each topic is sent to every consumer group, but within this consumer group it is sent to only one consumer (the rest of the group does not know anything about that message)</p>
 <p>Here you see that message ends up in exactly one consumer from each consumer group.</p>
 <p><img src="/img/2019-05-26-kafka-101/kafka-consumer-group.png" alt="kafka consumer groups"></p>
 <h2 id="partitions">Partitions</h2>
-<p>Let's focus now on a <strong>single</strong> consumer group. Assuming you have <em>EmailGroup</em> with 3 consumers in it, how does Kafka decide which message goes to which consumer?</p>
-<p>Internally every topic is divided into multiple partitions. Partition is a separate portion of data - basically, it's a shard. Each message is in only one partition, while partition contains many messages.</p>
+<p>Let&rsquo;s focus now on a <strong>single</strong> consumer group. Assuming you have <em>EmailGroup</em> with 3 consumers in it, how does Kafka decide which message goes to which consumer?</p>
+<p>Internally every topic is divided into multiple partitions. Partition is a separate portion of data - basically, it&rsquo;s a shard. Each message is in only one partition, while partition contains many messages.</p>
 <p>When the producer sends a message it provides both key and value of the message. Value is your data that describes anything you want to send. Key can also be used to pass data, however, it is also leveraged as a partition key. Producer calculates hash of the key and decides to which partition it should go. That means if you want two different messages to go to the same partition you should provide the same key for both of them.</p>
 <p>So far so good. We know how the producer works with partitions, but what about consumers? Consumer upon subscribing to a topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition is subscribed by exactly one consumer and every consumer can subscribe to multiple partitions (or zero if for example there are more consumers than partitions).</p>
 <p><img src="/img/2019-05-26-kafka-101/kafka-partitions.png" alt="kafka partitions"></p>
 <p>Diving even deeper into partitions you will see that Kafka guarantees the order of messages in each partition. If <em>message A</em> with key <em>Alex</em> is published to a topic and after that <em>message B</em> also with key <em>Alex</em> is published, then the consumer will receive the messages in exactly that order - first <em>message A</em> and then <em>message B</em>. This is only valid for a single partition. Messages from different partitions might be delivered in any order.</p>
-<p>Under the hood, the partition is nothing more than an append-only log, that's why the order is guaranteed. On the other hand, different partitions are different shards of data thus no order can be ensured.</p>
+<p>Under the hood, the partition is nothing more than an append-only log, that&rsquo;s why the order is guaranteed. On the other hand, different partitions are different shards of data thus no order can be ensured.</p>
 <p>As a graphical explanation, here the producer published 3 messages - <em>A</em>, <em>B</em> and <em>C</em> - all with the same key. The partition will look like this:</p>
 <p><img src="/img/2019-05-26-kafka-101/kafka-partitions-order.png" alt="kafka order"></p>
-<p>If consumer now subscribes to this topic and will be assigned this partition, then it'll receive <em>UserCreatedA</em> first, then <em>UserCreatedB</em> and finally <em>UserCreatedC</em>.</p>
+<p>If consumer now subscribes to this topic and will be assigned this partition, then it&rsquo;ll receive <em>UserCreatedA</em> first, then <em>UserCreatedB</em> and finally <em>UserCreatedC</em>.</p>
 <h2 id="offset">Offset</h2>
 <p>Now you might ask how does your application track, which message has been processed and which message will be fetched next. Due to the linear structure of the message log in Kafka, every message in a partition is assigned a deterministic offset. First-ever message in a partition has an offset of 0, the next one 1 and so on.</p>
 <p>Based on that, every message in Kafka can be uniquely identified by topic name, partition number and offset.</p>
@@ -239,16 +239,16 @@ consumer.seekToEnd(somePartitions)
 <li><em>Latest</em> - offset will be set to the greatest/latest offset available</li>
 <li><em>None</em> - exception will be thrown, so you can handle this manually</li>
 </ul>
-<h1 id="lets-setup-kafka">Let's setup Kafka!</h1>
-<p>Enough theory! Let's spin our single node Kafka cluster and give it a try!</p>
-<p>The easiest way to set up Kafka just to mess around locally is to use Docker. There are many Docker Images with Kafka, however the easiest one to use (a little outdated though) is <a href="https://hub.docker.com/r/spotify/kafka">spotify/kafka</a>, so let's get started and run it.</p>
+<h1 id="lets-setup-kafka">Let&rsquo;s setup Kafka!</h1>
+<p>Enough theory! Let&rsquo;s spin our single node Kafka cluster and give it a try!</p>
+<p>The easiest way to set up Kafka just to mess around locally is to use Docker. There are many Docker Images with Kafka, however the easiest one to use (a little outdated though) is <a href="https://hub.docker.com/r/spotify/kafka">spotify/kafka</a>, so let&rsquo;s get started and run it.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name kafka spotify/kafka
 </code></pre></div><p>Let the command finish, and your Kafka should be up-and-running. If you see your new container after issuing command below, then everything seems to work fine, and you can go on and start producing messages.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                NAMES
 b52fc6d41375        spotify/kafka       <span style="color:#e6db74">&#34;supervisord -n&#34;</span>    <span style="color:#ae81ff">8</span> hours ago         Up <span style="color:#ae81ff">8</span> hours          2181/tcp, 9092/tcp   kafka
 </code></pre></div><h2 id="producing-message">Producing message</h2>
-<p>Let's try sending some messages. We will use console clients that are shipped with Kafka. To access them, we need to get into our container:</p>
+<p>Let&rsquo;s try sending some messages. We will use console clients that are shipped with Kafka. To access them, we need to get into our container:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker exec -it kafka bash
 root@b52fc6d41375:/# cd /opt/kafka_2.11-0.10.1.0/bin/
 </code></pre></div><p>If you list content of current directory you will be presented with various handy tools to access Kafka. However, we will focus right now on <em>kafka-console-producer.sh</em> in particular. Leveraging it you can send some data to Kafka:</p>
@@ -272,10 +272,10 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin#</code></pre></td></tr></table>
 </div>
 <p>We sent two messages: <em>my first message</em> and <em>my second message</em>. In first line I have specified kafka location - <em>localhost:9092</em> and to which topic I want to produce my messages - <em>myTestTopic</em>. After that, each consecutive line is a separate message - until I press Ctrl+C.</p>
 <blockquote>
-<p>Don't mind the warning in line 3. It's because of <em>myTestTopic</em> being a new topic, and Kafka has to create it first, so there is no leader for it, hence &ldquo;LEADER_NOT_AVAILABLE&rdquo; error. I will explain this in detail in future posts.</p>
+<p>Don&rsquo;t mind the warning in line 3. It&rsquo;s because of <em>myTestTopic</em> being a new topic, and Kafka has to create it first, so there is no leader for it, hence &ldquo;LEADER_NOT_AVAILABLE&rdquo; error. I will explain this in detail in future posts.</p>
 </blockquote>
 <h2 id="consuming-message">Consuming message</h2>
-<p>Right now Kafka has 2 messages, so let's try consuming them. We will use similar script as aforementioned <em>kafka-console-consumer.sh</em>.</p>
+<p>Right now Kafka has 2 messages, so let&rsquo;s try consuming them. We will use similar script as aforementioned <em>kafka-console-consumer.sh</em>.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
@@ -294,7 +294,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 </div>
 <p>As you see we received aforementioned messages. Same as previously, in first line I have specified Kafka location and topic, but I also had to specify option <em>&ndash;from-beginning</em>.</p>
 <p>What does option <em>&ndash;from-beginning</em> do? The consumer group for console clients is randomized on each run, so there is no initial offset for it. Due to the fact that we have just started consumers (while messages are already in Kafka) we have to start reading from beginning, hence <em>&ndash;from-beginning</em> option. It makes consumer to start from the earliest message available.</p>
-<p>In case you omit this option, the consumer won't print anything and will wait for new messages to come.</p>
+<p>In case you omit this option, the consumer won&rsquo;t print anything and will wait for new messages to come.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
@@ -480,7 +480,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

@@ -245,12 +245,12 @@ logger.info { topology.describe() }
 streams.start()</code></pre></td></tr></table>
 </div>
 </div>
-<p>What happens here? Let's analyze it step by step.</p>
+<p>What happens here? Let&rsquo;s analyze it step by step.</p>
 <ul>
 <li><strong>Line 2</strong> - We are setting an application ID. This is a mandatory parameter. It is used as a base for group id for your consumers, internal topics, and a few other things.</li>
 <li><strong>Line 3</strong> - We are pointing where our Kafka is located.</li>
 <li><strong>Line 4 - 5</strong> - We are setting default serializers. If you do not override serializers or deserializers in a particular method call, then this default class will be used.</li>
-<li><strong>Line 7</strong> - Kafka Streams requires the source topic to be created up-front, otherwise you will get an exception. Thus, we are creating a <em>WordsTopic</em> here. To be honest, there is nothing extraordinary about it, so let's skip it.</li>
+<li><strong>Line 7</strong> - Kafka Streams requires the source topic to be created up-front, otherwise you will get an exception. Thus, we are creating a <em>WordsTopic</em> here. To be honest, there is nothing extraordinary about it, so let&rsquo;s skip it.</li>
 <li><strong>Line 9</strong> - Get a <em>StreamBuilder</em> instance</li>
 <li><strong>Line 10</strong> - Start creating our first stream! We are pointing where the source of the stream is. In this case, it is a topic called <em>WordsTopic</em>.</li>
 <li><strong>Line 13</strong> - Map the value of every message in the stream to the number of characters in it.</li>
@@ -266,7 +266,7 @@ streams.start()</code></pre></td></tr></table>
 <h1 id="kafka-streams-dsl">Kafka Streams DSL</h1>
 <p>All your processing is defined as a graph. The nodes are called <em>stream processors</em>, and every stream processor can accept input records from the upstream, apply processing to them and send the result downstream.</p>
 <p>Obviously, there has to be some kind of start and end of the stream. Those nodes are called <em>source processor</em> and <em>sink processor</em>. We have both of them in the sample app, and one is subscribed to the <em>WordsTopic</em> and the second one publishes records to <em>CountsTopic</em>.</p>
-<p>Knowing that, let's revisit the definition of our topology.</p>
+<p>Knowing that, let&rsquo;s revisit the definition of our topology.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -337,7 +337,7 @@ logger.info { topology.describe() }</code></pre></td></tr></table>
 <p>How to remember the arrow direction? It is similar as in Bash, if you want to send something to your output, use <code>echo &quot;something&quot; &gt; file.txt</code>, however if you want to receive something as an input, use <code>./cmd.sh &lt; &quot;param&quot;</code>.</p>
 <h1 id="processor-api">Processor API</h1>
 <p>In the aforementioned sample app, we have used <em>Kafka Streams DSL</em>, which is one of two kinds of an interface to configure your topology. The DSL is a high-level interface, with many details hidden underneath. Another interface, however, is a low-level <em>Processor API</em>. It gives you far more grained control over the construction of topology, although, is not so neat and clean as DSL.</p>
-<p>If you would dig into the code of Kafka Streams DSL you would conclude that it actually uses <em>Processor API</em> to operate on a topology. To compare both interfaces let's rewrite our code using other API.</p>
+<p>If you would dig into the code of Kafka Streams DSL you would conclude that it actually uses <em>Processor API</em> to operate on a topology. To compare both interfaces let&rsquo;s rewrite our code using other API.</p>
 <p>In the repository, next to the previous code there is a <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/streams/ProcessorAPI.kt">ProcessorAPI</a> example.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
@@ -493,7 +493,7 @@ topology.addSink(
 <li><strong>Line 4</strong> - We have added a new processor <em>OddChecker</em>, and connected it to the source node</li>
 <li><strong>Line 14</strong> - Here we create a new sink, that will publish records to the new topic <em>OddTopic</em>. It will receive messages from the <em>OddChecker</em> processor.</li>
 </ul>
-<p>Let's run the application. If we inspect the logs we will see printed topology. Lines <strong>8</strong> and <strong>13</strong> are the newly added nodes.</p>
+<p>Let&rsquo;s run the application. If we inspect the logs we will see printed topology. Lines <strong>8</strong> and <strong>13</strong> are the newly added nodes.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -697,7 +697,7 @@ topology.addSink(
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

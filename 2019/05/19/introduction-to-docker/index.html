@@ -190,8 +190,8 @@
 <p>What is Docker? It is so popular that you probably know more or less what it is - anyway - according to documentation Docker is a <!-- raw HTML omitted -->platform for developing, shipping and running applications<!-- raw HTML omitted -->. So what’s the deal? Isolation! Docker uses features like <!-- raw HTML omitted -->cgroups<!-- raw HTML omitted -->, <!-- raw HTML omitted -->namespaces<!-- raw HTML omitted -->, <!-- raw HTML omitted -->capabilities<!-- raw HTML omitted --> and other Linux kernel stuff to lock down your process in a “software cage” by limiting resources like CPU, memory as well as ability to see other things in the system like processes or files. If you’re interested go check those mechanisms, but I think you can imagine how Docker might work under the hood using them.</p>
 <p>Before we go further be sure to have Docker installed - the installation process is fairly simple, and you can follow the instructions for Ubuntu <!-- raw HTML omitted -->here<!-- raw HTML omitted -->.</p>
 <h1 id="image-vs-container">Image vs container</h1>
-<p>The two most important things in Docker's world are image and container. You can think of an <!-- raw HTML omitted -->image<!-- raw HTML omitted --> as some kind of ISO image or CD with your favorite system installation. In particular, Docker image contains all things that are required to create a running thing - <!-- raw HTML omitted -->container<!-- raw HTML omitted -->. A container is much like a living thing inside your OS, process, or something. You can start it, stop it, change it, save it.</p>
-<h1 id="handson--cowsay-on-ubuntu">Hands-on - cowsay on Ubuntu</h1>
+<p>The two most important things in Docker&rsquo;s world are image and container. You can think of an <!-- raw HTML omitted -->image<!-- raw HTML omitted --> as some kind of ISO image or CD with your favorite system installation. In particular, Docker image contains all things that are required to create a running thing - <!-- raw HTML omitted -->container<!-- raw HTML omitted -->. A container is much like a living thing inside your OS, process, or something. You can start it, stop it, change it, save it.</p>
+<h1 id="hands-on---cowsay-on-ubuntu">Hands-on - cowsay on Ubuntu</h1>
 <p>I’ll show you a quick thing you can do with Docker - install random software and check it out. In our example, it’ll be a popular <!-- raw HTML omitted -->cowsay in the Ubuntu environment<!-- raw HTML omitted -->.
 Let’s get started with running Ubuntu container - remember you’re not installing a virtual machine with Ubuntu, but creating an <!-- raw HTML omitted -->“isolated box” with the environment just like ubuntu<!-- raw HTML omitted --> (libraries, tools, binaries, whatever, etc.).</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -t -i ubuntu
@@ -373,7 +373,7 @@ apt-get install cowsay
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

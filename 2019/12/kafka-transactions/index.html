@@ -187,17 +187,17 @@
 
                 
                 <p>When you first encounter Kafka, you will face either <em>at-least-once</em>, or <em>at-most-once</em> guarantees, depending on when you commit your offsets. This is sufficient for many or even most use cases. However, if you are processing events from one topic to another, you might worry about the duplication of your messages on the target topic, or lost events on the source topic. A solution to that problem is a transaction.</p>
-<p>What can we expect from Kafka's transactions? As an example, let's consider two topics, our application is consuming events from <code>Source Topic</code>, transforming them, and publishing the result on <code>Target Topic</code>.</p>
+<p>What can we expect from Kafka&rsquo;s transactions? As an example, let&rsquo;s consider two topics, our application is consuming events from <code>Source Topic</code>, transforming them, and publishing the result on <code>Target Topic</code>.</p>
 <p>At first, we have some messages on <code>Source Topic</code>:</p>
-<p><img src="/img/2019-11-kafka-transactions/example-before-transaction.png" alt="example-before-transaction"></p>
+<p><img src="/img/2019-12-kafka-transactions/example-before-transaction.png" alt="example-before-transaction"></p>
 <p>Our consumer fetches <code>Message 1</code> and <code>Message 2</code>, publishes them on <code>Target Topic</code>. As a result, if everything went well, we expect the messages to be available on <code>Target Topic</code>, and the offsets committed on the <code>Source Topic</code>:</p>
-<p><img src="/img/2019-11-kafka-transactions/example-after-commit-transaction.png" alt="example-after-commit-transaction"></p>
+<p><img src="/img/2019-12-kafka-transactions/example-after-commit-transaction.png" alt="example-after-commit-transaction"></p>
 <p>On the other hand, if something went wrong, the messages on the source topic should be still uncommitted and no messages should appear on the target topic.</p>
-<p><img src="/img/2019-11-kafka-transactions/example-before-transaction.png" alt="example-before-transaction"></p>
+<p><img src="/img/2019-12-kafka-transactions/example-before-transaction.png" alt="example-before-transaction"></p>
 <p>Simply speaking we require an atomicity. In a transaction, consume and produce operations, should either all, or none of them happen.</p>
 <h1 id="high-level-overview">High level overview</h1>
 <p>In the code, the component that does the heavy work with transactions on an application side is a producer. We have used the producer many times, so what changes in comparison to the standard producer usage? We have to use a few additional methods, and now transactional flow looks like this:</p>
-<p><img src="/img/2019-11-kafka-transactions/simple-transaction.png" alt="simple-transaction"></p>
+<p><img src="/img/2019-12-kafka-transactions/simple-transaction.png" alt="simple-transaction"></p>
 <p>You can see a few extra steps like:</p>
 <ul>
 <li><strong>initTransactions</strong> - Sets up a producer to use transactions.</li>
@@ -207,7 +207,7 @@
 <li><strong>commitTransaction</strong> - This includes committing consumed offsets and marking produced messages as committed.</li>
 </ul>
 <h1 id="the-code">The code</h1>
-<p>An example we will follow today is a piece of code that fetches records, filters them according to some predicate, and publishes them on a target topic. Let's say we want to extract the income from pizza orders, so we fetch orders, check if those are pizza orders, and extract the value of the order. It looks like this:</p>
+<p>An example we will follow today is a piece of code that fetches records, filters them according to some predicate, and publishes them on a target topic. Let&rsquo;s say we want to extract the income from pizza orders, so we fetch orders, check if those are pizza orders, and extract the value of the order. It looks like this:</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -274,18 +274,18 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">initTransactions</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    throwIfNoTransactionManager<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    throwIfProducerClosed<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">initializeTransactions</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">(</span>maxBlockTimeMs<span style="color:#f92672">,</span> TimeUnit<span style="color:#f92672">.</span><span style="color:#a6e22e">MILLISECONDS</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">initTransactions</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    throwIfNoTransactionManager<span style="color:#f92672">();</span>
+    throwIfProducerClosed<span style="color:#f92672">();</span>
+    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">initializeTransactions</span><span style="color:#f92672">();</span>
+    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">();</span>
+    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">(</span>maxBlockTimeMs<span style="color:#f92672">,</span> TimeUnit<span style="color:#f92672">.</span><span style="color:#a6e22e">MILLISECONDS</span><span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>We can see some preliminary checks. The first one ensures that we have set the <code>transactional.id</code> property.</p>
 <p>What is a <code>transactional.id</code>? It is a value that identifies a producer instance across restarts. If your particular service instance has a <code>transactional.id</code> <em>1234</em>, after the restart it should still have a value of <em>1234</em>. Although, it is tricky if you are using auto-assignment of partitions and multiple instances. This case is covered in this great blog post: <a href="https://tgrez.github.io/posts/2019-04-13-kafka-transactions.html">&ldquo;When Kafka transactions might fail&rdquo;</a></p>
-<p>In line 4 we are initializing producer's internal <code>transactionManager</code>, which is responsible for managing all transactions features of producer. The implementation looks like this (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/internals/TransactionManager.java#L275">source code</a>):</p>
+<p>In line 4 we are initializing producer&rsquo;s internal <code>transactionManager</code>, which is responsible for managing all transactions features of producer. The implementation looks like this (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/internals/TransactionManager.java#L275">source code</a>):</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -302,28 +302,28 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">synchronized</span> TransactionalRequestResult <span style="color:#a6e22e">initializeTransactions</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">handleCachedTransactionRequestResult</span><span style="color:#f92672">(</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">{</span>
-        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">INITIALIZING</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        setProducerIdAndEpoch<span style="color:#f92672">(</span>ProducerIdAndEpoch<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        InitProducerIdRequestData requestData <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> InitProducerIdRequestData<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">synchronized</span> TransactionalRequestResult <span style="color:#a6e22e">initializeTransactions</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">handleCachedTransactionRequestResult</span><span style="color:#f92672">(()</span> <span style="color:#f92672">-&gt;</span> <span style="color:#f92672">{</span>
+        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">INITIALIZING</span><span style="color:#f92672">);</span>
+        setProducerIdAndEpoch<span style="color:#f92672">(</span>ProducerIdAndEpoch<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">);</span>
+        InitProducerIdRequestData requestData <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> InitProducerIdRequestData<span style="color:#f92672">()</span>
                 <span style="color:#f92672">.</span><span style="color:#a6e22e">setTransactionalId</span><span style="color:#f92672">(</span>transactionalId<span style="color:#f92672">)</span>
-                <span style="color:#f92672">.</span><span style="color:#a6e22e">setTransactionTimeoutMs</span><span style="color:#f92672">(</span>transactionTimeoutMs<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        InitProducerIdHandler handler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> InitProducerIdHandler<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> InitProducerIdRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>requestData<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        enqueueRequest<span style="color:#f92672">(</span>handler<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#f92672">.</span><span style="color:#a6e22e">setTransactionTimeoutMs</span><span style="color:#f92672">(</span>transactionTimeoutMs<span style="color:#f92672">);</span>
+        InitProducerIdHandler handler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> InitProducerIdHandler<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> InitProducerIdRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>requestData<span style="color:#f92672">));</span>
+        enqueueRequest<span style="color:#f92672">(</span>handler<span style="color:#f92672">);</span>
         <span style="color:#66d9ef">return</span> handler<span style="color:#f92672">.</span><span style="color:#a6e22e">result</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span><span style="color:#f92672">,</span> State<span style="color:#f92672">.</span><span style="color:#a6e22e">INITIALIZING</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">},</span> State<span style="color:#f92672">.</span><span style="color:#a6e22e">INITIALIZING</span><span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>The most important logic is contacting the remote transaction coordinator, which resides on a broker. This involves two steps:</p>
 <ul>
-<li><strong>Line 4 - 7</strong> - We are preparing a request to the broker's transaction coordinator. The producer includes <code>transactional.id</code>, and transaction timeout. This request is called <code>InitProducerId</code>.</li>
+<li><strong>Line 4 - 7</strong> - We are preparing a request to the broker&rsquo;s transaction coordinator. The producer includes <code>transactional.id</code>, and transaction timeout. This request is called <code>InitProducerId</code>.</li>
 <li><strong>Line 8</strong> - The aforementioned request is enqueued for sending. The class that is responsible for sending enqueued requests is called <code>Sender</code>, and it is a background thread created by every producer. Eventually, the request will be sent.</li>
 </ul>
 <p>What does the group coordinator do when it received an <code>initProducerId</code> call? First, it checks if it has any more information on this <code>transactional.id</code>.</p>
 <p>Here come the transaction states. A transaction is in one particular state and is allowed to switch to different states according to some rules. States and transitions look like this:</p>
-<p><img src="/img/2019-11-kafka-transactions/transaction-states.png" alt="transaction-states"></p>
+<p><img src="/img/2019-12-kafka-transactions/transaction-states.png" alt="transaction-states"></p>
 <p>In case there is no information about the transaction, the coordinator creates an <code>Empty</code> state. However, if there is already a transaction for this id, there are three possible results. Those depend on the transaction state:</p>
 <ul>
 <li><code>Ongoing</code> - There is an ongoing transaction started by the previous instance of the producer, so the broker will assume the old producer is dead, and abort this transaction. It has to do some cleaning, so it asks the new producer instance to retry later. While aborting the transaction, the broker will fence off the old producer preventing him from committing the transaction, if it was not dead but just disappear for a while.</li>
@@ -361,24 +361,24 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#a6e22e">@Override</span>
 <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">handleResponse</span><span style="color:#f92672">(</span>AbstractResponse response<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
     InitProducerIdResponse initProducerIdResponse <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>InitProducerIdResponse<span style="color:#f92672">)</span> response<span style="color:#f92672">;</span>
-    Errors error <span style="color:#f92672">=</span> initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    Errors error <span style="color:#f92672">=</span> initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">();</span>
 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        ProducerIdAndEpoch producerIdAndEpoch <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ProducerIdAndEpoch<span style="color:#f92672">(</span>initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">.</span><span style="color:#a6e22e">producerId</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">,</span>
-                initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">.</span><span style="color:#a6e22e">producerEpoch</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        setProducerIdAndEpoch<span style="color:#f92672">(</span>producerIdAndEpoch<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">READY</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        ProducerIdAndEpoch producerIdAndEpoch <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ProducerIdAndEpoch<span style="color:#f92672">(</span>initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">.</span><span style="color:#a6e22e">producerId</span><span style="color:#f92672">(),</span>
+                initProducerIdResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">.</span><span style="color:#a6e22e">producerEpoch</span><span style="color:#f92672">());</span>
+        setProducerIdAndEpoch<span style="color:#f92672">(</span>producerIdAndEpoch<span style="color:#f92672">);</span>
+        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">READY</span><span style="color:#f92672">);</span>
         lastError <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
-        result<span style="color:#f92672">.</span><span style="color:#a6e22e">done</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NOT_COORDINATOR</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">COORDINATOR_NOT_AVAILABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        lookupCoordinator<span style="color:#f92672">(</span>FindCoordinatorRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">CoordinatorType</span><span style="color:#f92672">.</span><span style="color:#a6e22e">TRANSACTION</span><span style="color:#f92672">,</span> transactionalId<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        reenqueue<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">COORDINATOR_LOAD_IN_PROGRESS</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">CONCURRENT_TRANSACTIONS</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        reenqueue<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">=</span><span style="color:#f92672">=</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">TRANSACTIONAL_ID_AUTHORIZATION_FAILED</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        fatalError<span style="color:#f92672">(</span>error<span style="color:#f92672">.</span><span style="color:#a6e22e">exception</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        result<span style="color:#f92672">.</span><span style="color:#a6e22e">done</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NOT_COORDINATOR</span> <span style="color:#f92672">||</span> error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">COORDINATOR_NOT_AVAILABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        lookupCoordinator<span style="color:#f92672">(</span>FindCoordinatorRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">CoordinatorType</span><span style="color:#f92672">.</span><span style="color:#a6e22e">TRANSACTION</span><span style="color:#f92672">,</span> transactionalId<span style="color:#f92672">);</span>
+        reenqueue<span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">COORDINATOR_LOAD_IN_PROGRESS</span> <span style="color:#f92672">||</span> error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">CONCURRENT_TRANSACTIONS</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        reenqueue<span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">TRANSACTIONAL_ID_AUTHORIZATION_FAILED</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        fatalError<span style="color:#f92672">(</span>error<span style="color:#f92672">.</span><span style="color:#a6e22e">exception</span><span style="color:#f92672">());</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-        fatalError<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> KafkaException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected error in InitProducerIdResponse; &#34;</span> <span style="color:#f92672">+</span> error<span style="color:#f92672">.</span><span style="color:#a6e22e">message</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        fatalError<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> KafkaException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected error in InitProducerIdResponse; &#34;</span> <span style="color:#f92672">+</span> error<span style="color:#f92672">.</span><span style="color:#a6e22e">message</span><span style="color:#f92672">()));</span>
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
@@ -399,10 +399,10 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> ProducerFencedException <span style="color:#f92672">{</span>
-    throwIfNoTransactionManager<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    throwIfProducerClosed<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> ProducerFencedException <span style="color:#f92672">{</span>
+    throwIfNoTransactionManager<span style="color:#f92672">();</span>
+    throwIfProducerClosed<span style="color:#f92672">();</span>
+    transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">();</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
@@ -416,10 +416,10 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        ensureTransactional<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        maybeFailWithError<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">IN_TRANSACTION</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">beginTransaction</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        ensureTransactional<span style="color:#f92672">();</span>
+        maybeFailWithError<span style="color:#f92672">();</span>
+        transitionTo<span style="color:#f92672">(</span>State<span style="color:#f92672">.</span><span style="color:#a6e22e">IN_TRANSACTION</span><span style="color:#f92672">);</span>
     <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
@@ -442,8 +442,8 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>transactionManager <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">isTransactional</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
-    transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeAddPartitionToTransaction</span><span style="color:#f92672">(</span>tp<span style="color:#f92672">)</span><span style="color:#f92672">;</span></code></pre></td></tr></table>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>transactionManager <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">isTransactional</span><span style="color:#f92672">())</span>
+    transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeAddPartitionToTransaction</span><span style="color:#f92672">(</span>tp<span style="color:#f92672">);</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>If we jump a little further (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/internals/TransactionManager.java#L340">source code</a>):</p>
@@ -462,14 +462,14 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">maybeAddPartitionToTransaction</span><span style="color:#f92672">(</span>TopicPartition topicPartition<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    failIfNotReadyForSend<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    failIfNotReadyForSend<span style="color:#f92672">();</span>
 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isPartitionAdded<span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">)</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> isPartitionPendingAdd<span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isPartitionAdded<span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">)</span> <span style="color:#f92672">||</span> isPartitionPendingAdd<span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">))</span>
         <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
 
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Begin adding new partition {} to transaction&#34;</span><span style="color:#f92672">,</span> topicPartition<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    topicPartitionBookkeeper<span style="color:#f92672">.</span><span style="color:#a6e22e">addPartition</span><span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    newPartitionsInTransaction<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Begin adding new partition {} to transaction&#34;</span><span style="color:#f92672">,</span> topicPartition<span style="color:#f92672">);</span>
+    topicPartitionBookkeeper<span style="color:#f92672">.</span><span style="color:#a6e22e">addPartition</span><span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">);</span>
+    newPartitionsInTransaction<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>topicPartition<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
@@ -486,12 +486,12 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">runOnce</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>transactionManager <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">runOnce</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>transactionManager <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
         <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">isTransactional</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
-            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>maybeSendAndPollTransactionalRequest<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span></code></pre></td></tr></table>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">isTransactional</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#f92672">...</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>maybeSendAndPollTransactionalRequest<span style="color:#f92672">())</span> <span style="color:#f92672">{</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>If we jump further to <code>maybeSendAndPollTransactionalRequest()</code> implementation, and later on to the transaction manager, we will see (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/internals/TransactionManager.java#L724">source code</a>):</p>
@@ -501,15 +501,15 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>newPartitionsInTransaction<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
-    enqueueRequest<span style="color:#f92672">(</span>addPartitionsToTransactionHandler<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span></code></pre></td></tr></table>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>newPartitionsInTransaction<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span>
+    enqueueRequest<span style="color:#f92672">(</span>addPartitionsToTransactionHandler<span style="color:#f92672">());</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>So along with every request to publish a batch of records, there is a request informing about the partitions in a transaction.</p>
 <h1 id="sending-consumed-offsets-to-the-transaction">Sending consumed offsets to the transaction</h1>
 <p>Apart from adding newly produced messages to the transaction, we have to take care of consumed offsets, as those should be committed at the same time as the transaction. We inform Kafka broker about those offsets in this way:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaProducer.sendOffsetsToTransaction(consumedOffsets, <span style="color:#e6db74">&#34;kafka-transactions-group&#34;</span>)</code></pre></div>
-<p>Let's jump to the implementation (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/KafkaProducer.java#L669">source code</a>).</p>
+<p>Let&rsquo;s jump to the implementation (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/KafkaProducer.java#L669">source code</a>).</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
@@ -524,11 +524,11 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendOffsetsToTransaction</span><span style="color:#f92672">(</span>Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> OffsetAndMetadata<span style="color:#f92672">&gt;</span> offsets<span style="color:#f92672">,</span>
                                      String consumerGroupId<span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> ProducerFencedException <span style="color:#f92672">{</span>
-    throwIfNoTransactionManager<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    throwIfProducerClosed<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">sendOffsetsToTransaction</span><span style="color:#f92672">(</span>offsets<span style="color:#f92672">,</span> consumerGroupId<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    throwIfNoTransactionManager<span style="color:#f92672">();</span>
+    throwIfProducerClosed<span style="color:#f92672">();</span>
+    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">sendOffsetsToTransaction</span><span style="color:#f92672">(</span>offsets<span style="color:#f92672">,</span> consumerGroupId<span style="color:#f92672">);</span>
+    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">();</span>
+    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">();</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
@@ -552,21 +552,21 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">commitTransaction</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> ProducerFencedException <span style="color:#f92672">{</span>
-    throwIfNoTransactionManager<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    throwIfProducerClosed<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">beginCommit</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">(</span>maxBlockTimeMs<span style="color:#f92672">,</span> TimeUnit<span style="color:#f92672">.</span><span style="color:#a6e22e">MILLISECONDS</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-groovy" data-lang="groovy"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">commitTransaction</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> ProducerFencedException <span style="color:#f92672">{</span>
+    throwIfNoTransactionManager<span style="color:#f92672">();</span>
+    throwIfProducerClosed<span style="color:#f92672">();</span>
+    TransactionalRequestResult result <span style="color:#f92672">=</span> transactionManager<span style="color:#f92672">.</span><span style="color:#a6e22e">beginCommit</span><span style="color:#f92672">();</span>
+    sender<span style="color:#f92672">.</span><span style="color:#a6e22e">wakeup</span><span style="color:#f92672">();</span>
+    result<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">(</span>maxBlockTimeMs<span style="color:#f92672">,</span> TimeUnit<span style="color:#f92672">.</span><span style="color:#a6e22e">MILLISECONDS</span><span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>Similarly, to the <code>sendOffsetsToTransaction</code>, we see some simple validation, as well as preparation of a request, and queuing of it.</p>
-<p>What happens on a transaction coordinator's side? I would like to cite the code, however, it is too complicated and fragmented. However, it is changing the transaction state to the <code>PrepareCommit</code> state, notifying all participants - partitions that have consumed offsets to commit and produced messages to mark as committed.</p>
+<p>What happens on a transaction coordinator&rsquo;s side? I would like to cite the code, however, it is too complicated and fragmented. However, it is changing the transaction state to the <code>PrepareCommit</code> state, notifying all participants - partitions that have consumed offsets to commit and produced messages to mark as committed.</p>
 <p>After it collects all the responses it will change the state to <code>CompleteCommit</code> state. After that, you can be sure that the offsets are committed, and messages you have produced are available for consumption.</p>
 <h1 id="summary">Summary</h1>
 <p>Today we have discussed how transactions in Apache Kafka work. The topic is far more complicated than what we have seen today, so if you are interested in digging deeper, check out the <em>Further reading</em> section below.</p>
-<p>Anyway, I am pretty sure that the gentle introduction to the transaction's code will enable you to debug it in case of problems in your application.</p>
+<p>Anyway, I am pretty sure that the gentle introduction to the transaction&rsquo;s code will enable you to debug it in case of problems in your application.</p>
 <p>Be sure to share your thoughts in the comments. Are you using transactions in your application? Please share your experience with it.</p>
 <p>Anyway, a few points to summarize:</p>
 <ul>
@@ -591,7 +591,7 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </li>
 </ul>
 <h1 id="further-reading">Further reading</h1>
-<p>If you want to discover a bit more the Apache Kafka's transactions topic check out those resources:</p>
+<p>If you want to discover a bit more the Apache Kafka&rsquo;s transactions topic check out those resources:</p>
 <ul>
 <li>
 <p><a href="https://www.confluent.io/blog/transactions-apache-kafka/">&ldquo;Transactions in Apache Kafka&rdquo; - Confluent</a> - Introductory article about Kafka Transactions. Good starting point.</p>
@@ -621,6 +621,11 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
                             Previous Post</a>
                     </li>
                     
+                    
+                    <li class="next">
+                        <a href="/2020/08/kafka-testing/" data-toggle="tooltip" data-placement="top" title="How to test the application&#39;s integration with Kafka?">Next
+                            Post &rarr;</a>
+                    </li>
                     
                 </ul>
 
@@ -748,7 +753,7 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

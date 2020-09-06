@@ -187,52 +187,52 @@
 
                 
                 <h1 id="recap">Recap</h1>
-<p><a href="/2019/06/16/kafka-consumer-poll/">In the previous post</a> we've discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.</p>
-<p>Remember what I've intentionally omitted from previous post? That's right! Heartbeat thread. We will investigate what it does exactly and how it works in general.</p>
+<p><a href="/2019/06/16/kafka-consumer-poll/">In the previous post</a> we&rsquo;ve discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.</p>
+<p>Remember what I&rsquo;ve intentionally omitted from previous post? That&rsquo;s right! Heartbeat thread. We will investigate what it does exactly and how it works in general.</p>
 <h1 id="samples-and-setup">Samples and setup</h1>
 <p>If you want to run some samples on debug to discover heartbeat code by yourself, please by all means use my simple project on this <a href="https://github.com/lchrzaszcz/kafka-examples">GitHub repo</a>. This is the same repo as in previous post.</p>
-<p>Similarly, to previous post I'll cite some Apache Kafka code. You can find it on their <a href="https://github.com/apache/kafka/tree/2.2">github</a>.</p>
+<p>Similarly, to previous post I&rsquo;ll cite some Apache Kafka code. You can find it on their <a href="https://github.com/apache/kafka/tree/2.2">github</a>.</p>
 <h1 id="what-is-a-heartbeat">What is a heartbeat?</h1>
-<p>We're working in a distributed system. We have our business application working on one server and Kafka is running on a different server. In such a configuration how can Kafka tell if your application with consumer is still working? If it isn't, maybe coordinator should evict consumer from the group to give some partitions to the rest of the consumers, so the processing can go on?</p>
-<p>Obviously the easiest solution is to send some status updates via network saying that we're still alive and evict each other based on some sort of timeouts. So if consumer didn't contact Kafka in time then let's assume it is dead, otherwise it is still up and running and is a valid member of its consumer group. This is called heartbeat.</p>
+<p>We&rsquo;re working in a distributed system. We have our business application working on one server and Kafka is running on a different server. In such a configuration how can Kafka tell if your application with consumer is still working? If it isn&rsquo;t, maybe coordinator should evict consumer from the group to give some partitions to the rest of the consumers, so the processing can go on?</p>
+<p>Obviously the easiest solution is to send some status updates via network saying that we&rsquo;re still alive and evict each other based on some sort of timeouts. So if consumer didn&rsquo;t contact Kafka in time then let&rsquo;s assume it is dead, otherwise it is still up and running and is a valid member of its consumer group. This is called heartbeat.</p>
 <p>Back in old days and old Kafka versions there used to be a simple heartbeat mechanism that was triggered when you called your <em>poll</em> method. In other words, heartbeat was sent only when you called poll.</p>
 <p><img src="/img/2019-06-kafka-heartbeat-thread/heartbeat-old-way.png" alt="kafka heartbeat old way"></p>
 <p>That might work great provided you call your <em>poll</em> frequently or specify long timeout, right?</p>
-<p>As easy as it sounds, it might be a little bit tricky. If your processing takes a lot of time, then you have to specify long timeout, and you end up with a system that takes minutes to detect failure and recover from it. It has to work like that, since the system is not sure if you're dead, or you're just processing records longer.</p>
-<p>That's why in <a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread">KIP-62</a>, the background thread has been introduced. So instead of waiting for you to call poll, this thread takes care of notifying Kafka we're working just fine. So if your whole process dies along with heartbeat thread, then Kafka will quickly discover that, and it is no longer affected by the time you spend on processing records, since the heartbeat is sent asynchronously and more often  - awesome!</p>
+<p>As easy as it sounds, it might be a little bit tricky. If your processing takes a lot of time, then you have to specify long timeout, and you end up with a system that takes minutes to detect failure and recover from it. It has to work like that, since the system is not sure if you&rsquo;re dead, or you&rsquo;re just processing records longer.</p>
+<p>That&rsquo;s why in <a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread">KIP-62</a>, the background thread has been introduced. So instead of waiting for you to call poll, this thread takes care of notifying Kafka we&rsquo;re working just fine. So if your whole process dies along with heartbeat thread, then Kafka will quickly discover that, and it is no longer affected by the time you spend on processing records, since the heartbeat is sent asynchronously and more often  - awesome!</p>
 <p><img src="/img/2019-06-kafka-heartbeat-thread/heartbeat-new-way.png" alt="kafka consumers and producers"></p>
-<p>Ok so now we understand there is a heartbeat thread in the first place, but when does it start and what exactly it does? Let's check it out!</p>
+<p>Ok so now we understand there is a heartbeat thread in the first place, but when does it start and what exactly it does? Let&rsquo;s check it out!</p>
 <h1 id="when-does-the-heartbeat-thread-start">When does the heartbeat thread start?</h1>
-<p>You can recollect from previous post that we already spotted the starting place, but for the sake of completeness of this post let's cite the code again.</p>
+<p>You can recollect from previous post that we already spotted the starting place, but for the sake of completeness of this post let&rsquo;s cite the code again.</p>
 <p>Every time you call poll, consumer also polls for coordinator events, and it basically does this (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310">original code</a>):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#f92672">...</span>
 
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#f92672">...</span>
                 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
                     <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-            <span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+            <span style="color:#f92672">...</span>
         <span style="color:#f92672">}</span>
-        <span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+        <span style="color:#f92672">...</span>
     <span style="color:#f92672">}</span>
-</code></pre></div><p>So if we're using auto-assignment (lets assume that we do, because manual assignment is a different story), then consumer checks if it needs to rejoin the group. That might be the case if some changes were done (Kafka evicted us from consumer group, we changed the subscription for this consumer). If that's true then we want to ensure that the consumer's membership in the consumer group is active, and it is ready to fetch some records. Inside <em>ensureActiveGroup</em> method, just before joining the group, consumer starts heartbeat thread if it was dead before (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336">original code</a>)</p>
+</code></pre></div><p>So if we&rsquo;re using auto-assignment (lets assume that we do, because manual assignment is a different story), then consumer checks if it needs to rejoin the group. That might be the case if some changes were done (Kafka evicted us from consumer group, we changed the subscription for this consumer). If that&rsquo;s true then we want to ensure that the consumer&rsquo;s membership in the consumer group is active, and it is ready to fetch some records. Inside <em>ensureActiveGroup</em> method, just before joining the group, consumer starts heartbeat thread if it was dead before (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336">original code</a>)</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
         <span style="color:#f92672">}</span>
 
-        startHeartbeatThreadIfNeeded<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
     <span style="color:#f92672">}</span>
 </code></pre></div><p>As you see the heartbeat thread is started upon calling poll provided there were some changes made - it might be because we changed subscription, our assignment has been changed, we were evicted from group, etc. It is also the case at the first poll.</p>
 <h1 id="what-does-the-heartbeat-thread-do">What does the heartbeat thread do?</h1>
-<p>Knowing when this thread starts, you're probably wondering what it does? Without further ado, let me introduce the code! I've removed some unimportant code for the sake of readability, and as usual here is the <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L1016">original code</a></p>
+<p>Knowing when this thread starts, you&rsquo;re probably wondering what it does? Without further ado, let me introduce the code! I&rsquo;ve removed some unimportant code for the sake of readability, and as usual here is the <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L1016">original code</a></p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -311,43 +311,43 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">74
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">run</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">run</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
         <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                 <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>closed<span style="color:#f92672">)</span>
                     <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">();</span>
                     <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
                 <span style="color:#f92672">}</span>
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!</span><span style="color:#f92672">=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    disable<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    disable<span style="color:#f92672">();</span>
                     <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
                 <span style="color:#f92672">}</span>
 
-                client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-                <span style="color:#66d9ef">long</span> now <span style="color:#f92672">=</span> time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
+                <span style="color:#66d9ef">long</span> now <span style="color:#f92672">=</span> time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">();</span>
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> lookupCoordinator<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
-                        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    markCoordinatorUnknown<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    maybeLeaveGroup<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator<span style="color:#f92672">().</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">())</span>
+                        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
+                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    markCoordinatorUnknown<span style="color:#f92672">();</span>
+                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    maybeLeaveGroup<span style="color:#f92672">();</span>
+                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
                 <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
 
-                    sendHeartbeatRequest<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    sendHeartbeatRequest<span style="color:#f92672">().</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;()</span> <span style="color:#f92672">{</span>
                         <span style="color:#a6e22e">@Override</span>
                         <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onSuccess</span><span style="color:#f92672">(</span>Void value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                             <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
                             <span style="color:#f92672">}</span>
                         <span style="color:#f92672">}</span>
 
@@ -355,39 +355,39 @@
                         <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onFailure</span><span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                             <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                                 <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RebalanceInProgressException<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
                                 <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">();</span>
 
-                                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">();</span>
                                 <span style="color:#f92672">}</span>
                             <span style="color:#f92672">}</span>
                         <span style="color:#f92672">}</span>
-                    <span style="color:#f92672">}</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    <span style="color:#f92672">});</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>AuthenticationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>GroupAuthorizationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>InterruptedException <span style="color:#f92672">|</span> InterruptException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">();</span>
+        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Throwable e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
         <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RuntimeException<span style="color:#f92672">)</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#f92672">(</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">((</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">);</span>
         <span style="color:#66d9ef">else</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>At the first glance we see that heartbeat is basically a giant loop that performs several checks every run. Let's split this humongous code and inspect it bit by bit.</p>
+<p>At the first glance we see that heartbeat is basically a giant loop that performs several checks every run. Let&rsquo;s split this humongous code and inspect it bit by bit.</p>
 <h2 id="should-heartbeat-run">Should heartbeat run?</h2>
 <p>First things first, thread needs to know if it should run at all, hence 3 conditions:</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
@@ -409,13 +409,13 @@
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>closed<span style="color:#f92672">)</span>
     <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>enabled<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">();</span>
     <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
 <span style="color:#f92672">}</span>
 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!</span><span style="color:#f92672">=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    disable<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">STABLE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    disable<span style="color:#f92672">();</span>
     <span style="color:#66d9ef">continue</span><span style="color:#f92672">;</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
@@ -423,13 +423,13 @@
 <p>What is the meaning of those 3 <em>ifs</em>?</p>
 <ul>
 <li>
-<p><strong>Line 1</strong> - Should the heartbeat thread quit? This is the case if you're closing your consumer.</p>
+<p><strong>Line 1</strong> - Should the heartbeat thread quit? This is the case if you&rsquo;re closing your consumer.</p>
 </li>
 <li>
-<p><strong>Line 4</strong> - Consumer can selectively disable and enable the heartbeat without killing the thread. This is done if we're joining the group, or the group is unstable. In fact this is the place where thread will block after the start until consumer successfully joins the group (<em>enabled</em> field is false at first).</p>
+<p><strong>Line 4</strong> - Consumer can selectively disable and enable the heartbeat without killing the thread. This is done if we&rsquo;re joining the group, or the group is unstable. In fact this is the place where thread will block after the start until consumer successfully joins the group (<em>enabled</em> field is false at first).</p>
 </li>
 <li>
-<p><strong>Line 9</strong> - Heartbeat thread should do something only when the group is stable (a.k.a. consumer have joined it), so if it is not stable then heartbeat disables itself. It's enabled in one situation only, and it is when consumer receives a successful join group response (it can fetch records)</p>
+<p><strong>Line 9</strong> - Heartbeat thread should do something only when the group is stable (a.k.a. consumer have joined it), so if it is not stable then heartbeat disables itself. It&rsquo;s enabled in one situation only, and it is when consumer receives a successful join group response (it can fetch records)</p>
 </li>
 </ul>
 <h2 id="give-some-time-for-a-network-io">Give some time for a network I/O</h2>
@@ -439,7 +439,7 @@
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span></code></pre></td></tr></table>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span></code></pre></td></tr></table>
 </div>
 </div>
 <h2 id="check-the-state-of-the-world">Check the state of the world</h2>
@@ -460,26 +460,26 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">|</span><span style="color:#f92672">|</span> lookupCoordinator<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
-        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    markCoordinatorUnknown<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    maybeLeaveGroup<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>findCoordinatorFuture <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> lookupCoordinator<span style="color:#f92672">().</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">())</span>
+        AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+    markCoordinatorUnknown<span style="color:#f92672">();</span>
+<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">pollTimeoutExpired</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+    maybeLeaveGroup<span style="color:#f92672">();</span>
+<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">wait</span><span style="color:#f92672">(</span>retryBackoffMs<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
     <span style="color:#75715e">// Send heartbeat. Described in next section.
 </span><span style="color:#75715e"></span><span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>What's going on here?</p>
+<p>What&rsquo;s going on here?</p>
 <ul>
-<li><strong>Line 1</strong> - Check if the coordinator is still up-and-running. If we had troubles contacting our coordinator (this might be the result of aforementioned network polling) then try to find the coordinator again. If this fails or finding is already in progress then wait for some time - maybe it'll come back online, or we reestablish connection to it.</li>
-<li><strong>Line 4</strong> - Session expires if we didn't see successful heartbeat response for a while (<em>session.timeout.ms</em> to be precise). If we're here and this check fails that means we should assume the coordinator is unhealthy, thus marking it as unknown. This will result in heartbeat falling in the first <em>if</em> from previous point on the next run and finding coordinator again. You should also know that this works both ways - this time it is a consumer that detects coordinator problems, however the same value (<em>session.timeout.ms</em>) is used by the coordinator to detect consumer problems - your consumer have to send the heartbeat before this timeout.</li>
-<li><strong>Line 6</strong> - Another thing that can expire? Right! Since it is your responsibility to manage processing thread, Kafka has to be sure, you don't shoot yourself in the foot. In fact this is fairly easy. If you just forget to close your consumer when you're done, but you're still keeping your process running, then heartbeat thread will keep on working, but no progress will be made on some partitions. Because of that, kafka tracks how often you call poll and this is line is exactly this check. If you spend too much time outside of poll, then consumer will actively leave the group. In case you know that you'll be spending a lot of time processing records then you should consider increasing <em>max.poll.interval.ms</em></li>
-<li><strong>Line 8</strong> - You want your consumer to send the heartbeat only from time to time, right? That wouldn't be great to spam coordinator with massive number of messages. Thus, there is a parameter called <em>heartbeat.interval.ms</em> that specifies how often this should be sent. Here's the check if it's time for next heartbeat and thread sleeps here if it isn't.</li>
+<li><strong>Line 1</strong> - Check if the coordinator is still up-and-running. If we had troubles contacting our coordinator (this might be the result of aforementioned network polling) then try to find the coordinator again. If this fails or finding is already in progress then wait for some time - maybe it&rsquo;ll come back online, or we reestablish connection to it.</li>
+<li><strong>Line 4</strong> - Session expires if we didn&rsquo;t see successful heartbeat response for a while (<em>session.timeout.ms</em> to be precise). If we&rsquo;re here and this check fails that means we should assume the coordinator is unhealthy, thus marking it as unknown. This will result in heartbeat falling in the first <em>if</em> from previous point on the next run and finding coordinator again. You should also know that this works both ways - this time it is a consumer that detects coordinator problems, however the same value (<em>session.timeout.ms</em>) is used by the coordinator to detect consumer problems - your consumer have to send the heartbeat before this timeout.</li>
+<li><strong>Line 6</strong> - Another thing that can expire? Right! Since it is your responsibility to manage processing thread, Kafka has to be sure, you don&rsquo;t shoot yourself in the foot. In fact this is fairly easy. If you just forget to close your consumer when you&rsquo;re done, but you&rsquo;re still keeping your process running, then heartbeat thread will keep on working, but no progress will be made on some partitions. Because of that, kafka tracks how often you call poll and this is line is exactly this check. If you spend too much time outside of poll, then consumer will actively leave the group. In case you know that you&rsquo;ll be spending a lot of time processing records then you should consider increasing <em>max.poll.interval.ms</em></li>
+<li><strong>Line 8</strong> - You want your consumer to send the heartbeat only from time to time, right? That wouldn&rsquo;t be great to spam coordinator with massive number of messages. Thus, there is a parameter called <em>heartbeat.interval.ms</em> that specifies how often this should be sent. Here&rsquo;s the check if it&rsquo;s time for next heartbeat and thread sleeps here if it isn&rsquo;t.</li>
 <li><strong>Line 11</strong> - If coordinator is alive, no timeouts have occurred, and it is time for the next heartbeat, then we have nothing more to do than just send it!</li>
 </ul>
 <h2 id="send-the-heartbeat">Send the heartbeat</h2>
@@ -514,13 +514,13 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">sentHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
 
-    sendHeartbeatRequest<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    sendHeartbeatRequest<span style="color:#f92672">().</span><span style="color:#a6e22e">addListener</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RequestFutureListener<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;()</span> <span style="color:#f92672">{</span>
         <span style="color:#a6e22e">@Override</span>
         <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onSuccess</span><span style="color:#f92672">(</span>Void value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span>
 
@@ -528,26 +528,26 @@
         <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onFailure</span><span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                 <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RebalanceInProgressException<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">receiveHeartbeat</span><span style="color:#f92672">();</span>
                 <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">failHeartbeat</span><span style="color:#f92672">();</span>
 
-                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+                    AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">notify</span><span style="color:#f92672">();</span>
                 <span style="color:#f92672">}</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">});</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>What's going on? Let's dig in</p>
+<p>What&rsquo;s going on? Let&rsquo;s dig in</p>
 <ul>
-<li><strong>Line 2</strong> - We're updating heartbeat timer, a.k.a. marking that we've sent a heartbeat just now (although we didn't, but we're just about to). This is used in previous code in line 8 - to prevent sending too many heartbeat messages.</li>
-<li><strong>Line 4</strong> - And here we are! We're actually sending a heartbeat. Also, we add a response listener that in case of success updates session timer - we received response from the coordinator, so it is up-and-running. However, in case of failure, handler is a little bit trickier. If the group is rebalancing it is fine, we keep on heartbeating. Group rebalance can take way more than session timeout, so it is crucial we keep on heartbeating, so coordinator won't kick us out thinking we're dead. However, if it isn't just rebalancing then we're failing this trial. What does it mean? Basically we're rescheduling heartbeat quicker than normally (quicker than <em>heartbeat.interval.ms</em>). Maybe next one will succeed. You may wonder, why is there a <em>notify</em> call? Response handler might be called by a different thread, while the heartbeat one might be sleeping waiting for its next heartbeat, thus we're waking it up here, so it can retry heartbeat sooner.</li>
+<li><strong>Line 2</strong> - We&rsquo;re updating heartbeat timer, a.k.a. marking that we&rsquo;ve sent a heartbeat just now (although we didn&rsquo;t, but we&rsquo;re just about to). This is used in previous code in line 8 - to prevent sending too many heartbeat messages.</li>
+<li><strong>Line 4</strong> - And here we are! We&rsquo;re actually sending a heartbeat. Also, we add a response listener that in case of success updates session timer - we received response from the coordinator, so it is up-and-running. However, in case of failure, handler is a little bit trickier. If the group is rebalancing it is fine, we keep on heartbeating. Group rebalance can take way more than session timeout, so it is crucial we keep on heartbeating, so coordinator won&rsquo;t kick us out thinking we&rsquo;re dead. However, if it isn&rsquo;t just rebalancing then we&rsquo;re failing this trial. What does it mean? Basically we&rsquo;re rescheduling heartbeat quicker than normally (quicker than <em>heartbeat.interval.ms</em>). Maybe next one will succeed. You may wonder, why is there a <em>notify</em> call? Response handler might be called by a different thread, while the heartbeat one might be sleeping waiting for its next heartbeat, thus we&rsquo;re waking it up here, so it can retry heartbeat sooner.</li>
 </ul>
 <h2 id="error-handling">Error handling</h2>
 <p>The last thing left is handling the errors. A funny thing is that all of that catch phrases are outside of a while loop, so any exception results in death of heartbeat thread.</p>
-<p>Why is that? If you take a look at the expected exceptions you can see that they're mostly errors that won't happen in the middle of being active member of a group. They're either some group access problems or exceptions that shouldn't normally occur.</p>
+<p>Why is that? If you take a look at the expected exceptions you can see that they&rsquo;re mostly errors that won&rsquo;t happen in the middle of being active member of a group. They&rsquo;re either some group access problems or exceptions that shouldn&rsquo;t normally occur.</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
@@ -572,23 +572,23 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>AuthenticationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;An authentication error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>GroupAuthorizationException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;A group authorization error occurred in the heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>InterruptedException <span style="color:#f92672">|</span> InterruptException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
-    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupted</span><span style="color:#f92672">();</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unexpected interrupt received in heartbeat thread&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
 <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Throwable e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread failed due to unexpected error&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
     <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> RuntimeException<span style="color:#f92672">)</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#f92672">(</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">((</span>RuntimeException<span style="color:#f92672">)</span> e<span style="color:#f92672">);</span>
     <span style="color:#66d9ef">else</span>
-        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">failed</span><span style="color:#f92672">.</span><span style="color:#a6e22e">set</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> RuntimeException<span style="color:#f92672">(</span>e<span style="color:#f92672">));</span>
 <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread has closed&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Heartbeat thread has closed&#34;</span><span style="color:#f92672">);</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
@@ -612,40 +612,40 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">synchronized</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">pollHeartbeat</span><span style="color:#f92672">(</span><span style="color:#66d9ef">long</span> now<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">hasFailed</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            RuntimeException cause <span style="color:#f92672">=</span> heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">failureCause</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">hasFailed</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            RuntimeException cause <span style="color:#f92672">=</span> heartbeatThread<span style="color:#f92672">.</span><span style="color:#a6e22e">failureCause</span><span style="color:#f92672">();</span>
             heartbeatThread <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
             <span style="color:#66d9ef">throw</span> cause<span style="color:#f92672">;</span>
         <span style="color:#f92672">}</span>
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            notify<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">shouldHeartbeat</span><span style="color:#f92672">(</span>now<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+            notify<span style="color:#f92672">();</span>
         <span style="color:#f92672">}</span>
-        heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>now<span style="color:#f92672">)</span><span style="color:#f92672">;</span>
+        heartbeat<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>now<span style="color:#f92672">);</span>
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>As you see, if failure is detected then reference to the heartbeat thread is cleared and failure cause is thrown. So all in all if you want to handle exceptions from heartbeat threads you have to wrap your <em>poll</em> call in a try-catch. New heartbeat thread will by spawned in one of the next <em>polls</em> (coordinator will spot missing heartbeats and evict consumer, triggering rejoin on our side)</p>
 <h1 id="scary-story">Scary story</h1>
-<p>As a bonus I can share with you a story why it is crucial to close your consumer even if you're using it during the whole lifetime of your application.</p>
-<p>I used to have an application that was spawning a consumer at the start to fetch some records from kafka. It was a constant stream of records, so I didn't care about closing the consumer.</p>
+<p>As a bonus I can share with you a story why it is crucial to close your consumer even if you&rsquo;re using it during the whole lifetime of your application.</p>
+<p>I used to have an application that was spawning a consumer at the start to fetch some records from kafka. It was a constant stream of records, so I didn&rsquo;t care about closing the consumer.</p>
 <p>On the other hand I had the integration tests that restarted spring context between suites, but all within the same process. Due to the asynchronous nature of Kafka processing, my tests heavily relied on awaitility and proper timeouts.</p>
-<p>At first there was no problem. Tests were running just fine. However, after adding <em>n-th</em> test I've spotted that I'm getting random build fails, which were caused by random test failures.</p>
-<p>After a lot of debugging, I've realized that tests are running fine if I increase the timeouts to ridiculous value like 40-50 seconds.</p>
+<p>At first there was no problem. Tests were running just fine. However, after adding <em>n-th</em> test I&rsquo;ve spotted that I&rsquo;m getting random build fails, which were caused by random test failures.</p>
+<p>After a lot of debugging, I&rsquo;ve realized that tests are running fine if I increase the timeouts to ridiculous value like 40-50 seconds.</p>
 <p>Long story short, as you probably have guessed, the problem was with the consumer not being closed. Since the Spring context was being restarted, new consumer were spawned, and because of old ones still being active in the background, the rebalancing took a lot of time, because Kafka was waiting for old consumers to reach their <em>poll</em> methods and take part in rebalancing (welcoming the new consumer to the group).</p>
 <p>Since old processing threads were dead, Kafka never received <em>join group</em> message from the old consumers (it still received heartbeats though). After waiting for <em>session.timeout.ms</em> and not seeing old consumers reaching <em>poll</em>, kafka decided to kick them out, continue rebalancing, and ending up with a stable group with only one member - the new consumer for the current suite.</p>
-<p>That explains why increasing timeouts to high values &ldquo;solved&rdquo; the issue. After fixing the root cause, and closing consumers properly I've lowered the awaitility timeouts and no tests were failing randomly.</p>
+<p>That explains why increasing timeouts to high values &ldquo;solved&rdquo; the issue. After fixing the root cause, and closing consumers properly I&rsquo;ve lowered the awaitility timeouts and no tests were failing randomly.</p>
 <h1 id="summary">Summary</h1>
-<p>That's all of the heartbeat thread mystery and magic. I believe we have a solid grasp of what this mechanism does and why it is important.</p>
-<p>What are the key takeaways from today's post?</p>
+<p>That&rsquo;s all of the heartbeat thread mystery and magic. I believe we have a solid grasp of what this mechanism does and why it is important.</p>
+<p>What are the key takeaways from today&rsquo;s post?</p>
 <ul>
 <li>
 <p>Heartbeat thread is responsible for sending heartbeat messages to Kafka, informing about consumer liveness as well as monitoring liveness of the remote coordinator.</p>
 </li>
 <li>
-<p>Heartbeat thread does something only when the group is stable. If it isn't stable then thread disables itself and waits until group is stable again.</p>
+<p>Heartbeat thread does something only when the group is stable. If it isn&rsquo;t stable then thread disables itself and waits until group is stable again.</p>
 </li>
 <li>
 <p>Heartbeats are sent every <em>heartbeat.interval.ms</em></p>
@@ -660,7 +660,7 @@
 <p>Heartbeat thread is responsible for tracking aforementioned timers and timeouts</p>
 </li>
 <li>
-<p>Be sure to close consumer after you're finished using it, as heartbeat thread will keep it alive for a while which might result in longer rebalancing of your consumer group as coordinator'll wait for your half-dead consumer to join.</p>
+<p>Be sure to close consumer after you&rsquo;re finished using it, as heartbeat thread will keep it alive for a while which might result in longer rebalancing of your consumer group as coordinator&rsquo;ll wait for your half-dead consumer to join.</p>
 </li>
 </ul>
 
@@ -807,7 +807,7 @@
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2019
+                    Copyright &copy; Łukasz Chrząszcz 2020
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe
