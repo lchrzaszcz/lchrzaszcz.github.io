@@ -635,7 +635,7 @@
 <p>At first there was no problem. Tests were running just fine. However, after adding <em>n-th</em> test I&rsquo;ve spotted that I&rsquo;m getting random build fails, which were caused by random test failures.</p>
 <p>After a lot of debugging, I&rsquo;ve realized that tests are running fine if I increase the timeouts to ridiculous value like 40-50 seconds.</p>
 <p>Long story short, as you probably have guessed, the problem was with the consumer not being closed. Since the Spring context was being restarted, new consumer were spawned, and because of old ones still being active in the background, the rebalancing took a lot of time, because Kafka was waiting for old consumers to reach their <em>poll</em> methods and take part in rebalancing (welcoming the new consumer to the group).</p>
-<p>Since old processing threads were dead, Kafka never received <em>join group</em> message from the old consumers (it still received heartbeats though). After waiting for <em>session.timeout.ms</em> and not seeing old consumers reaching <em>poll</em>, kafka decided to kick them out, continue rebalancing, and ending up with a stable group with only one member - the new consumer for the current suite.</p>
+<p>Since old processing threads were dead, Kafka never received <em>join group</em> message from the old consumers (it still received heartbeats though). After waiting for <em>max.poll.interval.ms</em> and not seeing old consumers reaching <em>poll</em>, kafka decided to kick them out, continue rebalancing, and ending up with a stable group with only one member - the new consumer for the current suite.</p>
 <p>That explains why increasing timeouts to high values &ldquo;solved&rdquo; the issue. After fixing the root cause, and closing consumers properly I&rsquo;ve lowered the awaitility timeouts and no tests were failing randomly.</p>
 <h1 id="summary">Summary</h1>
 <p>That&rsquo;s all of the heartbeat thread mystery and magic. I believe we have a solid grasp of what this mechanism does and why it is important.</p>
@@ -807,7 +807,7 @@
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2020
+                    Copyright &copy; Łukasz Chrząszcz 2021
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

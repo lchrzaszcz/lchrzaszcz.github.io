@@ -211,7 +211,7 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">fireAndWaitForCommit</span>(value: String) {
-    logger.info { <span style="color:#e6db74">&#34;Fire and waiting for commit: $value&#34;</span> }
+    logger.info { <span style="color:#e6db74">&#34;Fire and waiting for commit: </span><span style="color:#e6db74">$value</span><span style="color:#e6db74">&#34;</span> }
     
     <span style="color:#66d9ef">val</span> record = ProducerRecord(<span style="color:#e6db74">&#34;topic&#34;</span>, <span style="color:#e6db74">&#34;anyKey&#34;</span>, value)
     
@@ -294,18 +294,18 @@
 
     <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> application: Application? = <span style="color:#66d9ef">null</span>
 
-    @BeforeEach
+    <span style="color:#a6e22e">@BeforeEach</span>
     <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">setup</span>() {
         kafka.start()
     }
 
-    @AfterEach
+    <span style="color:#a6e22e">@AfterEach</span>
     <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">cleanup</span>() {
         application<span style="color:#f92672">?.</span>close()
         kafka.stop()
     }
 
-    @Test
+    <span style="color:#a6e22e">@Test</span>
     <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">`should send events to kafka topic`</span>() {
         <span style="color:#75715e">// given
 </span><span style="color:#75715e"></span>        <span style="color:#66d9ef">val</span> application = createApplication(kafka.bootstrapServers)
@@ -321,18 +321,18 @@
 
         <span style="color:#75715e">// then
 </span><span style="color:#75715e"></span>        assertThat(events)
-            .extracting { it.value() }
+            .extracting { <span style="color:#66d9ef">it</span>.value() }
             .isEqualTo(event)
     }
     
-    ...
+    <span style="color:#f92672">..</span>.
 }</code></pre></td></tr></table>
 </div>
 </div>
 <p>What is happening here?</p>
 <ul>
 <li>
-<p><strong>Line 3</strong> - We are creating <code>Testcontainers</code>&rsquo; Kafka container.</p>
+<p><strong>Line 3</strong> - We are creating <code>Testcontainers</code>' Kafka container.</p>
 </li>
 <li>
 <p><strong>Line 9</strong> - We are starting container with Kafka</p>
@@ -434,8 +434,8 @@
 
     <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> application: Application
 
-    @BeforeAll
-    @JvmStatic
+    <span style="color:#a6e22e">@BeforeAll</span>
+    <span style="color:#a6e22e">@JvmStatic</span>
     <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">setup</span>() {
         toxiproxy.start()
         kafkaProxy = toxiproxy.getProxy(kafka, <span style="color:#ae81ff">9093</span>)
@@ -444,8 +444,8 @@
         application = createApplication()
     }
 
-    @AfterAll
-    @JvmStatic
+    <span style="color:#a6e22e">@AfterAll</span>
+    <span style="color:#a6e22e">@JvmStatic</span>
     <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">cleanup</span>() {
         application.close()
     }
@@ -456,7 +456,7 @@
         <span style="color:#66d9ef">val</span> kafkaProxyIp = kafkaProxy.containerIpAddress
         <span style="color:#66d9ef">val</span> kafkaProxyPort = kafkaProxy.proxyPort
 
-        <span style="color:#66d9ef">return</span> applicationFactory.createApplication(<span style="color:#e6db74">&#34;$kafkaProxyIp:$kafkaProxyPort&#34;</span>)
+        <span style="color:#66d9ef">return</span> applicationFactory.createApplication(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$kafkaProxyIp</span><span style="color:#e6db74">:</span><span style="color:#e6db74">$kafkaProxyPort</span><span style="color:#e6db74">&#34;</span>)
     }
 }</code></pre></td></tr></table>
 </div>
@@ -501,7 +501,7 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">@Test
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#a6e22e">@Test</span>
 <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">`should throw exception when committing failed`</span>() {
     <span style="color:#75715e">// given
 </span><span style="color:#75715e"></span>    <span style="color:#66d9ef">val</span> event = <span style="color:#e6db74">&#34;anyEventValue&#34;</span>
@@ -537,7 +537,7 @@
 <p><strong>Line 15</strong> - We are checking if the raised exception is of the proper type.</p>
 </li>
 </ul>
-<p>As you see, we are using <code>Toxiproxy</code>'s <code>setConnectionCut</code> method to terminate the connection between our application and Kafka. We want to achieve this situation:</p>
+<p>As you see, we are using <code>Toxiproxy</code>&rsquo;s <code>setConnectionCut</code> method to terminate the connection between our application and Kafka. We want to achieve this situation:</p>
 <p><img src="/img/2020-08-kafka-testing/kafka-toxiproxy-connection-cut.png" alt="toxiproxy-connection-cut"></p>
 <p>Ok, so we are ready to run our test and see if it works!</p>
 <p>Unfortunately, when we run this test we are welcomed by an assertion error:</p>
@@ -545,7 +545,7 @@
 <p>Well&hellip; that does not look good. This test should have finished successfully. Let us dig in, what is the cause of failure.</p>
 <h2 id="why-it-does-not-work">Why it does not work?</h2>
 <p>If we inspect the error, we will see that the problem is an exception being null. We expected our application to raise an exception after failing to publish the event to Kafka. If we dig in even further it appears that the message has been sent to Kafka even though we cut the connection, thus there is no exception as the call finished successfully. Why is that happening? The reason is Kafka&rsquo;s cluster discovery logic.</p>
-<p>We are providing our proxy&rsquo;s IP address and port to our Kafka client, however after it makes a first connection to Kafka it will ask for cluster configuration, and will be served hostnames according to <code>ADVERTISED_LISTENERS</code>, which will be set to the <code>Testcontainers</code>&rsquo; Kafka container. This way our application omits the proxy, so even though we cut the connection through a proxy it bypasses that cut:</p>
+<p>We are providing our proxy&rsquo;s IP address and port to our Kafka client, however after it makes a first connection to Kafka it will ask for cluster configuration, and will be served hostnames according to <code>ADVERTISED_LISTENERS</code>, which will be set to the <code>Testcontainers</code>' Kafka container. This way our application omits the proxy, so even though we cut the connection through a proxy it bypasses that cut:</p>
 <p><img src="/img/2020-08-kafka-testing/kafka-toxiproxy-bootstrap-servers.png" alt="toxiproxy-bootstrap-servers"></p>
 <p>What can we do about <code>ADVERTISED_LISTENERS</code>? Can we somehow change them? Fortunately, we can. Let us find out how!</p>
 <p>The first place to jump is the <code>KafkaContainer</code> class which we are using in our test suite. The problem is actually in this class already.
@@ -685,7 +685,7 @@ Let us take a closer look at <a href="https://github.com/testcontainers/testcont
 
     <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> kafkaProxy: ToxiproxyContainer.ContainerProxy
     
-    ...
+    <span style="color:#f92672">..</span>.
 }</code></pre></td></tr></table>
 </div>
 </div>
@@ -854,7 +854,7 @@ Let us take a closer look at <a href="https://github.com/testcontainers/testcont
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2020
+                    Copyright &copy; Łukasz Chrząszcz 2021
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

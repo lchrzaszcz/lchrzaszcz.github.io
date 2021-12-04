@@ -232,13 +232,13 @@
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaProducer.initTransactions()
 
-...
+<span style="color:#f92672">..</span>.
 
 kafkaProducer.beginTransaction()
-messages.forEach { message -&gt;
+messages.forEach { message <span style="color:#f92672">-&gt;</span>
     <span style="color:#66d9ef">val</span> order = objectMapper.readValue&lt;Order&gt;(message.value())
 
-    <span style="color:#66d9ef">if</span> (order.meal == <span style="color:#e6db74">&#34;Pizza&#34;</span>) {
+    <span style="color:#66d9ef">if</span> (order.meal <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;Pizza&#34;</span>) {
         kafkaProducer.send(ProducerRecord(pizzaIncomeIncreased, order.value))
     }
 }
@@ -435,7 +435,7 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
 </div>
 </div>
 <p>The importance of this piece of code is significant to the transaction, as it is the place in which the records are sent to Kafka and their partitions are added to the transaction.</p>
-<p>Deep inside the <code>send</code> method you can find a call to the <code>transactionManager</code>'s method (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/KafkaProducer.java#L914">source code</a>):</p>
+<p>Deep inside the <code>send</code> method you can find a call to the <code>transactionManager</code>&rsquo;s method (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/producer/KafkaProducer.java#L914">source code</a>):</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
 <pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
@@ -753,7 +753,7 @@ kafkaProducer.commitTransaction()</code></pre></td></tr></table>
                     
                 </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz 2020
+                    Copyright &copy; Łukasz Chrząszcz 2021
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe

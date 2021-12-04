@@ -6,11 +6,7 @@
     <description>Recent content in kafka on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="http://chrzaszcz.dev/tags/kafka/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://chrzaszcz.dev/tags/kafka/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How to test the application&#39;s integration with Kafka?</title>
       <link>http://chrzaszcz.dev/2020/08/kafka-testing/</link>
@@ -37,7 +33,7 @@ What can we expect from Kafka&amp;rsquo;s transactions?</description>
       <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
       
       <guid>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</guid>
-      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&amp;rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</description>
+      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&#39; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</description>
     </item>
     
     <item>

@@ -5,11 +5,7 @@
     <link>http://chrzaszcz.dev/top/</link>
     <description>Recent content in Tops on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    
-	<atom:link href="http://chrzaszcz.dev/top/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <language>en-us</language><atom:link href="http://chrzaszcz.dev/top/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title></title>
       <link>http://chrzaszcz.dev/top/about/</link>
