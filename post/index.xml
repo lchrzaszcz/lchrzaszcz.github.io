@@ -6,7 +6,17 @@
     <description>Recent content in Posts on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 07 Jan 2022 00:00:00 +0000</lastBuildDate><atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>How to assign partitions to your consumers?</title>
+      <link>http://chrzaszcz.dev/2021/09/kafka-assignors/</link>
+      <pubDate>Fri, 07 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>http://chrzaszcz.dev/2021/09/kafka-assignors/</guid>
+      <description>Using Kafka is usually fairly simple. You just create consumers, subscribe them to the topic of your choice, and your messages are being automagically consumed. Usually that is all you need to be &amp;ldquo;successful&amp;rdquo; with Kafka. Unfortunately, sometimes things do not go as planned, and you end up with your throughput looking like in one of the diagrams below.
+Although it is never an easy answer what is causing such behavior, nevertheless it might be the case your consumers are suffering from using the wrong assignor.</description>
+    </item>
+    
     <item>
       <title>How to test the application&#39;s integration with Kafka?</title>
       <link>http://chrzaszcz.dev/2020/08/kafka-testing/</link>

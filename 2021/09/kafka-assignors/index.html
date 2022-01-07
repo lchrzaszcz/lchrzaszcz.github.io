@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="http://chrzaszcz.dev/img/2021-09-kafka-assignors/background.jpg">
+    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2021-09-kafka-assignors/background.jpg" />
+    
+
+    
+    <meta name="title" content="How to assign partitions to your consumers?" />
+    <meta property="og:title" content="How to assign partitions to your consumers?" />
+    <meta property="twitter:title" content="How to assign partitions to your consumers?" />
+    
+
+    
+    <meta name="description" content="Integrating with Kafka usually starts with subscribing your consumers to Kafka with default configuration and it just works. However, after working a while with Kafka you will encounter various &#34;weird&#34; behaviors originating from rebalancing settings such as chosen assignor implementation. Let&#39;s see how different assignors work and what are their pros and cons.">
+    <meta property="og:description" content="Integrating with Kafka usually starts with subscribing your consumers to Kafka with default configuration and it just works. However, after working a while with Kafka you will encounter various &#34;weird&#34; behaviors originating from rebalancing settings such as chosen assignor implementation. Let&#39;s see how different assignors work and what are their pros and cons." />
+    <meta property="twitter:description" content="Integrating with Kafka usually starts with subscribing your consumers to Kafka with default configuration and it just works. However, after working a while with Kafka you will encounter various &#34;weird&#34; behaviors originating from rebalancing settings such as chosen assignor implementation. Let&#39;s see how different assignors work and what are their pros and cons." />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>How to assign partitions to your consumers? - Łukasz Chrząszcz Blog</title>
+
+    <link rel="canonical" href="/2021/09/kafka-assignors/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link rel="stylesheet" href="/css/main.css">
+
+    
+    <link rel="stylesheet" href="/css/cookie-notice.css"/>
+
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+	
+</head>
+
+<body>
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+		    
+                        <li><a href="/top/about/">ABOUT</a></li>
+                    
+
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/2021-09-kafka-assignors/background.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                    </div>
+                    <h1>How to assign partitions to your consumers?</h1>
+                    <h2 class="subheading">Introduction to Kafka assignors</h2>
+                    <span class="meta">
+			Posted by 
+			
+			    Łukasz Chrząszcz
+			 
+			on 
+			Friday, January 7, 2022
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <p>Using Kafka is usually fairly simple. You just create consumers, subscribe them to the topic of your choice, and your messages are being automagically consumed. Usually that is all you need to be &ldquo;successful&rdquo; with Kafka. Unfortunately, sometimes things do not go as planned, and you end up with your throughput looking like in one of the diagrams below.</p>
+<p><img src="/img/2021-09-kafka-assignors/throughput-1.png" alt="throughput-1">
+<img src="/img/2021-09-kafka-assignors/throughput-2.png" alt="throughput-2"></p>
+<p>Although it is never an easy answer what is causing such behavior, nevertheless it might be the case your consumers are suffering from using the wrong assignor. What is the assignor? It is the piece of code that is assigning concrete partitions to concrete consumers during the rebalancing. There are different implementations of assignors, each of which having different pros and cons, and if that is not enough you can write your own.</p>
+<h2 id="why-do-we-need-assignor-and-when-it-is-used">Why do we need assignor and when it is used?</h2>
+<p>Assignor is an implementation of the <code>ConsumerPartitionAssignor</code> interface. It is used by the leader (one of the consumers) to assign partitions to the consumers according to their subscriptions. Like in the diagram below - assignor takes data about consumer&rsquo;s subscriptions and returns concrete partitions for each of the consumers.</p>
+<p><img src="/img/2021-09-kafka-assignors/assignor-high-level.svg" alt="kafka-assignors"></p>
+<p>It is particularly intriguing that the assignor is part of the consumer logic. You might wonder - why it is not a broker&rsquo;s job to assign partitions? The answer is simple - new algorithms can be added by updating consumers without touching kafka brokers. You just roll out new version of your service with the new algorithm.</p>
+<p>Currently (Kafka version 3.0) we have 4 implementations of assignors available:</p>
+<ul>
+<li>RangeAssignor</li>
+<li>RoundRobinAssignor</li>
+<li>StickyAssignor</li>
+<li>CooperativeStickyAssignor</li>
+</ul>
+<p>You can choose any assignor by simply changing the <code>partition.assignment.strategy</code> property in your consumer. Value of this property is a list of assignors to choose from. Consumers must have at least one common assignor. Currently, the default assignor is a <code>RangeAssignor</code>, but <code>CooperativeStickyAssignor</code> is also added to the default list in case you need to switch to cooperative rebalancing in one deployment.</p>
+<p>If you want to change the assignor to - for example <code>RoundRobinAssignor</code> - take a look at this snippet:</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
+<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> consumer = KafkaConsumer&lt;String, String&gt;(
+    mapOf(
+        <span style="color:#e6db74">&#34;partition.assignment.strategy&#34;</span> to 
+            listOf(<span style="color:#e6db74">&#34;org.apache.kafka.clients.consumer.RoundRobinAssignor&#34;</span>),
+        <span style="color:#75715e">// ... other properties
+</span><span style="color:#75715e"></span>    )
+)</code></pre></td></tr></table>
+</div>
+</div>
+<p>Knowing what assignors are and how to select them, let&rsquo;s go ahead and discuss all aforementioned assignor implementations!</p>
+<h1 id="rangeassignor">RangeAssignor</h1>
+<p>This is the first ever assignor available in Kafka. What is important is that it works on a per-topic basis which a contrary to all other assignors. For each topic this algorithm lays out partitions and consumers after sorting them and then divides them in ranges putting one range for each consumer. In case all partitions do not divide evenly by the number of consumers, a few first consumers will receive one extra partition.</p>
+<p>Take a look at the example of assignment. Given one topic and 3 consumers the assignment might look like in this diagram:</p>
+<p><img src="/img/2021-09-kafka-assignors/range-assignor-9-partitions.svg" alt="kafka-assignors"></p>
+<p>As you see <code>RangeAssignor</code> produces good results. Additionally, if we increase the number of subscribed topics, the algorithm will analyze each of the topic separately, so it also outputs good assignment:</p>
+<p><img src="/img/2021-09-kafka-assignors/range-assignor-3-topics.svg" alt="kafka-assignors"></p>
+<!-- raw HTML omitted -->
+<p>However, this algorithm has some flaws which come up when the number of partitions does not divide evenly. In our simple scenario, if we increase the number of partitions to 10 instead of 9, the first consumer will have one extra partition per topic, so 3 extra partitions overall. With such configuration one consumer might end up doing all the work, while the others are doing nothing. This is an unacceptable waist of resources!</p>
+<p><img src="/img/2021-09-kafka-assignors/range-assignor-10-partitions.svg" alt="kafka-assignors"></p>
+<p>Beside aforementioned uneven assignment, one of the drawbacks of this assignor is the lack of stickiness. It is not designed in a way to minimize movement of partitions between consumers. Why does that matter? In your application you might build some cache building upon assigned partitions. If that partition is taken away from you, and assigned to another consumer, your cache is useless as it has to be recreated by the other consumer.</p>
+<p>So, when should we use <code>RangeAssignor</code>? Of course, it depends, nevertheless, from my experience one good reason to use <code>RangeAssignor</code> is when you have multiple topics, but you expect occasionally spikes of events on one of them. In such case you need to assign every topic evenly to all consumers. Due to this assignor treating every topic separately, you can expect that all consumers consume from all of the topics. In different assignors, one consumer might end up having all partitions from one topic and no partition from the others.</p>
+<p><strong>In the nutshell</strong></p>
+<p>Pros:</p>
+<ul>
+<li>Works on per topic basis, so every consumer has a chance to get a partition for every topic, which is good for some workloads.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Since the consumers and partitions are sorted before assignment, the first few consumers might receive one extra partition which might result in very imbalanced assignment if the group subscribes many topics.</li>
+<li>In case of multiple topics, if there are more consumers than partitions in single topic the extra consumers receive no partitions to consume from.</li>
+<li>By default, the assignment might change drastically when scaling up or down consumers.</li>
+</ul>
+<h1 id="roundrobinassignor">RoundRobinAssignor</h1>
+<p>Although name of this assignor depicts pretty much its logic it is crucial to know that this assignor takes all the topics into consideration at the same time. It does not analyze each of the topic separately as <code>RangeAssignor</code>.</p>
+<p>The first step is to lay out all the available partitions from all topics and all interested consumers. After that the algorithm assigns partitions to consumers in a round-robin fashion.</p>
+<p>The great advantage of this assignor is the uniform assignment it produces. Assignments might differ by only one partition in case the number of partitions does not divide evenly by the number of consumers.</p>
+<p>Take a look at the example below. Here we have 3 topics with 10 partitions each and 3 consumers that subscribe them. Each of the consumer received 10 partitions spanning all of the topics.</p>
+<p><img src="/img/2021-09-kafka-assignors/round-robin.svg" alt="kafka-assignors"></p>
+<p><strong>In the nutshell</strong></p>
+<p>Pros:</p>
+<ul>
+<li>Produces uniform assignment.</li>
+<li>All consumer will get fair share of partitions even if there are more consumers than partition in single topic (in case of subscribing to multiple topics)</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Addition or removal of a consumer results in a huge reassignment of partitions which might cause extra processing due to the partitions changing their owner.</li>
+</ul>
+<h1 id="stickyassignor">StickyAssignor</h1>
+<p>Imagine a situation in which you have many topics and one consumer group that subscribes them all. Using <code>RangeAssignor</code> is not a good choice, since one of the consumer will have more partitions than the others. <code>RoundRobinAssignor</code> sounds like a better choice, but let&rsquo;s assume you have a cache in your application that tracks some events in each partition. Moving such partition to other consumer means loosing such cache, thus decreasing performance. Ideally, after rebalancing you would like to preserve ownership of as many partitions as it is possible. Here comes the <code>StickyAssignor</code> that was created especially for this purpose.</p>
+<p>This assignor has two goals. It tries to create as balanced assignment as possible, as well as it tries to preserve as many assignments as possible.</p>
+<p>When you have an empty consumer group, and new consumers appear, the first rebalancing works similarly to <code>RoundRobinAssignor</code>. So in case of 3 topics (10 partitions each) and 3 consumers, our diagram would look like this:</p>
+<p><img src="/img/2021-09-kafka-assignors/round-robin.svg" alt="kafka-assignors"></p>
+<p>What would happen next in case of removal of consumer 2? Of course its partitions would become available for assignment, but partitions of consumer 1 and 3 would be preserved.</p>
+<p><img src="/img/2021-09-kafka-assignors/sticky-assignor-removal.svg" alt="kafka-assignors"></p>
+<p>Partitions that were released would be equally spread across other consumers:</p>
+<p><img src="/img/2021-09-kafka-assignors/sticky-assignor-assigned.svg" alt="kafka-assignors"></p>
+<p>As you see, even after one rebalancing the result is quite different from <code>RoundRobinAssignor</code>. In this case all consumers have the same number of partitions, but the first consumer has a majority of partitions in first topic, while the second consumer has a majority of partitions in the third topic.</p>
+<p>In the nutshell:</p>
+<p>Pros:</p>
+<ul>
+<li>Minimizes the number of partitions movement between consumers, saving additional processing overhead.</li>
+<li>Produces balanced results.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>After a few iterations the consumers might end up having been assigned the whole topic for themselves. Although it will still be a balanced assignment, that is a thing to keep in mind if you have uneven load on topics, as it might result in one consumer having to do all the work.</li>
+</ul>
+<h1 id="cooperativestickyassignor">CooperativeStickyAssignor</h1>
+<p>The big issue with all aforementioned assignors is the stop the world problem. In case of any failure, removal, additional of a consumer the whole group suffers as every consumer has to give up their partitions, close connections to brokers, clean up some data. Even if using <code>StickyAssignor</code> it is still the case, as formally consumers still clear their assignment before joining rebalancing. Suddenly, because of the one failing node, the whole group stops.</p>
+<p>This sounds bad, and it is bad. If you have a huge group of consumers you probably already had issues with one failing node causing mayhem in your rebalancing.</p>
+<p>Here comes the <code>CooperativeStickyAssignor</code> that leverages a brand-new rebalancing protocol <code>COOPERATIVE</code>. In this protocol each of the consumer instead of revoking all partitions before joining rebalancing it might retain them and release them only after being told to do so.</p>
+<p>Let&rsquo;s assume we have two consumers, 3 topics, each having 10 partitions:</p>
+<p><img src="/img/2021-09-kafka-assignors/cooperative-rebalancing-1.svg" alt="kafka-assignors"></p>
+<p>Adding a new consumers in any other assignor would require those two to revoke all of their partitions. But on cooperative rebalancing we will perform rebalancing twice. First to revoke partitions that will actually move to the new consumer:</p>
+<p><img src="/img/2021-09-kafka-assignors/cooperative-rebalancing-2.svg" alt="kafka-assignors"></p>
+<p>After that rebalancing, the another one is instantly triggered. This one assigns revoked partitions to the new consumer:</p>
+<p><img src="/img/2021-09-kafka-assignors/cooperative-rebalancing-3.svg" alt="kafka-assignors"></p>
+<p>While running those two rebalancing events, consumer 1 and 3 for partitions that were not touched:</p>
+<ul>
+<li>Did not close connections</li>
+<li>Did not clean up resources</li>
+<li>Were able to still consumer from them</li>
+</ul>
+<p><strong>In the nutshell</strong></p>
+<p>Pros:</p>
+<ul>
+<li>Rebalancing is much more lightweight and does not stop consumers from consuming from most of their partitions.</li>
+<li>Provides a balanced results.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Similarly to <code>StickyAssignor</code> - After a few iterations the consumers might end up having been assigned the whole topic for themselves. Although it will still be a balanced assignment, that is a thing to keep in mind if you have uneven load on topics, as it might result in one consumer having to do all the work.</li>
+</ul>
+<h1 id="further-reading">Further reading</h1>
+<p>If you are interested in reading more about assignors, here are a few resources I have used to prepare this post:</p>
+<ul>
+<li>
+<p><a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-429%3A+Kafka+Consumer+Incremental+Rebalance+Protocol">KIP-429</a> - KIP introducing Cooperative Rebalancing</p>
+</li>
+<li>
+<p><a href="https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/consumer/CooperativeStickyAssignor.html">CooperativeStickyAssignor</a> - CooperativeStickyAssignor documentation</p>
+</li>
+<li>
+<p><a href="https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/consumer/StickyAssignor.html">StickyAssignor</a> - StickyAssignor documentation</p>
+</li>
+<li>
+<p><a href="https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/consumer/RangeAssignor.html">RangeAssignor</a> - RangeAssignor documentation</p>
+</li>
+<li>
+<p><a href="https://kafka.apache.org/26/javadoc/org/apache/kafka/clients/consumer/RoundRobinAssignor.html">RoundRobinAssignor</a> - RoundRobinAssignor documentation</p>
+</li>
+<li>
+<p><a href="https://medium.com/streamthoughts/understanding-kafka-partition-assignment-strategies-and-how-to-write-your-own-custom-assignor-ebeda1fc06f3">Understanding Kafka partition assignment strategies and how to write your own custom assignor</a> - Excellent walkthrough of different assignor implementations as well as a tutorial of writing your own.</p>
+</li>
+</ul>
+<p>Photo by <a href="https://unsplash.com/@ryanancill?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Ryan Ancill</a> on <a href="https://unsplash.com/?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a></p>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2020/08/kafka-testing/" data-toggle="tooltip" data-placement="top" title="How to test the application&#39;s integration with Kafka?">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "theer108" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        <a href="/tags/docker" title="docker">
+                            docker
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                   <li>
+                       <a href="" rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fa fa-circle fa-stack-2x"></i>
+                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+                   
+                    
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/ChrzaszczL">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Łukasz Chrząszcz 2022
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+    
+        
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-80545838-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    
+
+
+<div class="cookie-container">
+    <span>
+        I use cookies on this website to give you the best experience on my site.
+    </span>
+    <button class="cookie-btn">
+        Okay
+    </button>
+</div>
+<script src="/js/cookie-notice.js"></script>
+
+</body>
+</html>
