@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>docker on Łukasz Chrząszcz</title>
+    <title>docker on Łukasz Chrząszcz - Dev Blog</title>
     <link>http://chrzaszcz.dev/tags/docker/</link>
-    <description>Recent content in docker on Łukasz Chrząszcz</description>
+    <description>Recent content in docker on Łukasz Chrząszcz - Dev Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 18 May 2019 00:00:00 +0000</lastBuildDate><atom:link href="http://chrzaszcz.dev/tags/docker/index.xml" rel="self" type="application/rss+xml" />
