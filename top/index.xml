@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Tops on Łukasz Chrząszcz - Dev Blog</title>
-    <link>http://chrzaszcz.dev/top/</link>
-    <description>Recent content in Tops on Łukasz Chrząszcz - Dev Blog</description>
+    <title>Tops on Łukasz Chrząszcz</title>
+    <link>https://chrzaszcz.dev/top/</link>
+    <description>Recent content in Tops on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language><atom:link href="http://chrzaszcz.dev/top/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language><atom:link href="https://chrzaszcz.dev/top/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title></title>
-      <link>http://chrzaszcz.dev/top/about/</link>
+      <link>https://chrzaszcz.dev/top/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/top/about/</guid>
+      <guid>https://chrzaszcz.dev/top/about/</guid>
       <description>Hi!
 I am Łukasz and I am a software engineer - since I was 9 😄.
 What can I say about myself? I always want to reach deeper understanding of the stuff I am dealing with. How exactly is rebalancing in Kafka implemented? How does Zookeeper reach its consensus? Those are the questions that inspire me to dig in the code and share my findings with others.

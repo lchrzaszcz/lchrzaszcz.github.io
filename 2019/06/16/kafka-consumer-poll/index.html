@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     
-    <meta property="og:site_name" content="Łukasz Chrząszcz - Dev Blog">
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="http://chrzaszcz.dev/img/2019-06-kafka-consumer-poll/background.jpg">
-    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2019-06-kafka-consumer-poll/background.jpg" />
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2019-06-kafka-consumer-poll/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2019-06-kafka-consumer-poll/background.jpg" />
     
 
     
@@ -31,45 +31,41 @@
     
     
 
-    <meta name="keyword"  content="">
+    <meta name="keyword"  content="blog,developer,software engineer">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>What happens when you call poll on Kafka Consumer? - Łukasz Chrząszcz Dev Blog</title>
+    <title>What happens when you call poll on Kafka Consumer? | Łukasz Chrząszcz Dev Blog</title>
 
     <link rel="canonical" href="/2019/06/16/kafka-consumer-poll/">
 
-    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
-	
+    
+    
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
     
-    <link rel="stylesheet" href="/css/hux-blog.min.css">
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
 
     
     <link rel="stylesheet" href="/css/zanshang.css">
 
     
-    <link rel="stylesheet" href="/css/main.css">
-
-    
-    <link rel="stylesheet" href="/css/cookie-notice.css"/>
-
-    
-    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.1/css/all.css" rel="stylesheet" type="text/css">
 
     
     
 
-    
     
     <script src="/js/jquery.min.js"></script>
-    
+
     
     <script src="/js/bootstrap.min.js"></script>
-    
+
     
     <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
 
     
     
@@ -77,9 +73,25 @@
 </head>
 
 
-<body>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
 
 <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
     <div class="container-fluid">
         
         <div class="navbar-header page-scroll">
@@ -89,7 +101,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Łukasz Chrząszcz - Dev Blog</a>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
         </div>
 
         
@@ -98,14 +110,14 @@
             <div class="navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <a href="/">Home</a>
+                        <a href="/">All Posts</a>
                     </li>
+                    
+                        
                     
                     
 		    
-                        <li><a href="/top/about/">ABOUT</a></li>
-                    
-
+                        <li><a href="/top/about//">ABOUT</a></li>
                     
                 </ul>
             </div>
@@ -151,7 +163,9 @@
         background-image: url('/img/2019-06-kafka-consumer-poll/background.jpg')
     }
 </style>
-<header class="intro-header">
+
+<header class="intro-header" >
+
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -166,15 +180,17 @@
                     <h1>What happens when you call poll on Kafka Consumer?</h1>
                     <h2 class="subheading">Internals of Kafka consumer initialization and first fetch</h2>
                     <span class="meta">
-                        Posted by 
                         
-                            Łukasz Chrząszcz
-                         
-                        on 
-                        Sunday, June 16, 2019
-                        
-                        
-                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Sunday, June 16, 2019
+                            
+                            
+                            
+                            
                     </span>
                 </div>
             </div>
@@ -202,8 +218,8 @@
 <h1 id="samples-and-setup">Samples and setup</h1>
 <p>We will investigate some code today, so if you want to check the examples be sure to head to the <a href="https://github.com/lchrzaszcz/kafka-examples">GitHub repo</a>. You will find there some Kotlin code with a simple producer that sends a few messages to Kafka, as well as simple consumer that continuously fetches records from Kafka and prints them to the console.</p>
 <p>To make setup easier I&rsquo;ve included docker-compose file, so you can make your kafka cluster up and running in seconds. Just run the following command from the repository directory:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">docker-compose up
-</code></pre></div><p>After that, you can run one of the main methods - one for a producer, and the second one for consumer - preferably in debug, so you can jump straight to the Kafka code by yourself. Anyway, I will cite crucial code, so you can go on and read without cloning the repository.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker-compose up
+</span></span></code></pre></div><p>After that, you can run one of the main methods - one for a producer, and the second one for consumer - preferably in debug, so you can jump straight to the Kafka code by yourself. Anyway, I will cite crucial code, so you can go on and read without cloning the repository.</p>
 <p>For better understanding I&rsquo;ll cite some Apache Kafka code. You can find it on their <a href="https://github.com/apache/kafka/tree/2.2">github</a>.</p>
 <h1 id="how-does-sample-consumer-workflow-look-like">How does sample consumer workflow look like?</h1>
 <p>Using Kafka consumer usually follows few simple steps.</p>
@@ -213,25 +229,25 @@
 <li>Poll messages in some kind of loop.</li>
 </ul>
 <p>If you head over to <em>Consumer</em> class in the sample repository, you&rsquo;ll find that the run method does exactly that:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">run</span>() {
-    <span style="color:#66d9ef">val</span> kafkaConsumer = createKafkaConsumer()
-    kafkaConsumer.subscribe(listOf(TOPIC))
-    kafkaConsumer.use { fetchContinuously(kafkaConsumer) }
-}
-</code></pre></div><p>Let&rsquo;s break down every step and see what is done underneath.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">run</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">val</span> kafkaConsumer = createKafkaConsumer()
+</span></span><span style="display:flex;"><span>    kafkaConsumer.subscribe(listOf(TOPIC))
+</span></span><span style="display:flex;"><span>    kafkaConsumer.use { fetchContinuously(kafkaConsumer) }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s break down every step and see what is done underneath.</p>
 <h1 id="what-happens-when-you-create-consumer">What happens when you create consumer?</h1>
 <p>To start using consumer you have to instantiate your consumer. Pretty obvious right? As easy as it sounds, you have to set at least a few options to get it working. Let&rsquo;s head over to <em>Consumer</em> class and check how to create our first consumer.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">kafkaConsumer</span>(): KafkaConsumer&lt;String, String&gt; {
-    <span style="color:#66d9ef">val</span> properties = Properties()
-
-    properties[<span style="color:#e6db74">&#34;bootstrap.servers&#34;</span>] = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
-    properties[<span style="color:#e6db74">&#34;group.id&#34;</span>] = <span style="color:#e6db74">&#34;kafka-example&#34;</span>
-    properties[<span style="color:#e6db74">&#34;key.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
-    properties[<span style="color:#e6db74">&#34;value.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
-
-    <span style="color:#66d9ef">return</span> KafkaConsumer(properties)
-}
-</code></pre></div><p>We set 4 properties. All of them are necessary - in fact, you&rsquo;ll get exception if you don&rsquo;t set them!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">kafkaConsumer</span>(): KafkaConsumer&lt;String, String&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">val</span> properties = Properties()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    properties[<span style="color:#e6db74">&#34;bootstrap.servers&#34;</span>] = <span style="color:#e6db74">&#34;localhost:9092&#34;</span>
+</span></span><span style="display:flex;"><span>    properties[<span style="color:#e6db74">&#34;group.id&#34;</span>] = <span style="color:#e6db74">&#34;kafka-example&#34;</span>
+</span></span><span style="display:flex;"><span>    properties[<span style="color:#e6db74">&#34;key.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+</span></span><span style="display:flex;"><span>    properties[<span style="color:#e6db74">&#34;value.deserializer&#34;</span>] = <span style="color:#e6db74">&#34;org.apache.kafka.common.serialization.StringDeserializer&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> KafkaConsumer(properties)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We set 4 properties. All of them are necessary - in fact, you&rsquo;ll get exception if you don&rsquo;t set them!</p>
 <ul>
 <li><strong>bootstrap.servers</strong> - First Kafka servers the consumer should contact to fetch cluster configuration. Here we&rsquo;re pointing it to our docker container with Kafka.</li>
 <li><strong>group.id</strong> - Consumer group ID. Specify the same value for a few consumers to balance workload among them. Here we&rsquo;re using <em>kafka-example</em>.</li>
@@ -241,87 +257,46 @@
 <p>Ok, so we instantiated a new consumer. What happened under-the-hood of this simple constructor? Well&hellip; not gonna lie to you - nothing happened. We just created a whole tree of objects behind the scenes, but nothing extraordinary has been done apart from validation.</p>
 <h1 id="what-happens-when-you-subscribe-to-the-topic">What happens when you subscribe to the topic?</h1>
 <p>After creating the consumer, second thing we do is subscribing to set of topics. In the example we subscribe to one topic <em>kafka-example-topic</em>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">kafkaConsumer.subscribe(listOf(TOPIC))
-</code></pre></div><p>What happened here? Nothing much! Just a few values set here and there.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span>kafkaConsumer.subscribe(listOf(TOPIC))
+</span></span></code></pre></div><p>What happened here? Nothing much! Just a few values set here and there.</p>
 <p>This part is more compelling if you have live consumer that is already subscribed to something and is already fetching something. However, we&rsquo;ve just created consumer so nothing really happens.</p>
 <h1 id="what-happens-when-you-call-first-poll">What happens when you call first poll?</h1>
 <p>Here things become serious! As they say, code is worth a thousand words, so we will look into the code of Kafka Consumer (version: 2.2.0, you can access it on <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1179">Github</a>). For the sake of readability I&rsquo;ve skipped some comments to focus on the important parts.</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> ConsumerRecords<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    acquireAndEnsureOpen<span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
-
-        <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">();</span>
-
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)))</span> <span style="color:#f92672">{</span>
-                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-
-            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;&gt;&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
-
-                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;(</span>records<span style="color:#f92672">));</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">());</span>
-
-        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
-        release<span style="color:#f92672">();</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#66d9ef">private</span> ConsumerRecords<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>    acquireAndEnsureOpen<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">subscriptions</span><span style="color:#f92672">.</span><span style="color:#a6e22e">hasNoSubscriptionOrUserAssignment</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalStateException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Consumer is not subscribed to any topics or assigned any partitions&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>            client<span style="color:#f92672">.</span><span style="color:#a6e22e">maybeTriggerWakeup</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>includeMetadataInTimeout<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>                    <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>                <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>updateAssignmentMetadataIfNeeded<span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">timer</span><span style="color:#f92672">(</span>Long<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">)))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>                    log<span style="color:#f92672">.</span><span style="color:#a6e22e">warn</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Still waiting for metadata&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>            <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>TopicPartition<span style="color:#f92672">,</span> List<span style="color:#f92672">&lt;</span>ConsumerRecord<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span> V<span style="color:#f92672">&gt;&gt;&gt;</span> records <span style="color:#f92672">=</span> pollForFetches<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>records<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>fetcher<span style="color:#f92672">.</span><span style="color:#a6e22e">sendFetches</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPendingRequests</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>                    client<span style="color:#f92672">.</span><span style="color:#a6e22e">pollNoWakeup</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">interceptors</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onConsume</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ConsumerRecords<span style="color:#f92672">&lt;&gt;(</span>records<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">notExpired</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>        <span style="color:#66d9ef">return</span> ConsumerRecords<span style="color:#f92672">.</span><span style="color:#a6e22e">empty</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>        release<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>Ok so what&rsquo;s going on here? Basically:</p>
 <ul>
 <li>
@@ -361,14 +336,14 @@
 <p>Let&rsquo;s jump to <em>updateAssignmentMetadataIfNeeded</em> implementation!</p>
 <h1 id="updating-assignment">Updating assignment</h1>
 <p><em>updateAssignmentMetadataIfNeeded</em> method (<a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/KafkaConsumer.java#L1225">source code</a>) is quite simple and basically it delegates stuff to the coordinator (which is one of the classes in Kafka Consumer).</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span>
-
-    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Here are two main points:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">updateAssignmentMetadataIfNeeded</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>coordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> updateFetchPositions<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Here are two main points:</p>
 <ul>
 <li>
 <p>Polling coordinator for updates - ensure we&rsquo;re up-to-date with our group&rsquo;s coordinator.</p>
@@ -378,78 +353,39 @@
 </li>
 </ul>
 <p>Updating positions is pretty straightforward, so let&rsquo;s skip this part and focus on updating coordinator. Let&rsquo;s jump down to implementation. What does the coordinator&rsquo;s poll do? Code cited below (with comments removed for enhanced readability). Original source code is <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/ConsumerCoordinator.java#L310">here</a></p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">();</span>
-
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-        <span style="color:#f92672">}</span>
-
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">())</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">();</span>
-                <span style="color:#f92672">}</span>
-
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
-            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-
-    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
-    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">poll</span><span style="color:#f92672">(</span>Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>    invokeCompletedOffsetCommitCallbacks<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">partitionsAutoAssigned</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>        pollHeartbeat<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>rejoinNeededOrPending<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>subscriptions<span style="color:#f92672">.</span><span style="color:#a6e22e">hasPatternSubscription</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">timeToAllowUpdate</span><span style="color:#f92672">(</span>time<span style="color:#f92672">.</span><span style="color:#a6e22e">milliseconds</span><span style="color:#f92672">())</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>                    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">metadata</span><span style="color:#f92672">.</span><span style="color:#a6e22e">requestUpdate</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">ensureFreshMetadata</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureActiveGroup<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>metadata<span style="color:#f92672">.</span><span style="color:#a6e22e">updateRequested</span><span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>client<span style="color:#f92672">.</span><span style="color:#a6e22e">hasReadyNodes</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>            client<span style="color:#f92672">.</span><span style="color:#a6e22e">awaitMetadataUpdate</span><span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>    maybeAutoCommitOffsetsAsync<span style="color:#f92672">(</span>timer<span style="color:#f92672">.</span><span style="color:#a6e22e">currentTimeMs</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>What happened?</p>
 <ul>
 <li>
@@ -463,7 +399,7 @@
 <p>You may wonder, why should consumer report that? In fact, calling <em>poll</em> method is your responsibility and Kafka doesn&rsquo;t trust you (no way 😱!). As a precaution, Consumer tracks how often you call <em>poll</em> and if you exceed some specified time (<em>max.poll.interval.ms</em>), then it leaves the group, so other consumers can move processing further. You&rsquo;re still asking why? Imagine your processing thread has thrown an exception and died, but the whole application is still alive - you would stall some partitions by still sending heartbeat in the background. The only solution would be to restart the application! In fact that&rsquo;s something I did, but more on that in different post.</p>
 <hr>
 <ul>
-<li><strong>Line 6</strong> - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it&rsquo;s group (see *group.id* setting) and establishes connection to it. If all of that went well then we have live connection to *our* coordinator and can move on.</li>
+<li><strong>Line 6</strong> - Here is something important! Here we establish the very first connection to the cluster. <em>ensureCoordinatorReady</em> method connects to one of <em>bootstrap.servers</em>, fetches the whole cluster topology, asks random* node for group coordinator for it&rsquo;s group (see <em>group.id</em> setting) and establishes connection to it. If all of that went well then we have live connection to <em>our</em> coordinator and can move on.</li>
 </ul>
 <hr>
 <p>* Not exactly random, but that&rsquo;s far from crucial here.</p>
@@ -489,32 +425,21 @@
 </li>
 </ul>
 <p>There is a small but important detail about <em>ensureActiveGroup</em> method. It starts a heartbeat thread! <a href="https://github.com/apache/kafka/blob/2.2/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L336">Code</a>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
-    <span style="color:#f92672">}</span>
-
-    startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">ensureActiveGroup</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Timer timer<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>ensureCoordinatorReady<span style="color:#f92672">(</span>timer<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>    startHeartbeatThreadIfNeeded<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>    <span style="color:#66d9ef">return</span> joinGroupIfNeeded<span style="color:#f92672">(</span>timer<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span><span><span style="color:#f92672">}</span></span></span></code></pre></div></p>
 <p>If that method finishes successfully, the consumer is fully initialized and is ready to fetch records. On every poll this process is repeated if it&rsquo;s needed - for example we&rsquo;ve dropped out of group or lost connection, etc.</p>
 <h1 id="summary">Summary</h1>
 <p>We&rsquo;ve ran through Kafka Consumer code to explore mechanics of the first poll. Let&rsquo;s wrap up the whole process. Below is the sequence of steps to fetch the first batch of records. As you see in the first poll we fetch cluster topology, discover our group coordinator, ask it to join the group, start heartbeat thread, initialize offsets and finally fetch the records.</p>
-<p><img src="/img/2019-06-kafka-consumer-poll/consumer-first-poll.png" alt="consumer-first-poll"></p>
+<p>
+  <img src="/img/2019-06-kafka-consumer-poll/consumer-first-poll.png" alt="consumer-first-poll">
+
+</p>
 <p>What can we conclude from inspecting the first poll of Kafka consumer?</p>
 <ul>
 <li>
@@ -547,6 +472,7 @@
 
                 
 
+                
                 <hr>
                 <ul class="pager">
                     
@@ -562,13 +488,15 @@
                     </li>
                     
                 </ul>
+                
 
                 
-<div id="disqus-comment"></div>
 
+
+<div id="disqus-comment"></div>
 <div id="disqus_thread"></div>
 <script type="application/javascript">
-    var disqus_config = function () {
+    window.disqus_config = function () {
     
     
     
@@ -590,6 +518,10 @@
 
 
             </div>
+
+            
+            
+
             
             <div class="
                 col-lg-8 col-lg-offset-2
@@ -634,66 +566,59 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <ul class="list-inline text-center">
-                   
-                   <li>
-                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz - Dev Blog" >
-                           <span class="fa-stack fa-lg">
-                               <i class="fa fa-circle fa-stack-2x"></i>
-                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-                           </span>
-                       </a>
-                   </li>
-                   
+                <ul class="list-inline text-center">                  
                     
                     
-                    
-                    <li>
-                        <a href="https://twitter.com/ChrzaszczL">
-                            <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
-                            </span>
-                        </a>
-                    </li>
                     
                     
                     
 
-                    
-
-		    
+		            
                     
                     
                     <li>
                         <a target="_blank" href="https://github.com/lchrzaszcz">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		            
                     
                     
                     
                     <li>
                         <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		           
                     
                     
                     
                     
                     
-                </ul>
+                    
+            
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz - Dev Blog 2022
+                    Copyright &copy; Łukasz Chrząszcz 2023
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe
@@ -711,7 +636,7 @@
 
 
 <script>
-    function async(u, c) {
+    function loadAsync(u, c) {
       var d = document, t = 'script',
           o = d.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -729,7 +654,7 @@
 <script>
     
     if($('#tag_cloud').length !== 0){
-        async("/js/jquery.tagcloud.js",function(){
+        loadAsync("/js/jquery.tagcloud.js",function(){
             $.fn.tagcloud.defaults = {
                 
                 color: {start: '#bbbbee', end: '#0085a1'},
@@ -741,7 +666,7 @@
 
 
 <script>
-    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
         var $nav = document.querySelector("nav");
         if($nav) FastClick.attach($nav);
     })
@@ -751,31 +676,11 @@
 
 
 
-    
-        
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-80545838-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
-
-    
 
 
-<div class="cookie-container">
-    <span>
-        I use cookies on this website to give you the best experience on my site.
-    </span>
-    <button class="cookie-btn">
-        Okay
-    </button>
-</div>
-<script src="/js/cookie-notice.js"></script>
+
+
+
 
 </body>
 </html>

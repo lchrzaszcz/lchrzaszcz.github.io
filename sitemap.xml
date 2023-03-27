@@ -2,55 +2,55 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://chrzaszcz.dev/2021/09/kafka-assignors/</loc>
+    <loc>https://chrzaszcz.dev/2021/09/kafka-assignors/</loc>
     <lastmod>2022-01-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/tags/kafka/</loc>
+    <loc>https://chrzaszcz.dev/tags/kafka/</loc>
     <lastmod>2022-01-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/post/</loc>
+    <loc>https://chrzaszcz.dev/</loc>
     <lastmod>2022-01-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/tags/</loc>
+    <loc>https://chrzaszcz.dev/post/</loc>
     <lastmod>2022-01-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/</loc>
+    <loc>https://chrzaszcz.dev/tags/</loc>
     <lastmod>2022-01-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2020/08/kafka-testing/</loc>
+    <loc>https://chrzaszcz.dev/2020/08/kafka-testing/</loc>
     <lastmod>2020-09-06T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/12/kafka-transactions/</loc>
+    <loc>https://chrzaszcz.dev/2019/12/kafka-transactions/</loc>
     <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</loc>
+    <loc>https://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</loc>
     <lastmod>2019-09-28T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/08/kafka-streams/</loc>
+    <loc>https://chrzaszcz.dev/2019/08/kafka-streams/</loc>
     <lastmod>2019-08-06T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</loc>
+    <loc>https://chrzaszcz.dev/2019/06/kafka-rebalancing/</loc>
     <lastmod>2019-07-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</loc>
+    <loc>https://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</loc>
     <lastmod>2019-06-22T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</loc>
+    <loc>https://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</loc>
     <lastmod>2019-06-16T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/05/26/kafka-101/</loc>
+    <loc>https://chrzaszcz.dev/2019/05/26/kafka-101/</loc>
     <lastmod>2019-05-26T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/tags/docker/</loc>
+    <loc>https://chrzaszcz.dev/tags/docker/</loc>
     <lastmod>2019-05-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</loc>
+    <loc>https://chrzaszcz.dev/2019/05/19/introduction-to-docker/</loc>
     <lastmod>2019-05-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://chrzaszcz.dev/top/about/</loc>
+    <loc>https://chrzaszcz.dev/top/about/</loc>
   </url><url>
-    <loc>http://chrzaszcz.dev/categories/</loc>
+    <loc>https://chrzaszcz.dev/categories/</loc>
   </url><url>
-    <loc>http://chrzaszcz.dev/top/</loc>
+    <loc>https://chrzaszcz.dev/top/</loc>
   </url>
 </urlset>

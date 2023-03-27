@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     
-    <meta property="og:site_name" content="Łukasz Chrząszcz - Dev Blog">
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="http://chrzaszcz.dev/img/2019-05-26-kafka-101/background.jpg">
-    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2019-05-26-kafka-101/background.jpg" />
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2019-05-26-kafka-101/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2019-05-26-kafka-101/background.jpg" />
     
 
     
@@ -31,45 +31,41 @@
     
     
 
-    <meta name="keyword"  content="">
+    <meta name="keyword"  content="blog,developer,software engineer">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>Kafka 101 - Łukasz Chrząszcz Dev Blog</title>
+    <title>Kafka 101 | Łukasz Chrząszcz Dev Blog</title>
 
     <link rel="canonical" href="/2019/05/26/kafka-101/">
 
-    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
-	
+    
+    
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
     
-    <link rel="stylesheet" href="/css/hux-blog.min.css">
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
 
     
     <link rel="stylesheet" href="/css/zanshang.css">
 
     
-    <link rel="stylesheet" href="/css/main.css">
-
-    
-    <link rel="stylesheet" href="/css/cookie-notice.css"/>
-
-    
-    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.1/css/all.css" rel="stylesheet" type="text/css">
 
     
     
 
-    
     
     <script src="/js/jquery.min.js"></script>
-    
+
     
     <script src="/js/bootstrap.min.js"></script>
-    
+
     
     <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
 
     
     
@@ -77,9 +73,25 @@
 </head>
 
 
-<body>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
 
 <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
     <div class="container-fluid">
         
         <div class="navbar-header page-scroll">
@@ -89,7 +101,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Łukasz Chrząszcz - Dev Blog</a>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
         </div>
 
         
@@ -98,14 +110,14 @@
             <div class="navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <a href="/">Home</a>
+                        <a href="/">All Posts</a>
                     </li>
+                    
+                        
                     
                     
 		    
-                        <li><a href="/top/about/">ABOUT</a></li>
-                    
-
+                        <li><a href="/top/about//">ABOUT</a></li>
                     
                 </ul>
             </div>
@@ -151,7 +163,9 @@
         background-image: url('/img/2019-05-26-kafka-101/background.jpg')
     }
 </style>
-<header class="intro-header">
+
+<header class="intro-header" >
+
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -166,15 +180,17 @@
                     <h1>Kafka 101</h1>
                     <h2 class="subheading">Introduction to Apache Kafka</h2>
                     <span class="meta">
-                        Posted by 
                         
-                            Łukasz Chrząszcz
-                         
-                        on 
-                        Sunday, May 26, 2019
-                        
-                        
-                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Sunday, May 26, 2019
+                            
+                            
+                            
+                            
                     </span>
                 </div>
             </div>
@@ -204,23 +220,35 @@
 <p>Many messages might be passing through Kafka, so to distinguish between them and allow you to isolate different processing contexts, Kafka groups messages into Topics.</p>
 <p>Every producer that is trying to publish something has to provide a topic name.</p>
 <p>On the other hand, consumers subscribe to a set of topics (there might be many of them at the same time) and later on consume messages from those topics.</p>
-<p><img src="/img/2019-05-26-kafka-101/kafka-basics.png" alt="kafka consumers and producers"></p>
+<p>
+  <img src="/img/2019-05-26-kafka-101/kafka-basics.png" alt="kafka consumers and producers">
+
+</p>
 <h2 id="consumer-group">Consumer group</h2>
 <p>In real-world scenarios you&rsquo;d require every service interested, to receive every message from a particular topic, while at the same time you&rsquo;d like your message to be delivered to exactly one instance of each service. That&rsquo;s were consumer groups come in.</p>
 <p>Basically, you add consumers to something called <strong>consumer group</strong> if you want to split messages among them and separate them from other consumers in other consumer groups.</p>
 <p>Each message from each topic is sent to every consumer group, but within this consumer group it is sent to only one consumer (the rest of the group does not know anything about that message)</p>
 <p>Here you see that message ends up in exactly one consumer from each consumer group.</p>
-<p><img src="/img/2019-05-26-kafka-101/kafka-consumer-group.png" alt="kafka consumer groups"></p>
+<p>
+  <img src="/img/2019-05-26-kafka-101/kafka-consumer-group.png" alt="kafka consumer groups">
+
+</p>
 <h2 id="partitions">Partitions</h2>
 <p>Let&rsquo;s focus now on a <strong>single</strong> consumer group. Assuming you have <em>EmailGroup</em> with 3 consumers in it, how does Kafka decide which message goes to which consumer?</p>
 <p>Internally every topic is divided into multiple partitions. Partition is a separate portion of data - basically, it&rsquo;s a shard. Each message is in only one partition, while partition contains many messages.</p>
 <p>When the producer sends a message it provides both key and value of the message. Value is your data that describes anything you want to send. Key can also be used to pass data, however, it is also leveraged as a partition key. Producer calculates hash of the key and decides to which partition it should go. That means if you want two different messages to go to the same partition you should provide the same key for both of them.</p>
 <p>So far so good. We know how the producer works with partitions, but what about consumers? Consumer upon subscribing to a topic (joining consumer group to be specific) receives its own partitions from which it can poll messages. What is crucial here is that every partition is subscribed by exactly one consumer and every consumer can subscribe to multiple partitions (or zero if for example there are more consumers than partitions).</p>
-<p><img src="/img/2019-05-26-kafka-101/kafka-partitions.png" alt="kafka partitions"></p>
+<p>
+  <img src="/img/2019-05-26-kafka-101/kafka-partitions.png" alt="kafka partitions">
+
+</p>
 <p>Diving even deeper into partitions you will see that Kafka guarantees the order of messages in each partition. If <em>message A</em> with key <em>Alex</em> is published to a topic and after that <em>message B</em> also with key <em>Alex</em> is published, then the consumer will receive the messages in exactly that order - first <em>message A</em> and then <em>message B</em>. This is only valid for a single partition. Messages from different partitions might be delivered in any order.</p>
 <p>Under the hood, the partition is nothing more than an append-only log, that&rsquo;s why the order is guaranteed. On the other hand, different partitions are different shards of data thus no order can be ensured.</p>
 <p>As a graphical explanation, here the producer published 3 messages - <em>A</em>, <em>B</em> and <em>C</em> - all with the same key. The partition will look like this:</p>
-<p><img src="/img/2019-05-26-kafka-101/kafka-partitions-order.png" alt="kafka order"></p>
+<p>
+  <img src="/img/2019-05-26-kafka-101/kafka-partitions-order.png" alt="kafka order">
+
+</p>
 <p>If consumer now subscribes to this topic and will be assigned this partition, then it&rsquo;ll receive <em>UserCreatedA</em> first, then <em>UserCreatedB</em> and finally <em>UserCreatedC</em>.</p>
 <h2 id="offset">Offset</h2>
 <p>Now you might ask how does your application track, which message has been processed and which message will be fetched next. Due to the linear structure of the message log in Kafka, every message in a partition is assigned a deterministic offset. First-ever message in a partition has an offset of 0, the next one 1 and so on.</p>
@@ -233,16 +261,16 @@
 <p>Committed offset is stored persistently in Kafka and can be change only by committing. Consumer fetches this offset when it connects to cluster to get to know where previous consumer finished.</p>
 <h3 id="consumer-position">Consumer Position</h3>
 <p>You might ask, what offset is used when you call poll? Is it a committed one? Look at the snippet below, there are two consecutive calls to poll method, but no commit between. What would you expect from second poll?</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> anyTimeout = <span style="color:#ae81ff">100</span>
-
-consumer.poll()
-consumer.poll()
-</code></pre></div><p>You probably would want to go on with work, so second poll should return next batch of messages, right? This is exactly the case. Behind the scenes the consumer remembers something called <em>position</em>. It gets increased every time you call poll and determines next messages to fetch while at the same time it is the offset that gets committed if you call one of commit methods.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span><span style="color:#66d9ef">val</span> anyTimeout = <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>consumer.poll()
+</span></span><span style="display:flex;"><span>consumer.poll()
+</span></span></code></pre></div><p>You probably would want to go on with work, so second poll should return next batch of messages, right? This is exactly the case. Behind the scenes the consumer remembers something called <em>position</em>. It gets increased every time you call poll and determines next messages to fetch while at the same time it is the offset that gets committed if you call one of commit methods.</p>
 <p>You can change position of your consumer by calling one of those methods:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">consumer.seek(somePartition, newOffset)
-consumer.seekToBeginning(somePartitions)
-consumer.seekToEnd(somePartitions)
-</code></pre></div><p>The last thing is&hellip; What is the initial offset? If you introduce new consumer group then it has no committed offset, so how does it work?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span>consumer.seek(somePartition, newOffset)
+</span></span><span style="display:flex;"><span>consumer.seekToBeginning(somePartitions)
+</span></span><span style="display:flex;"><span>consumer.seekToEnd(somePartitions)
+</span></span></code></pre></div><p>The last thing is&hellip; What is the initial offset? If you introduce new consumer group then it has no committed offset, so how does it work?</p>
 <p>Kafka allows you to choose from several strategies. Keep in mind that this setting is taken into account only if there is no offset committed. Remember that if committed offset already exists in Kafka then consumer will use saved offset rather than apply this strategy. Anyway, you can choose one of those:</p>
 <ul>
 <li><em>Earliest</em> - offset will be set to the lowest/earliest offset available</li>
@@ -252,71 +280,39 @@ consumer.seekToEnd(somePartitions)
 <h1 id="lets-setup-kafka">Let&rsquo;s setup Kafka!</h1>
 <p>Enough theory! Let&rsquo;s spin our single node Kafka cluster and give it a try!</p>
 <p>The easiest way to set up Kafka just to mess around locally is to use Docker. There are many Docker Images with Kafka, however the easiest one to use (a little outdated though) is <a href="https://hub.docker.com/r/spotify/kafka">spotify/kafka</a>, so let&rsquo;s get started and run it.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name kafka spotify/kafka
-</code></pre></div><p>Let the command finish, and your Kafka should be up-and-running. If you see your new container after issuing command below, then everything seems to work fine, and you can go on and start producing messages.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker ps
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                NAMES
-b52fc6d41375        spotify/kafka       <span style="color:#e6db74">&#34;supervisord -n&#34;</span>    <span style="color:#ae81ff">8</span> hours ago         Up <span style="color:#ae81ff">8</span> hours          2181/tcp, 9092/tcp   kafka
-</code></pre></div><h2 id="producing-message">Producing message</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run -d --name kafka spotify/kafka
+</span></span></code></pre></div><p>Let the command finish, and your Kafka should be up-and-running. If you see your new container after issuing command below, then everything seems to work fine, and you can go on and start producing messages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker ps
+</span></span><span style="display:flex;"><span>CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                NAMES
+</span></span><span style="display:flex;"><span>b52fc6d41375        spotify/kafka       <span style="color:#e6db74">&#34;supervisord -n&#34;</span>    <span style="color:#ae81ff">8</span> hours ago         Up <span style="color:#ae81ff">8</span> hours          2181/tcp, 9092/tcp   kafka
+</span></span></code></pre></div><h2 id="producing-message">Producing message</h2>
 <p>Let&rsquo;s try sending some messages. We will use console clients that are shipped with Kafka. To access them, we need to get into our container:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker exec -it kafka bash
-root@b52fc6d41375:/# cd /opt/kafka_2.11-0.10.1.0/bin/
-</code></pre></div><p>If you list content of current directory you will be presented with various handy tools to access Kafka. However, we will focus right now on <em>kafka-console-producer.sh</em> in particular. Leveraging it you can send some data to Kafka:</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-producer.sh --broker-list localhost:9092 --topic myTestTopic
-my first message
-[2019-05-26 09:20:14,695] WARN Error while fetching metadata with correlation id 0 : {myTestTopic=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
-my second message
-^C
-root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin#</code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> % docker exec -it kafka bash
+</span></span><span style="display:flex;"><span>root@b52fc6d41375:/# cd /opt/kafka_2.11-0.10.1.0/bin/
+</span></span></code></pre></div><p>If you list content of current directory you will be presented with various handy tools to access Kafka. However, we will focus right now on <em>kafka-console-producer.sh</em> in particular. Leveraging it you can send some data to Kafka:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-producer.sh --broker-list localhost:9092 --topic myTestTopic
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>my first message
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>[2019-05-26 09:20:14,695] WARN Error while fetching metadata with correlation id 0 : {myTestTopic=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>my second message
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>^C
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin#</span></span></code></pre></div>
 <p>We sent two messages: <em>my first message</em> and <em>my second message</em>. In first line I have specified kafka location - <em>localhost:9092</em> and to which topic I want to produce my messages - <em>myTestTopic</em>. After that, each consecutive line is a separate message - until I press Ctrl+C.</p>
 <blockquote>
 <p>Don&rsquo;t mind the warning in line 3. It&rsquo;s because of <em>myTestTopic</em> being a new topic, and Kafka has to create it first, so there is no leader for it, hence &ldquo;LEADER_NOT_AVAILABLE&rdquo; error. I will explain this in detail in future posts.</p>
 </blockquote>
 <h2 id="consuming-message">Consuming message</h2>
 <p>Right now Kafka has 2 messages, so let&rsquo;s try consuming them. We will use similar script as aforementioned <em>kafka-console-consumer.sh</em>.</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic myTestTopic --from-beginning
-my first message
-my second message
-^CProcessed a total of 2 messages
-root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic myTestTopic --from-beginning
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>my first message
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>my second message
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>^CProcessed a total of 2 messages
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </span></span></code></pre></div>
 <p>As you see we received aforementioned messages. Same as previously, in first line I have specified Kafka location and topic, but I also had to specify option <em>&ndash;from-beginning</em>.</p>
 <p>What does option <em>&ndash;from-beginning</em> do? The consumer group for console clients is randomized on each run, so there is no initial offset for it. Due to the fact that we have just started consumers (while messages are already in Kafka) we have to start reading from beginning, hence <em>&ndash;from-beginning</em> option. It makes consumer to start from the earliest message available.</p>
 <p>In case you omit this option, the consumer won&rsquo;t print anything and will wait for new messages to come.</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic myTestTopic
-^CProcessed a total of 0 messages
-root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic myTestTopic
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>^CProcessed a total of 0 messages
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </span></span></code></pre></div>
 <p>Go ahead and mess around with console consumers and producers. You can try producing and consuming messages from different terminal windows and see live messages being dispatched to your consumers.</p>
 <h1 id="summary">Summary</h1>
 <p>We dug into basics of Kafka. It is a basis for future, more advanced posts in which we will touch rebalancing, java consumers, replication and many more. Anyway, for this post summary we learned that:</p>
@@ -350,6 +346,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
                 
 
+                
                 <hr>
                 <ul class="pager">
                     
@@ -365,13 +362,15 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
                     </li>
                     
                 </ul>
+                
 
                 
-<div id="disqus-comment"></div>
 
+
+<div id="disqus-comment"></div>
 <div id="disqus_thread"></div>
 <script type="application/javascript">
-    var disqus_config = function () {
+    window.disqus_config = function () {
     
     
     
@@ -393,6 +392,10 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 
             </div>
+
+            
+            
+
             
             <div class="
                 col-lg-8 col-lg-offset-2
@@ -437,66 +440,59 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <ul class="list-inline text-center">
-                   
-                   <li>
-                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz - Dev Blog" >
-                           <span class="fa-stack fa-lg">
-                               <i class="fa fa-circle fa-stack-2x"></i>
-                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-                           </span>
-                       </a>
-                   </li>
-                   
+                <ul class="list-inline text-center">                  
                     
                     
-                    
-                    <li>
-                        <a href="https://twitter.com/ChrzaszczL">
-                            <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
-                            </span>
-                        </a>
-                    </li>
                     
                     
                     
 
-                    
-
-		    
+		            
                     
                     
                     <li>
                         <a target="_blank" href="https://github.com/lchrzaszcz">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		            
                     
                     
                     
                     <li>
                         <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		           
                     
                     
                     
                     
                     
-                </ul>
+                    
+            
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz - Dev Blog 2022
+                    Copyright &copy; Łukasz Chrząszcz 2023
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe
@@ -514,7 +510,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 
 <script>
-    function async(u, c) {
+    function loadAsync(u, c) {
       var d = document, t = 'script',
           o = d.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -532,7 +528,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 <script>
     
     if($('#tag_cloud').length !== 0){
-        async("/js/jquery.tagcloud.js",function(){
+        loadAsync("/js/jquery.tagcloud.js",function(){
             $.fn.tagcloud.defaults = {
                 
                 color: {start: '#bbbbee', end: '#0085a1'},
@@ -544,7 +540,7 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 
 <script>
-    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
         var $nav = document.querySelector("nav");
         if($nav) FastClick.attach($nav);
     })
@@ -554,31 +550,11 @@ root@b52fc6d41375:/opt/kafka_2.11-0.10.1.0/bin# </code></pre></td></tr></table>
 
 
 
-    
-        
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-80545838-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
-
-    
 
 
-<div class="cookie-container">
-    <span>
-        I use cookies on this website to give you the best experience on my site.
-    </span>
-    <button class="cookie-btn">
-        Okay
-    </button>
-</div>
-<script src="/js/cookie-notice.js"></script>
+
+
+
 
 </body>
 </html>

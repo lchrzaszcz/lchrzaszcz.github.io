@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     
-    <meta property="og:site_name" content="Łukasz Chrząszcz - Dev Blog">
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="http://chrzaszcz.dev/img/2019-06-kafka-rebalancing/background.jpg">
-    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2019-06-kafka-rebalancing/background.jpg" />
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2019-06-kafka-rebalancing/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2019-06-kafka-rebalancing/background.jpg" />
     
 
     
@@ -31,45 +31,41 @@
     
     
 
-    <meta name="keyword"  content="">
+    <meta name="keyword"  content="blog,developer,software engineer">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>What happens when a new consumer joins the group in Kafka? - Łukasz Chrząszcz Dev Blog</title>
+    <title>What happens when a new consumer joins the group in Kafka? | Łukasz Chrząszcz Dev Blog</title>
 
     <link rel="canonical" href="/2019/06/kafka-rebalancing/">
 
-    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
-	
+    
+    
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
     
-    <link rel="stylesheet" href="/css/hux-blog.min.css">
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
 
     
     <link rel="stylesheet" href="/css/zanshang.css">
 
     
-    <link rel="stylesheet" href="/css/main.css">
-
-    
-    <link rel="stylesheet" href="/css/cookie-notice.css"/>
-
-    
-    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.1/css/all.css" rel="stylesheet" type="text/css">
 
     
     
 
-    
     
     <script src="/js/jquery.min.js"></script>
-    
+
     
     <script src="/js/bootstrap.min.js"></script>
-    
+
     
     <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
 
     
     
@@ -77,9 +73,25 @@
 </head>
 
 
-<body>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
 
 <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
     <div class="container-fluid">
         
         <div class="navbar-header page-scroll">
@@ -89,7 +101,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Łukasz Chrząszcz - Dev Blog</a>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
         </div>
 
         
@@ -98,14 +110,14 @@
             <div class="navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <a href="/">Home</a>
+                        <a href="/">All Posts</a>
                     </li>
+                    
+                        
                     
                     
 		    
-                        <li><a href="/top/about/">ABOUT</a></li>
-                    
-
+                        <li><a href="/top/about//">ABOUT</a></li>
                     
                 </ul>
             </div>
@@ -151,7 +163,9 @@
         background-image: url('/img/2019-06-kafka-rebalancing/background.jpg')
     }
 </style>
-<header class="intro-header">
+
+<header class="intro-header" >
+
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -166,15 +180,17 @@
                     <h1>What happens when a new consumer joins the group in Kafka?</h1>
                     <h2 class="subheading">Rebalancing in Apache Kafka</h2>
                     <span class="meta">
-                        Posted by 
                         
-                            Łukasz Chrząszcz
-                         
-                        on 
-                        Sunday, July 14, 2019
-                        
-                        
-                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Sunday, July 14, 2019
+                            
+                            
+                            
+                            
                     </span>
                 </div>
             </div>
@@ -210,7 +226,10 @@
 <li><strong>Dead</strong> - The group is going to be removed from this Kafka node soon. It might be due to the inactivity, or the group is being migrated to different group coordinator.</li>
 </ul>
 <p>Let&rsquo;s forget for a minute about two states in rebalancing and treat it like one state - simply <em>rebalancing</em> state. The transitions of consumer group are easy to depict on a state graph (duh!).</p>
-<p><img src="/img/2019-06-kafka-rebalancing/consumer-group-states-simple.png" alt="consumer_state_simple"></p>
+<p>
+  <img src="/img/2019-06-kafka-rebalancing/consumer-group-states-simple.png" alt="consumer_state_simple">
+
+</p>
 <p>The group starts as an empty group, and as you see the first consumer that connects to the group triggers rebalancing. Having it finished, Kafka switches the group to the stable state. From there if - let&rsquo;s say - a new consumer wants to join, then Kafka again triggers rebalancing for the group.</p>
 <p>Of course if all consumers have left the group, then it is again in the <em>Empty</em> state.</p>
 <p>What happened to the <em>Dead</em> state? Actually it can be reached from every other state, so for readability I have omitted it on the graph. It is not particularly stunning, so we will not discuss it further in this post.</p>
@@ -228,75 +247,47 @@
 <li>Sends the Leader the same data as for the followers plus list of all followers.</li>
 </ul>
 </li>
-<li>Followers send request for assignment (a.k.a. <em>&ldquo;What are my partitions?&quot;</em>)</li>
+<li>Followers send request for assignment (a.k.a. <em>&ldquo;What are my partitions?&rdquo;</em>)</li>
 <li>Leader generates assignment and sends it to Kafka. It also asks for its own assignment.</li>
 <li>Kafka receives the assignment from the Leader and responds to the Followers with their particular set of partitions.</li>
 </ul>
 <p>Having discussed a high-level overview of the rebalancing, let&rsquo;s immerse ourselves in the actual code. It might feel a little vague though. This is due to the distributed nature of the process. Unfortunately, several nodes take part in it, so the code is partially on consumer side as well as on broker side. Nevertheless, it is fairly educative to see what is actually sent in between the client and the server.</p>
 <h1 id="preparing-rebalancing">Preparing rebalancing</h1>
 <p>We start with the brand-new consumer. On the first poll, it wants to join the group. Remember <em>ensureActiveGroup</em> method from the <a href="/2019/06/16/kafka-consumer-poll/">previous post</a>? Few levels below, it calls <em>sendJoinGroupRequest</em> method, which looks like this (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L500">source code</a>):</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendJoinGroupRequest</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
-
-    <span style="color:#75715e">// send a join group request to the coordinator
-</span><span style="color:#75715e"></span>    log<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;(Re-)joining group&#34;</span><span style="color:#f92672">);</span>
-    JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
-            groupId<span style="color:#f92672">,</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutMs</span><span style="color:#f92672">,</span>
-            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span><span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
-            protocolType<span style="color:#f92672">(),</span>
-            metadata<span style="color:#f92672">()).</span><span style="color:#a6e22e">setRebalanceTimeout</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">rebalanceTimeoutMs</span><span style="color:#f92672">);</span>
-
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending JoinGroup ({}) to coordinator {}&#34;</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">);</span>
-
-    <span style="color:#75715e">// Note that we override the request timeout using the rebalance timeout since that is the
-</span><span style="color:#75715e"></span>    <span style="color:#75715e">// maximum time that it may block on the coordinator. We add an extra 5 seconds for small delays.
-</span><span style="color:#75715e"></span>
-    <span style="color:#66d9ef">int</span> joinGroupTimeoutMs <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>rebalanceTimeoutMs<span style="color:#f92672">,</span> rebalanceTimeoutMs <span style="color:#f92672">+</span> 5000<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> joinGroupTimeoutMs<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> JoinGroupResponseHandler<span style="color:#f92672">());</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span>RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendJoinGroupRequest</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>    <span style="color:#75715e">// send a join group request to the coordinator
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#75715e"></span>    log<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;(Re-)joining group&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>    JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JoinGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>            groupId<span style="color:#f92672">,</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">sessionTimeoutMs</span><span style="color:#f92672">,</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span><span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>            protocolType<span style="color:#f92672">(),</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>            metadata<span style="color:#f92672">()).</span><span style="color:#a6e22e">setRebalanceTimeout</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">rebalanceTimeoutMs</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending JoinGroup ({}) to coordinator {}&#34;</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>    <span style="color:#75715e">// Note that we override the request timeout using the rebalance timeout since that is the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#75715e"></span>    <span style="color:#75715e">// maximum time that it may block on the coordinator. We add an extra 5 seconds for small delays.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>    <span style="color:#66d9ef">int</span> joinGroupTimeoutMs <span style="color:#f92672">=</span> Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>rebalanceTimeoutMs<span style="color:#f92672">,</span> rebalanceTimeoutMs <span style="color:#f92672">+</span> <span style="color:#ae81ff">5000</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">,</span> joinGroupTimeoutMs<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> JoinGroupResponseHandler<span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>The most important thing here is sending the <em>JoinGroupRequest</em> message in line 20 and setting the <em>JoinGroupResponseHandler</em> handler for the response in line 21.</p>
 <p>What is sent in the <em>JoinGroupRequest</em>? According to the <a href="http://kafka.apache.org/protocol.html#The_Messages_JoinGroup">documentation</a>, in API version 4, the <em>JoinGroupRequest</em> looks like this:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">JoinGroup Request (Version: 4) =&gt; group_id session_timeout rebalance_timeout member_id protocol_type [group_protocols] 
-  group_id =&gt; STRING
-  session_timeout =&gt; INT32
-  rebalance_timeout =&gt; INT32
-  member_id =&gt; STRING
-  protocol_type =&gt; STRING
-  group_protocols =&gt; protocol_name protocol_metadata 
-    protocol_name =&gt; STRING
-    protocol_metadata =&gt; BYTES
-</code></pre></div><p>Interesting stuff here is:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>JoinGroup Request (Version: 4) =&gt; group_id session_timeout rebalance_timeout member_id protocol_type [group_protocols] 
+</span></span><span style="display:flex;"><span>  group_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  session_timeout =&gt; INT32
+</span></span><span style="display:flex;"><span>  rebalance_timeout =&gt; INT32
+</span></span><span style="display:flex;"><span>  member_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  protocol_type =&gt; STRING
+</span></span><span style="display:flex;"><span>  group_protocols =&gt; protocol_name protocol_metadata 
+</span></span><span style="display:flex;"><span>    protocol_name =&gt; STRING
+</span></span><span style="display:flex;"><span>    protocol_metadata =&gt; BYTES
+</span></span></code></pre></div><p>Interesting stuff here is:</p>
 <ul>
 <li><strong>group_id</strong> - Obviously, you define to which group you want to join.</li>
 <li><strong>session_timeout</strong> - This is the very place where you ask Kafka to consider your consumer dead if it does not send heartbeat in time. This might be because of your app or server crash.</li>
@@ -305,188 +296,102 @@
 <p>After providing aforementioned details, consumer waits for the response. Kafka on the other hand starts a timer for the first phase of rebalancing, it closes the connection to the old members and waits for them to rejoin. Question is, for how long?</p>
 <p>Kafka remembers all the old members and all their <em>rebalance_timeouts</em> (see aforementioned <em>JoinGroup</em> field). Since <em>rebalance_timeout</em> is a time for consumer to finish its processing and call <em>poll</em> again (and only in <em>poll</em> can it rejoin the group), then broker has to wait for the <em>max(rebalance_timeout)</em> to give a fair chance for all the members.</p>
 <p>After this time is up, Kafka will respond to all consumers, and switch the group to <em>CompletingRebalance</em> state. The response is called <em>JoinGroupResponse</em> and it looks like this:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">JoinGroup Response (Version: 4) =&gt; throttle_time_ms error_code generation_id group_protocol leader_id member_id [members] 
-  throttle_time_ms =&gt; INT32
-  error_code =&gt; INT16
-  generation_id =&gt; INT32
-  group_protocol =&gt; STRING
-  leader_id =&gt; STRING
-  member_id =&gt; STRING
-  members =&gt; member_id member_metadata 
-    member_id =&gt; STRING
-    member_metadata =&gt; BYTES
-</code></pre></div><p>What should you note from this structure?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>JoinGroup Response (Version: 4) =&gt; throttle_time_ms error_code generation_id group_protocol leader_id member_id [members] 
+</span></span><span style="display:flex;"><span>  throttle_time_ms =&gt; INT32
+</span></span><span style="display:flex;"><span>  error_code =&gt; INT16
+</span></span><span style="display:flex;"><span>  generation_id =&gt; INT32
+</span></span><span style="display:flex;"><span>  group_protocol =&gt; STRING
+</span></span><span style="display:flex;"><span>  leader_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  member_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  members =&gt; member_id member_metadata 
+</span></span><span style="display:flex;"><span>    member_id =&gt; STRING
+</span></span><span style="display:flex;"><span>    member_metadata =&gt; BYTES
+</span></span></code></pre></div><p>What should you note from this structure?</p>
 <ul>
 <li><strong>leader_id</strong> - Id of the leader for this run of rebalancing.</li>
 <li><strong>member_id</strong> - Current consumer id. If this is equal to <em>leader_id</em> then this consumer is a leader.</li>
 <li><strong>members</strong> - List of all the members of the group. This is sent only to the leader. Followers will receive an empty field.</li>
 </ul>
 <p>What does the consumer do to handle such response? Here comes the <em>JoinGroupResponseHandler</em> (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L527">source code</a>)</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">handle</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">,</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> future<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    Errors error <span style="color:#f92672">=</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        sensors<span style="color:#f92672">.</span><span style="color:#a6e22e">joinLatency</span><span style="color:#f92672">.</span><span style="color:#a6e22e">record</span><span style="color:#f92672">(</span>response<span style="color:#f92672">.</span><span style="color:#a6e22e">requestLatencyMs</span><span style="color:#f92672">());</span>
-
-        <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">REBALANCING</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                future<span style="color:#f92672">.</span><span style="color:#a6e22e">raise</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> UnjoinedGroupException<span style="color:#f92672">());</span>
-            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Generation<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">(),</span>
-                        joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">groupProtocol</span><span style="color:#f92672">());</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">isLeader</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-                    onJoinLeader<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">).</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-                    onJoinFollower<span style="color:#f92672">().</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
-                <span style="color:#f92672">}</span>
-            <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#75715e">// a lot of error handling
-</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">handle</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">,</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> future<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>    Errors error <span style="color:#f92672">=</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error <span style="color:#f92672">==</span> Errors<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>        sensors<span style="color:#f92672">.</span><span style="color:#a6e22e">joinLatency</span><span style="color:#f92672">.</span><span style="color:#a6e22e">record</span><span style="color:#f92672">(</span>response<span style="color:#f92672">.</span><span style="color:#a6e22e">requestLatencyMs</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>        <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state <span style="color:#f92672">!=</span> MemberState<span style="color:#f92672">.</span><span style="color:#a6e22e">REBALANCING</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>                future<span style="color:#f92672">.</span><span style="color:#a6e22e">raise</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> UnjoinedGroupException<span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>                AbstractCoordinator<span style="color:#f92672">.</span><span style="color:#a6e22e">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">generation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Generation<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">(),</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>                        joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">groupProtocol</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">isLeader</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>                    onJoinLeader<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">).</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>                <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>                    onJoinFollower<span style="color:#f92672">().</span><span style="color:#a6e22e">chain</span><span style="color:#f92672">(</span>future<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#75715e">// a lot of error handling
+</span></span></span></code></pre></div>
 <p>A lot of happening here, right? To be honest the only crucial part is the <em>if</em> in line 12. The consumer checks here if it has been chosen a leader and acts accordingly. We will discuss follower first, and then a leader.</p>
 <h2 id="what-does-the-follower-do">What does the follower do?</h2>
 <p>Let&rsquo;s assume that this consumer has not been chosen a leader, so we move to <em>onJoinFollower</em> (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L604">source code</a>)</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinFollower</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#75715e">// send follower&#39;s sync group with an empty assignment
-</span><span style="color:#75715e"></span>    SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
-            <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
-                    Collections<span style="color:#f92672">.&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span>emptyMap<span style="color:#f92672">());</span>
-    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending follower SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
-    <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinFollower</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>    <span style="color:#75715e">// send follower&#39;s sync group with an empty assignment
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span><span style="color:#75715e"></span>    SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>            <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">,</span> generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">,</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>                    Collections<span style="color:#f92672">.&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span>emptyMap<span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>    log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending follower SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>    <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>And for <em>sendSyncGroupRequest</em> in line 7 (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L649">source code</a>):</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendSyncGroupRequest</span><span style="color:#f92672">(</span>SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
-    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupResponseHandler<span style="color:#f92672">());</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">sendSyncGroupRequest</span><span style="color:#f92672">(</span>SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>coordinatorUnknown<span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">coordinatorNotAvailable</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>    <span style="color:#66d9ef">return</span> client<span style="color:#f92672">.</span><span style="color:#a6e22e">send</span><span style="color:#f92672">(</span>coordinator<span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">compose</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupResponseHandler<span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>Consumer sends <em>SyncGroup</em> message, which is a request for the partition assignment, and it looks like this (<a href="http://kafka.apache.org/protocol.html#The_Messages_SyncGroup">documentation</a>):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">SyncGroup Request (Version: 2) =&gt; group_id generation_id member_id [group_assignment] 
-  group_id =&gt; STRING
-  generation_id =&gt; INT32
-  member_id =&gt; STRING
-  group_assignment =&gt; member_id member_assignment 
-    member_id =&gt; STRING
-    member_assignment =&gt; BYTES
-</code></pre></div><p>Again, we enclose the <em>group_id</em> and consumer&rsquo;s <em>member_id</em>. Group assignment is empty in case of the follower, so the only meaning for this message is simply asking for partition assignment.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>SyncGroup Request (Version: 2) =&gt; group_id generation_id member_id [group_assignment] 
+</span></span><span style="display:flex;"><span>  group_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  generation_id =&gt; INT32
+</span></span><span style="display:flex;"><span>  member_id =&gt; STRING
+</span></span><span style="display:flex;"><span>  group_assignment =&gt; member_id member_assignment 
+</span></span><span style="display:flex;"><span>    member_id =&gt; STRING
+</span></span><span style="display:flex;"><span>    member_assignment =&gt; BYTES
+</span></span></code></pre></div><p>Again, we enclose the <em>group_id</em> and consumer&rsquo;s <em>member_id</em>. Group assignment is empty in case of the follower, so the only meaning for this message is simply asking for partition assignment.</p>
 <p>As you might have spotted, consumer also registers a handler <em>SyncGroupResponseHandler</em> which will take care of the received assignment. Kafka will wait with answering until it gets the assignment from the leader, so let&rsquo;s leave the follower waiting for the response, and head over to the leader code.</p>
 <h2 id="what-does-the-leader-do">What does the leader do?</h2>
 <p>Consumer received <em>JoinGroupResponse</em> and in the field <em>leader_id</em> there is a value matching <em>member_id</em> which means this is the leader, so we jump to <em>onJoinLeader</em> method (<a href="https://github.com/apache/kafka/blob/2.3/clients/src/main/java/org/apache/kafka/clients/consumer/internals/AbstractCoordinator.java#L619">source code</a>)</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinLeader</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-        <span style="color:#75715e">// perform the leader synchronization and send back the assignment for the group
-</span><span style="color:#75715e"></span>        Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> groupAssignment <span style="color:#f92672">=</span> performAssignment<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">leader</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">protocolName</span><span style="color:#f92672">(),</span>
-                joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">members</span><span style="color:#f92672">());</span>
-
-        List<span style="color:#f92672">&lt;</span>SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">&gt;</span> groupAssignmentList <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;&gt;();</span>
-        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Map<span style="color:#f92672">.</span><span style="color:#a6e22e">Entry</span><span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> assignment <span style="color:#f92672">:</span> groupAssignment<span style="color:#f92672">.</span><span style="color:#a6e22e">entrySet</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
-            groupAssignmentList<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">()</span>
-                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getKey</span><span style="color:#f92672">())</span>
-                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignment</span><span style="color:#f92672">(</span>Utils<span style="color:#f92672">.</span><span style="color:#a6e22e">toArray</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getValue</span><span style="color:#f92672">()))</span>
-            <span style="color:#f92672">);</span>
-        <span style="color:#f92672">}</span>
-
-        SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
-                <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
-                        <span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">()</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupId</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupInstanceId</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">groupInstanceId</span><span style="color:#f92672">.</span><span style="color:#a6e22e">orElse</span><span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">))</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGenerationId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">)</span>
-                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignments</span><span style="color:#f92672">(</span>groupAssignmentList<span style="color:#f92672">)</span>
-                <span style="color:#f92672">);</span>
-        log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending leader SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
-        <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">failure</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
-    <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span></code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#66d9ef">private</span> RequestFuture<span style="color:#f92672">&lt;</span>ByteBuffer<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">onJoinLeader</span><span style="color:#f92672">(</span>JoinGroupResponse joinResponse<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>        <span style="color:#75715e">// perform the leader synchronization and send back the assignment for the group
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#75715e"></span>        Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> groupAssignment <span style="color:#f92672">=</span> performAssignment<span style="color:#f92672">(</span>joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">leader</span><span style="color:#f92672">(),</span> joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">protocolName</span><span style="color:#f92672">(),</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>                joinResponse<span style="color:#f92672">.</span><span style="color:#a6e22e">data</span><span style="color:#f92672">().</span><span style="color:#a6e22e">members</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>        List<span style="color:#f92672">&lt;</span>SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">&gt;</span> groupAssignmentList <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;&gt;();</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Map<span style="color:#f92672">.</span><span style="color:#a6e22e">Entry</span><span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">&gt;</span> assignment <span style="color:#f92672">:</span> groupAssignment<span style="color:#f92672">.</span><span style="color:#a6e22e">entrySet</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>            groupAssignmentList<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">.</span><span style="color:#a6e22e">SyncGroupRequestAssignment</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getKey</span><span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>                    <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignment</span><span style="color:#f92672">(</span>Utils<span style="color:#f92672">.</span><span style="color:#a6e22e">toArray</span><span style="color:#f92672">(</span>assignment<span style="color:#f92672">.</span><span style="color:#a6e22e">getValue</span><span style="color:#f92672">()))</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>            <span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>        SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span> requestBuilder <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>                <span style="color:#66d9ef">new</span> SyncGroupRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">Builder</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>                        <span style="color:#66d9ef">new</span> SyncGroupRequestData<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupId</span><span style="color:#f92672">(</span>groupId<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setMemberId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">memberId</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGroupInstanceId</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">groupInstanceId</span><span style="color:#f92672">.</span><span style="color:#a6e22e">orElse</span><span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setGenerationId</span><span style="color:#f92672">(</span>generation<span style="color:#f92672">.</span><span style="color:#a6e22e">generationId</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>                                <span style="color:#f92672">.</span><span style="color:#a6e22e">setAssignments</span><span style="color:#f92672">(</span>groupAssignmentList<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>                <span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>        log<span style="color:#f92672">.</span><span style="color:#a6e22e">debug</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Sending leader SyncGroup to coordinator {}: {}&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">coordinator</span><span style="color:#f92672">,</span> requestBuilder<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>        <span style="color:#66d9ef">return</span> sendSyncGroupRequest<span style="color:#f92672">(</span>requestBuilder<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>RuntimeException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>        <span style="color:#66d9ef">return</span> RequestFuture<span style="color:#f92672">.</span><span style="color:#a6e22e">failure</span><span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span><span style="color:#f92672">}</span></span></span></code></pre></div>
 <p>Honorable mentions:</p>
 <ul>
 <li><strong>Line 4</strong> - Leader is performing an assignment. Variable <em>groupAssignment</em> is a map. Keys are the members and values are partitions assigned to this member.</li>
@@ -501,17 +406,20 @@
 <p>Why would you want to do that? Maybe you want to introduce lag-based strategy? Maybe you are doing some canary deployment and want to redirect 10% of your messages to the new version of your service? Choice is yours, just change the assignor in your consumer.</p>
 <h1 id="finishing-rebalancing">Finishing rebalancing</h1>
 <p>Ok, so right now all the followers have sent <em>SyncGroup</em> requests, as well as the leader have sent <em>SyncGroup</em> with the assignment for the whole group. What broker has to do is to take the received assignment and send responses to all the consumers about their partitions. The messages are called <em>SyncGroupResponse</em>, and it looks like this:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">SyncGroup Response (Version: 2) =&gt; throttle_time_ms error_code member_assignment 
-  throttle_time_ms =&gt; INT32
-  error_code =&gt; INT16
-  member_assignment =&gt; BYTES
-</code></pre></div><p>Consumers (both leader and followers) find their partitions in <em>member_assignment</em> field. Right now they can start fetching data from those. The group is stable!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>SyncGroup Response (Version: 2) =&gt; throttle_time_ms error_code member_assignment 
+</span></span><span style="display:flex;"><span>  throttle_time_ms =&gt; INT32
+</span></span><span style="display:flex;"><span>  error_code =&gt; INT16
+</span></span><span style="display:flex;"><span>  member_assignment =&gt; BYTES
+</span></span></code></pre></div><p>Consumers (both leader and followers) find their partitions in <em>member_assignment</em> field. Right now they can start fetching data from those. The group is stable!</p>
 <h1 id="summary">Summary</h1>
 <p>We have touched a lot of new stuff in this post, at the same time introducing rebalancing, which is not a trivial process, so let&rsquo;s wrap up what we know.</p>
 <ul>
 <li>There are 5 group states, and transitions between them look like this (Dead state omitted):</li>
 </ul>
-<p><img src="/img/2019-06-kafka-rebalancing/consumer-group-states.png" alt="consumer_state"></p>
+<p>
+  <img src="/img/2019-06-kafka-rebalancing/consumer-group-states.png" alt="consumer_state">
+
+</p>
 <ul>
 <li>
 <p>Rebalancing consists of two phases - collecting the consumers and assigning the partitions.</p>
@@ -527,11 +435,15 @@
 </li>
 </ul>
 <p>At last, here is the icing on the cake - the whole rebalancing as a sequence diagram.</p>
-<p><img src="/img/2019-06-kafka-rebalancing/rebalancing-sequence.png" alt="rebalancing_sequence"></p>
+<p>
+  <img src="/img/2019-06-kafka-rebalancing/rebalancing-sequence.png" alt="rebalancing_sequence">
+
+</p>
 
 
                 
 
+                
                 <hr>
                 <ul class="pager">
                     
@@ -547,13 +459,15 @@
                     </li>
                     
                 </ul>
+                
 
                 
-<div id="disqus-comment"></div>
 
+
+<div id="disqus-comment"></div>
 <div id="disqus_thread"></div>
 <script type="application/javascript">
-    var disqus_config = function () {
+    window.disqus_config = function () {
     
     
     
@@ -575,6 +489,10 @@
 
 
             </div>
+
+            
+            
+
             
             <div class="
                 col-lg-8 col-lg-offset-2
@@ -619,66 +537,59 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <ul class="list-inline text-center">
-                   
-                   <li>
-                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz - Dev Blog" >
-                           <span class="fa-stack fa-lg">
-                               <i class="fa fa-circle fa-stack-2x"></i>
-                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-                           </span>
-                       </a>
-                   </li>
-                   
+                <ul class="list-inline text-center">                  
                     
                     
-                    
-                    <li>
-                        <a href="https://twitter.com/ChrzaszczL">
-                            <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
-                            </span>
-                        </a>
-                    </li>
                     
                     
                     
 
-                    
-
-		    
+		            
                     
                     
                     <li>
                         <a target="_blank" href="https://github.com/lchrzaszcz">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		            
                     
                     
                     
                     <li>
                         <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		           
                     
                     
                     
                     
                     
-                </ul>
+                    
+            
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz - Dev Blog 2022
+                    Copyright &copy; Łukasz Chrząszcz 2023
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe
@@ -696,7 +607,7 @@
 
 
 <script>
-    function async(u, c) {
+    function loadAsync(u, c) {
       var d = document, t = 'script',
           o = d.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -714,7 +625,7 @@
 <script>
     
     if($('#tag_cloud').length !== 0){
-        async("/js/jquery.tagcloud.js",function(){
+        loadAsync("/js/jquery.tagcloud.js",function(){
             $.fn.tagcloud.defaults = {
                 
                 color: {start: '#bbbbee', end: '#0085a1'},
@@ -726,7 +637,7 @@
 
 
 <script>
-    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
         var $nav = document.querySelector("nav");
         if($nav) FastClick.attach($nav);
     })
@@ -736,31 +647,11 @@
 
 
 
-    
-        
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-80545838-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
-
-    
 
 
-<div class="cookie-container">
-    <span>
-        I use cookies on this website to give you the best experience on my site.
-    </span>
-    <button class="cookie-btn">
-        Okay
-    </button>
-</div>
-<script src="/js/cookie-notice.js"></script>
+
+
+
 
 </body>
 </html>

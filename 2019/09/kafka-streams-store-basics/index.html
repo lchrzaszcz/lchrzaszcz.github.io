@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     
-    <meta property="og:site_name" content="Łukasz Chrząszcz - Dev Blog">
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="http://chrzaszcz.dev/img/2019-09-kafka-streams-store-basics/background.jpg">
-    <meta property="twitter:image" content="http://chrzaszcz.dev/img/2019-09-kafka-streams-store-basics/background.jpg" />
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2019-09-kafka-streams-store-basics/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2019-09-kafka-streams-store-basics/background.jpg" />
     
 
     
@@ -31,45 +31,41 @@
     
     
 
-    <meta name="keyword"  content="">
+    <meta name="keyword"  content="blog,developer,software engineer">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>How to count events in Kafka Streams? - Łukasz Chrząszcz Dev Blog</title>
+    <title>How to count events in Kafka Streams? | Łukasz Chrząszcz Dev Blog</title>
 
     <link rel="canonical" href="/2019/09/kafka-streams-store-basics/">
 
-    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
-	
+    
+    
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
     
-    <link rel="stylesheet" href="/css/hux-blog.min.css">
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
 
     
     <link rel="stylesheet" href="/css/zanshang.css">
 
     
-    <link rel="stylesheet" href="/css/main.css">
-
-    
-    <link rel="stylesheet" href="/css/cookie-notice.css"/>
-
-    
-    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.1/css/all.css" rel="stylesheet" type="text/css">
 
     
     
 
-    
     
     <script src="/js/jquery.min.js"></script>
-    
+
     
     <script src="/js/bootstrap.min.js"></script>
-    
+
     
     <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
 
     
     
@@ -77,9 +73,25 @@
 </head>
 
 
-<body>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
 
 <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
     <div class="container-fluid">
         
         <div class="navbar-header page-scroll">
@@ -89,7 +101,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Łukasz Chrząszcz - Dev Blog</a>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
         </div>
 
         
@@ -98,14 +110,14 @@
             <div class="navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <a href="/">Home</a>
+                        <a href="/">All Posts</a>
                     </li>
+                    
+                        
                     
                     
 		    
-                        <li><a href="/top/about/">ABOUT</a></li>
-                    
-
+                        <li><a href="/top/about//">ABOUT</a></li>
                     
                 </ul>
             </div>
@@ -151,7 +163,9 @@
         background-image: url('/img/2019-09-kafka-streams-store-basics/background.jpg')
     }
 </style>
-<header class="intro-header">
+
+<header class="intro-header" >
+
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -166,15 +180,17 @@
                     <h1>How to count events in Kafka Streams?</h1>
                     <h2 class="subheading">Stores and aggregation in Kafka Streams</h2>
                     <span class="meta">
-                        Posted by 
                         
-                            Łukasz Chrząszcz
-                         
-                        on 
-                        Saturday, September 28, 2019
-                        
-                        
-                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Saturday, September 28, 2019
+                            
+                            
+                            
+                            
                     </span>
                 </div>
             </div>
@@ -197,7 +213,7 @@
 
                 
                 <h1 id="stateful">Stateful?</h1>
-<p><a href="/2019/08/kafka-streams/">In the previous post</a>, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users' orders in the last hour or calculate how many times did users order pizza in our pizzeria?</p>
+<p><a href="/2019/08/kafka-streams/">In the previous post</a>, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</p>
 <p>Since in Kafka we are living in an endless stream world, to achieve such aggregations we have to maintain some state to quickly apply newly arrived events and update our data. So the question is, can we introduce state to our Kafka Streams application?</p>
 <p>Yes, we can, and <em>stores</em> is a mechanism enabling us to do so.</p>
 <p>Today, we will analyze an example of the Kafka Streams application that leverages stores to count how many times did each user order pizza in our imaginary restaurant.</p>
@@ -206,48 +222,24 @@
 <p>Your employees could add extra sauces, coupons, etc. to every package, but they need to know how many pizzas did the particular client order since the existence of your company, to treat better the regular customers.</p>
 <p>Let&rsquo;s assume we have a stream of order events. Every event contains <code>customerId</code> and <code>meal</code> (for simplicity one order is one meal). We will create a Kafka Streams application, that selects only pizza orders and counts them based on <code>customerId</code>. As a result, we expect to receive events about the current total pizza orders for each user.</p>
 <p>We can achieve logic like that with just a few lines in Kafka Streams. Take a look at the snippet below. This is the code we will be dealing with today. If you want to check the whole project, head over to <a href="https://github.com/lchrzaszcz/kafka-examples/blob/master/src/main/kotlin/dev/chrzaszcz/kafka/examples/stores/PizzaOrderCount.kt">Github</a>.</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin"><span style="color:#66d9ef">val</span> builder = StreamsBuilder()
-<span style="color:#66d9ef">val</span> messagesStream = builder.stream&lt;String, Order&gt;(<span style="color:#e6db74">&#34;Orders&#34;</span>, Consumed.with(Serdes.String(), orderSerdes))
-
-messagesStream
-    .filter { _, value <span style="color:#f92672">-&gt;</span> value.meal <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;pizza&#34;</span> }
-    .groupBy { _, value <span style="color:#f92672">-&gt;</span> value.customerId }
-    .count(Materialized
-        .<span style="color:#a6e22e">`as</span><span style="color:#960050;background-color:#1e0010">`</span>&lt;String, Long, KeyValueStore&lt;Bytes, ByteArray&gt;&gt; (<span style="color:#e6db74">&#34;TotalPizzaOrdersStore&#34;</span>)
-        .withCachingDisabled())
-    .toStream()
-    .to(<span style="color:#e6db74">&#34;TotalPizzaOrders&#34;</span>, Produced.with(Serdes.String(), Serdes.Long()))
-
-<span style="color:#66d9ef">val</span> topology = builder.build()
-
-logger.info { topology.describe() }
-
-<span style="color:#66d9ef">val</span> streams = KafkaStreams(topology, props)
-streams.start()</code></pre></td></tr></table>
-</div>
-</div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-kotlin" data-lang="kotlin"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#66d9ef">val</span> builder = StreamsBuilder()
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#66d9ef">val</span> messagesStream = builder.stream&lt;String, Order&gt;(<span style="color:#e6db74">&#34;Orders&#34;</span>, <span style="color:#a6e22e">Consumed</span>.with(<span style="color:#a6e22e">Serdes</span>.String(), orderSerdes))
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>messagesStream
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>    .filter { _, <span style="color:#66d9ef">value</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">value</span>.meal <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;pizza&#34;</span> }
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>    .groupBy { _, <span style="color:#66d9ef">value</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">value</span>.customerId }
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>    .count(Materialized
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        .`as`&lt;String, Long, KeyValueStore&lt;Bytes, ByteArray&gt;&gt; (<span style="color:#e6db74">&#34;TotalPizzaOrdersStore&#34;</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>        .withCachingDisabled())
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    .toStream()
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    .to(<span style="color:#e6db74">&#34;TotalPizzaOrders&#34;</span>, <span style="color:#a6e22e">Produced</span>.with(<span style="color:#a6e22e">Serdes</span>.String(), <span style="color:#a6e22e">Serdes</span>.Long()))
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span><span style="color:#66d9ef">val</span> topology = builder.build()
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>logger.info { topology.describe() }
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#66d9ef">val</span> streams = KafkaStreams(topology, props)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>streams.start()</span></span></code></pre></div>
 <p>What is important here? Let&rsquo;s see.</p>
 <ul>
 <li><strong>Line 1-2</strong> - We are creating a stream builder as usual. We will be fetching records from <code>Orders</code> topic. The only difference is that we have provided custom <code>Serdes</code>. The incoming events will be in JSON format, so we need a custom serializer/deserializer. It is pretty straightforward, but if you are interested in the implementation, head over to the repository and check it out.</li>
@@ -258,53 +250,71 @@ streams.start()</code></pre></td></tr></table>
 <li><strong>Line 11</strong> - We are taking our stream of pizza orders count updates and publish it to the <code>TotalPizzaOrders</code> topic.</li>
 </ul>
 <p>Let&rsquo;s run this example and see how it works. The short video below presents how does our application count pizza orders. In the top terminal, I am writing some orders for users Bob and Alice, and in the bottom terminal, you can see the updating pizza order count for them.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/example-clip2.gif" alt="example-clip"></p>
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/example-clip2.gif" alt="example-clip">
+
+</p>
 <h1 id="how-does-it-work">How does it work?</h1>
 <p>The most important concept we are dealing with today is a store. It is a key-value store holding some aggregated data derived from a stream. In Kafka Streams, you can have 2 kinds of stores: local store, and global store.</p>
 <h2 id="store-types">Store types</h2>
 <p><strong>Local Store</strong> is a data about one particular partition from an input topic. So since every instance of your service has different partitions assigned, it has different stores with different data gathered from different partitions.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/local-store.png" alt="local-store"></p>
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/local-store.png" alt="local-store">
+
+</p>
 <p>On the other hand, there is a <strong>global store</strong>, which - as you might have guessed - is present on all Kafka Streams application instances and contains all the data across all the partitions.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/global-store.png" alt="global-store"></p>
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/global-store.png" alt="global-store">
+
+</p>
 <p>In our case, we do not need shared data between instances, so our store is a simple local store. Alice&rsquo;s data might end up in one store and Bob&rsquo;s in a totally different store.</p>
 <h2 id="repartitioning">Repartitioning</h2>
 <p>If that is the case, and the local store is closely connected to one of the input partitions, then what happens if you publish orders for Bob with different keys? You still need to count them as Bob&rsquo;s orders, but they might end up in different instances of your service. If that would happen we could not be able to count them. Look at the picture below.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-wrong.png" alt="repartitioning-wrong"></p>
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/repartitioning-wrong.png" alt="repartitioning-wrong">
+
+</p>
 <p>Each instance would know about a fraction of all Bob&rsquo;s orders, and could not say globally, how many times did he order pizza. That is why one particular user&rsquo;s order events should end up in the same instance to correctly count them, right?</p>
 <p>To gather the same values in the same instance, Kafka Streams employs repartitioning. This is a mechanism that splits a topology in half. The first part sends records with a new key to an intermediate topic, and the second one fetches records from this topic and follows up with the rest of the logic. Doing this ensures that all the records with the same key end up in the same partition of the intermediate topic, so it is fetched by the same consumer.</p>
 <p>Take a look at the diagram below, where the producer publishes 3 Bob&rsquo;s orders with keys <code>111</code>, <code>222</code>, and <code>333</code>. As you see, any instance can receive Bob&rsquo;s order, but as soon as they do, they change the key to the customer name and send it back to Kafka.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning-correct.png" alt="repartitioning-correct"></p>
-<p>As I said above, we can split topology in half, and it is exactly what Kafka Streams does. Let&rsquo;s print the topology and find out for ourselves:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">   Sub-topology: 0
-    Source: KSTREAM-SOURCE-0000000000 (topics: [Orders])
-      --&gt; KSTREAM-FILTER-0000000001
-    Processor: KSTREAM-FILTER-0000000001 (stores: [])
-      --&gt; KSTREAM-KEY-SELECT-0000000002
-      &lt;-- KSTREAM-SOURCE-0000000000
-    Processor: KSTREAM-KEY-SELECT-0000000002 (stores: [])
-      --&gt; KSTREAM-FILTER-0000000005
-      &lt;-- KSTREAM-FILTER-0000000001
-    Processor: KSTREAM-FILTER-0000000005 (stores: [])
-      --&gt; KSTREAM-SINK-0000000004
-      &lt;-- KSTREAM-KEY-SELECT-0000000002
-    Sink: KSTREAM-SINK-0000000004 (topic: TotalPizzaOrdersStore-repartition)
-      &lt;-- KSTREAM-FILTER-0000000005
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/repartitioning-correct.png" alt="repartitioning-correct">
 
-  Sub-topology: 1
-    Source: KSTREAM-SOURCE-0000000006 (topics: [TotalPizzaOrdersStore-repartition])
-      --&gt; KSTREAM-AGGREGATE-0000000003
-    Processor: KSTREAM-AGGREGATE-0000000003 (stores: [TotalPizzaOrdersStore])
-      --&gt; KTABLE-TOSTREAM-0000000007
-      &lt;-- KSTREAM-SOURCE-0000000006
-    Processor: KTABLE-TOSTREAM-0000000007 (stores: [])
-      --&gt; KSTREAM-SINK-0000000008
-      &lt;-- KSTREAM-AGGREGATE-0000000003
-    Sink: KSTREAM-SINK-0000000008 (topic: TotalPizzaOrders)
-      &lt;-- KTABLE-TOSTREAM-0000000007
-</code></pre></div><p>At first, you see that there are two sub-topologies. As we stated previously, the first one ends up in publishing records to <code>TotalPizzaOrdersStore-repartition</code> topic, while the other one starts from fetching from <code>TotalPizzaOrdersStore-repartition</code> topic.</p>
+</p>
+<p>As I said above, we can split topology in half, and it is exactly what Kafka Streams does. Let&rsquo;s print the topology and find out for ourselves:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>   Sub-topology: 0
+</span></span><span style="display:flex;"><span>    Source: KSTREAM-SOURCE-0000000000 (topics: [Orders])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-FILTER-0000000001
+</span></span><span style="display:flex;"><span>    Processor: KSTREAM-FILTER-0000000001 (stores: [])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-KEY-SELECT-0000000002
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-SOURCE-0000000000
+</span></span><span style="display:flex;"><span>    Processor: KSTREAM-KEY-SELECT-0000000002 (stores: [])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-FILTER-0000000005
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-FILTER-0000000001
+</span></span><span style="display:flex;"><span>    Processor: KSTREAM-FILTER-0000000005 (stores: [])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-SINK-0000000004
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-KEY-SELECT-0000000002
+</span></span><span style="display:flex;"><span>    Sink: KSTREAM-SINK-0000000004 (topic: TotalPizzaOrdersStore-repartition)
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-FILTER-0000000005
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Sub-topology: 1
+</span></span><span style="display:flex;"><span>    Source: KSTREAM-SOURCE-0000000006 (topics: [TotalPizzaOrdersStore-repartition])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-AGGREGATE-0000000003
+</span></span><span style="display:flex;"><span>    Processor: KSTREAM-AGGREGATE-0000000003 (stores: [TotalPizzaOrdersStore])
+</span></span><span style="display:flex;"><span>      --&gt; KTABLE-TOSTREAM-0000000007
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-SOURCE-0000000006
+</span></span><span style="display:flex;"><span>    Processor: KTABLE-TOSTREAM-0000000007 (stores: [])
+</span></span><span style="display:flex;"><span>      --&gt; KSTREAM-SINK-0000000008
+</span></span><span style="display:flex;"><span>      &lt;-- KSTREAM-AGGREGATE-0000000003
+</span></span><span style="display:flex;"><span>    Sink: KSTREAM-SINK-0000000008 (topic: TotalPizzaOrders)
+</span></span><span style="display:flex;"><span>      &lt;-- KTABLE-TOSTREAM-0000000007
+</span></span></code></pre></div><p>At first, you see that there are two sub-topologies. As we stated previously, the first one ends up in publishing records to <code>TotalPizzaOrdersStore-repartition</code> topic, while the other one starts from fetching from <code>TotalPizzaOrdersStore-repartition</code> topic.</p>
 <p>Let&rsquo;s subscribe to this internal topic to have a pick at what is sent there. The internal topic&rsquo;s name is <code>store-sample-dsl-application-TotalPizzaOrdersStore-repartition</code>. Prefix <code>store-sample-dsl-application</code> is inherited from Kafka Stream&rsquo;s application name, to prevent conflicts with other application&rsquo;s topics.</p>
 <p>Take a look at the video below to check what is being sent to the repartitioning topic. As you see it is the original event, but with a key changed to the <code>customerId</code>.</p>
-<p><img src="/img/2019-09-kafka-streams-store-basics/repartitioning.gif" alt="repartition"></p>
+<p>
+  <img src="/img/2019-09-kafka-streams-store-basics/repartitioning.gif" alt="repartition">
+
+</p>
 <h2 id="what-about-memory">What about memory?</h2>
 <p>So far so good. We have pizza orders counts for all our users.</p>
 <p>Along with being enormously satisfied with what we have achieved, we should be equally worried about the whole order history fitting into our memory, right?</p>
@@ -312,38 +322,38 @@ streams.start()</code></pre></td></tr></table>
 <p>I would not be myself if I would not dig into the database itself to see what is stored there. Let&rsquo;s go there together and check!</p>
 <p>Usually Kafka Streams stores databases in <code>/tmp</code> directory. In our case, for application named <code>store-sample-dsl-application</code> all the databases are stored in <code>/tmp/kafka-streams/store-sample-dsl-application</code> directory.</p>
 <p>Listing all the directories there shows us all the tasks that were created for our application.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">[0] % ls /tmp/kafka-streams/store-sample-dsl-application
-1_0  1_1  1_2  1_3  1_4  1_5  1_6  1_7
-</code></pre></div><p>We can check the content of those directories, and in my case two of them actually contained some data. That is reasonable since we have been sending orders for Alice and Bob (and those are two different keys).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>[0] % ls /tmp/kafka-streams/store-sample-dsl-application
+</span></span><span style="display:flex;"><span>1_0  1_1  1_2  1_3  1_4  1_5  1_6  1_7
+</span></span></code></pre></div><p>We can check the content of those directories, and in my case two of them actually contained some data. That is reasonable since we have been sending orders for Alice and Bob (and those are two different keys).</p>
 <p>We can use an <code>ldb</code> tool shipped with <code>RocksDB</code> to scan the database. The printed values are a hex representation of order count with a timestamp. The first 8 bytes are a timestamp, and the rest is a count. If you are curious about the implementation, you can check the Kafka Streams source <a href="https://github.com/apache/kafka/blob/trunk/streams/src/main/java/org/apache/kafka/streams/state/internals/ValueAndTimestampSerializer.java">here</a></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_7/rocksdb/TotalPizzaOrdersStore
-[0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex
-Bob : 0x0000016D787ABAE80000000000000022
-
-theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_1/rocksdb/TotalPizzaOrdersStore
-[0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex 
-Alice : 0x0000016D78A7D984000000000000000C
-</code></pre></div><p>I was playing for a while with the application, and the last update I have received for Bob was 34 and for Alice 12. This is exactly what we can see in the snippet above in an output from <code>RocksDB</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_7/rocksdb/TotalPizzaOrdersStore
+</span></span><span style="display:flex;"><span>[0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex
+</span></span><span style="display:flex;"><span>Bob : 0x0000016D787ABAE80000000000000022
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>theer@Theerpad : /tmp/kafka-streams/store-sample-dsl-application/1_1/rocksdb/TotalPizzaOrdersStore
+</span></span><span style="display:flex;"><span>[0] % ldb --db=`pwd` scan --column_family=keyValueWithTimestamp --value_hex 
+</span></span><span style="display:flex;"><span>Alice : 0x0000016D78A7D984000000000000000C
+</span></span></code></pre></div><p>I was playing for a while with the application, and the last update I have received for Bob was 34 and for Alice 12. This is exactly what we can see in the snippet above in an output from <code>RocksDB</code>.</p>
 <h2 id="durability">Durability</h2>
 <p>A crucial thing to remember is that <code>RocksDB</code> is not used for durability. It is entirely disposable, so if you run your services on Kubernetes or similar technology you would not have to run it as a StatefulSet or provision any shared storage.</p>
 <p>Does that mean in case of failure your application has to process and aggregate all events from the beginning?</p>
 <p>Fortunately, no. Kafka Streams sends all values from the store after to another topic. This topic is compacted, so it keeps at least the last value for each of the keys. Given that, in case of your service failure, the new instance will just scan this changelog topic and rebuild the store.</p>
-<p>In our case, this changelog topic is named <code>store-sample-dsl-application-TotalPizzaOrdersStore-changelog</code>. We can query it from beginning to see what has been sent there so far. Take a look at the snippet below (for readability, I skipped some parts with &ldquo;&hellip;&quot;).</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">bash-4.4# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic store-sample-dsl-application-TotalPizzaOrdersStore-changelog --property print.key=true --from-beginning --value-deserializer org.apache.kafka.common.serialization.LongDeserializer
-Bob	1
-Bob	2
-Bob	3
-...
-Bob	32
-Bob	33
-Bob	34
-Alice	1
-Alice	2
-Alice	3
-...
-Alice	11
-Alice	12
-</code></pre></div><p>Additionally, if you want your processing to be up-and-running even sooner, you can enable standby mode in which, every store is followed by a standby instance that is ready to take over the active one as soon as it goes down, but that is a material for future posts.</p>
+<p>In our case, this changelog topic is named <code>store-sample-dsl-application-TotalPizzaOrdersStore-changelog</code>. We can query it from beginning to see what has been sent there so far. Take a look at the snippet below (for readability, I skipped some parts with &ldquo;&hellip;&rdquo;).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-plaintext" data-lang="plaintext"><span style="display:flex;"><span>bash-4.4# ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic store-sample-dsl-application-TotalPizzaOrdersStore-changelog --property print.key=true --from-beginning --value-deserializer org.apache.kafka.common.serialization.LongDeserializer
+</span></span><span style="display:flex;"><span>Bob	1
+</span></span><span style="display:flex;"><span>Bob	2
+</span></span><span style="display:flex;"><span>Bob	3
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Bob	32
+</span></span><span style="display:flex;"><span>Bob	33
+</span></span><span style="display:flex;"><span>Bob	34
+</span></span><span style="display:flex;"><span>Alice	1
+</span></span><span style="display:flex;"><span>Alice	2
+</span></span><span style="display:flex;"><span>Alice	3
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Alice	11
+</span></span><span style="display:flex;"><span>Alice	12
+</span></span></code></pre></div><p>Additionally, if you want your processing to be up-and-running even sooner, you can enable standby mode in which, every store is followed by a standby instance that is ready to take over the active one as soon as it goes down, but that is a material for future posts.</p>
 <h1 id="summary">Summary</h1>
 <p>I think we got a pretty decent grasp of how stateful processing looks like in Kafka Streams. Even though it was only a simple counting example, we could observe a lot of mechanisms underneath.</p>
 <p>You can achieve much more in terms of aggregation in Kafka Streams by introducing moving windowing over the stream of data or joining multiple streams. We will definitely dig into that in later posts.</p>
@@ -385,6 +395,7 @@ Alice	12
 
                 
 
+                
                 <hr>
                 <ul class="pager">
                     
@@ -400,13 +411,15 @@ Alice	12
                     </li>
                     
                 </ul>
+                
 
                 
-<div id="disqus-comment"></div>
 
+
+<div id="disqus-comment"></div>
 <div id="disqus_thread"></div>
 <script type="application/javascript">
-    var disqus_config = function () {
+    window.disqus_config = function () {
     
     
     
@@ -428,6 +441,10 @@ Alice	12
 
 
             </div>
+
+            
+            
+
             
             <div class="
                 col-lg-8 col-lg-offset-2
@@ -472,66 +489,59 @@ Alice	12
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <ul class="list-inline text-center">
-                   
-                   <li>
-                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz - Dev Blog" >
-                           <span class="fa-stack fa-lg">
-                               <i class="fa fa-circle fa-stack-2x"></i>
-                               <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-                           </span>
-                       </a>
-                   </li>
-                   
+                <ul class="list-inline text-center">                  
                     
                     
-                    
-                    <li>
-                        <a href="https://twitter.com/ChrzaszczL">
-                            <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
-                            </span>
-                        </a>
-                    </li>
                     
                     
                     
 
-                    
-
-		    
+		            
                     
                     
                     <li>
                         <a target="_blank" href="https://github.com/lchrzaszcz">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		            
                     
                     
                     
                     <li>
                         <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
                             <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x"></i>
-                                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
                             </span>
                         </a>
                     </li>
-		    
+		           
                     
                     
                     
                     
                     
-                </ul>
+                    
+            
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
 		<p class="copyright text-muted">
-                    Copyright &copy; Łukasz Chrząszcz - Dev Blog 2022
+                    Copyright &copy; Łukasz Chrząszcz 2023
                     <br>
                     <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
                     <iframe
@@ -549,7 +559,7 @@ Alice	12
 
 
 <script>
-    function async(u, c) {
+    function loadAsync(u, c) {
       var d = document, t = 'script',
           o = d.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -567,7 +577,7 @@ Alice	12
 <script>
     
     if($('#tag_cloud').length !== 0){
-        async("/js/jquery.tagcloud.js",function(){
+        loadAsync("/js/jquery.tagcloud.js",function(){
             $.fn.tagcloud.defaults = {
                 
                 color: {start: '#bbbbee', end: '#0085a1'},
@@ -579,7 +589,7 @@ Alice	12
 
 
 <script>
-    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
         var $nav = document.querySelector("nav");
         if($nav) FastClick.attach($nav);
     })
@@ -589,31 +599,11 @@ Alice	12
 
 
 
-    
-        
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-80545838-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
-
-    
 
 
-<div class="cookie-container">
-    <span>
-        I use cookies on this website to give you the best experience on my site.
-    </span>
-    <button class="cookie-btn">
-        Okay
-    </button>
-</div>
-<script src="/js/cookie-notice.js"></script>
+
+
+
 
 </body>
 </html>

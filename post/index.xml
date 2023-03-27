@@ -1,57 +1,57 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Łukasz Chrząszcz - Dev Blog</title>
-    <link>http://chrzaszcz.dev/post/</link>
-    <description>Recent content in Posts on Łukasz Chrząszcz - Dev Blog</description>
+    <title>Posts on Łukasz Chrząszcz</title>
+    <link>https://chrzaszcz.dev/post/</link>
+    <description>Recent content in Posts on Łukasz Chrząszcz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 07 Jan 2022 00:00:00 +0000</lastBuildDate><atom:link href="http://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 07 Jan 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://chrzaszcz.dev/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How to assign partitions to your consumers?</title>
-      <link>http://chrzaszcz.dev/2021/09/kafka-assignors/</link>
+      <link>https://chrzaszcz.dev/2021/09/kafka-assignors/</link>
       <pubDate>Fri, 07 Jan 2022 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2021/09/kafka-assignors/</guid>
+      <guid>https://chrzaszcz.dev/2021/09/kafka-assignors/</guid>
       <description>Using Kafka is usually fairly simple. You just create consumers, subscribe them to the topic of your choice, and your messages are being automagically consumed. Usually that is all you need to be &amp;ldquo;successful&amp;rdquo; with Kafka. Unfortunately, sometimes things do not go as planned, and you end up with your throughput looking like in one of the diagrams below.
 Although it is never an easy answer what is causing such behavior, nevertheless it might be the case your consumers are suffering from using the wrong assignor.</description>
     </item>
     
     <item>
       <title>How to test the application&#39;s integration with Kafka?</title>
-      <link>http://chrzaszcz.dev/2020/08/kafka-testing/</link>
+      <link>https://chrzaszcz.dev/2020/08/kafka-testing/</link>
       <pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2020/08/kafka-testing/</guid>
+      <guid>https://chrzaszcz.dev/2020/08/kafka-testing/</guid>
       <description>Every application needs proper tests. We can write them on many levels ranging from unit tests, through integration tests to performance tests. When it comes to integrating our applications with Kafka it is easy to make mistakes and introduce bugs in the code, so it is crucial to write proper tests checking this integration.
 To write true integration tests you need a real-life Kafka working somewhere to test how your application cooperates with it.</description>
     </item>
     
     <item>
       <title>How do transactions work in Apache Kafka?</title>
-      <link>http://chrzaszcz.dev/2019/12/kafka-transactions/</link>
+      <link>https://chrzaszcz.dev/2019/12/kafka-transactions/</link>
       <pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/12/kafka-transactions/</guid>
+      <guid>https://chrzaszcz.dev/2019/12/kafka-transactions/</guid>
       <description>When you first encounter Kafka, you will face either at-least-once, or at-most-once guarantees, depending on when you commit your offsets. This is sufficient for many or even most use cases. However, if you are processing events from one topic to another, you might worry about the duplication of your messages on the target topic, or lost events on the source topic. A solution to that problem is a transaction.
 What can we expect from Kafka&amp;rsquo;s transactions?</description>
     </item>
     
     <item>
       <title>How to count events in Kafka Streams?</title>
-      <link>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</link>
+      <link>https://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</link>
       <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</guid>
-      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&#39; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</description>
+      <guid>https://chrzaszcz.dev/2019/09/kafka-streams-store-basics/</guid>
+      <description>Stateful? In the previous post, we have discussed how to define topologies in Kafka Streams to apply our processing logic to every record and send it to another topic. Examples we have run through, revolved around stateless processing, but moving forward, what if we want to aggregate some events? What if we want to calculate the average value of users&amp;rsquo; orders in the last hour or calculate how many times did users order pizza in our pizzeria?</description>
     </item>
     
     <item>
       <title>How to use Kafka Streams to process events from one topic to another?</title>
-      <link>http://chrzaszcz.dev/2019/08/kafka-streams/</link>
+      <link>https://chrzaszcz.dev/2019/08/kafka-streams/</link>
       <pubDate>Tue, 06 Aug 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/08/kafka-streams/</guid>
+      <guid>https://chrzaszcz.dev/2019/08/kafka-streams/</guid>
       <description>What is Kafka Streams? We have already discussed a lot about producers and consumers. We know that we can take a consumer, poll for some messages, transform them, and finally publish the result on another topic.
 As simple as it sounds it might get boring to write yet another thread that does the fetching, processing, error handling, and again and again. Not only it is cumbersome, but also error-prone.
 Is there a better way?</description>
@@ -59,20 +59,20 @@ Is there a better way?</description>
     
     <item>
       <title>What happens when a new consumer joins the group in Kafka?</title>
-      <link>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</link>
+      <link>https://chrzaszcz.dev/2019/06/kafka-rebalancing/</link>
       <pubDate>Sun, 14 Jul 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/06/kafka-rebalancing/</guid>
+      <guid>https://chrzaszcz.dev/2019/06/kafka-rebalancing/</guid>
       <description>What is a rebalancing? As you know, all messages on a topic are spread out among the members of consumer group. Every consumer has its set of partitions assigned exclusively to it and rebalancing is all about maintaining all partitions assigned to active consumers.
 When one consumer dies Kafka needs to reassign orphaned partitions to the rest of the consumers. Similarly, when a new consumer joins the group Kafka needs to free up some partitions and assign them to the new consumers (if it can).</description>
     </item>
     
     <item>
       <title>What does the heartbeat thread do in Kafka Consumer?</title>
-      <link>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</link>
+      <link>https://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</link>
       <pubDate>Sat, 22 Jun 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</guid>
+      <guid>https://chrzaszcz.dev/2019/06/kafka-heartbeat-thread/</guid>
       <description>Recap In the previous post we&amp;rsquo;ve discussed how does Kafka Consumer work underneath. Now we know what are the very first steps to fetch records.
 Remember what I&amp;rsquo;ve intentionally omitted from previous post? That&amp;rsquo;s right! Heartbeat thread. We will investigate what it does exactly and how it works in general.
 Samples and setup If you want to run some samples on debug to discover heartbeat code by yourself, please by all means use my simple project on this GitHub repo.</description>
@@ -80,30 +80,30 @@ Samples and setup If you want to run some samples on debug to discover heartbeat
     
     <item>
       <title>What happens when you call poll on Kafka Consumer?</title>
-      <link>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</link>
+      <link>https://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</link>
       <pubDate>Sun, 16 Jun 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</guid>
+      <guid>https://chrzaszcz.dev/2019/06/16/kafka-consumer-poll/</guid>
       <description>Recap In the previous post we&amp;rsquo;ve discussed what Kafka is and how to interact with it. We explored how consumers subscribe to the topic and consume messages from it. We know that consumers form a group called consumer group and that Kafka split messages among members of the consumer group.
 That&amp;rsquo;s of course after the initialization is finished, but what exactly is done in the background when you create a new consumer and call the very first poll?</description>
     </item>
     
     <item>
       <title>Kafka 101</title>
-      <link>http://chrzaszcz.dev/2019/05/26/kafka-101/</link>
+      <link>https://chrzaszcz.dev/2019/05/26/kafka-101/</link>
       <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/05/26/kafka-101/</guid>
+      <guid>https://chrzaszcz.dev/2019/05/26/kafka-101/</guid>
       <description>What is Kafka? Kafka is a popular stream-processing platform. What does it mean? You can think of it as a service that takes messages from one place and put it in another. It allows you to construct asynchronous processing of events, create pub-sub mechanism or distribute work evenly among worker services - the are many use cases for it.
 Whatever your use case is, you need to know a few basic ideas about Kafka.</description>
     </item>
     
     <item>
       <title>Introduction to Docker</title>
-      <link>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</link>
+      <link>https://chrzaszcz.dev/2019/05/19/introduction-to-docker/</link>
       <pubDate>Sat, 18 May 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://chrzaszcz.dev/2019/05/19/introduction-to-docker/</guid>
+      <guid>https://chrzaszcz.dev/2019/05/19/introduction-to-docker/</guid>
       <description>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with the problem of installing new software just for trying something out? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with LAMP).</description>
     </item>
     
