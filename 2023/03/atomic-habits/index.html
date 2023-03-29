@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2023-03-atomic-habits/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2023-03-atomic-habits/background.jpg" />
+    
+
+    
+    <meta name="title" content="My thoughts on Atomic Habits" />
+    <meta property="og:title" content="My thoughts on Atomic Habits" />
+    <meta property="twitter:title" content="My thoughts on Atomic Habits" />
+    
+
+    
+    <meta name="description" content="We as software engineers are usually highly interested in technical topics, but usually neglect soft-skill part our work. I&#39;ve discovered that learning such skills might benefit my day-to-day work even more than learning yet another technology. Let&#39;s see how we could use knowledge from Atomic Habits!">
+    <meta property="og:description" content="We as software engineers are usually highly interested in technical topics, but usually neglect soft-skill part our work. I&#39;ve discovered that learning such skills might benefit my day-to-day work even more than learning yet another technology. Let&#39;s see how we could use knowledge from Atomic Habits!" />
+    <meta property="twitter:description" content="We as software engineers are usually highly interested in technical topics, but usually neglect soft-skill part our work. I&#39;ve discovered that learning such skills might benefit my day-to-day work even more than learning yet another technology. Let&#39;s see how we could use knowledge from Atomic Habits!" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="blog,developer,software engineer">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>My thoughts on Atomic Habits | Łukasz Chrząszcz Dev Blog</title>
+
+    <link rel="canonical" href="/2023/03/atomic-habits/">
+
+    
+    
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.1/css/all.css" rel="stylesheet" type="text/css">
+
+    
+    
+
+    
+    <script src="/js/jquery.min.js"></script>
+
+    
+    <script src="/js/bootstrap.min.js"></script>
+
+    
+    <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
+
+    
+    
+
+</head>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">All Posts</a>
+                    </li>
+                    
+                        
+                    
+                    
+		    
+                        <li><a href="/top/about//">ABOUT</a></li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/2023-03-atomic-habits/background.jpg')
+    }
+</style>
+
+<header class="intro-header" >
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/soft-skills" title="soft-skills">
+                            soft-skills
+                        </a>
+                        
+                        <a class="tag" href="/tags/book" title="book">
+                            book
+                        </a>
+                        
+                    </div>
+                    <h1>My thoughts on Atomic Habits</h1>
+                    <h2 class="subheading">How Atomic Habits could be used by a software engineer?</h2>
+                    <span class="meta">
+                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Wednesday, March 29, 2023
+                            
+                            
+                            
+                            
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <p>Hi! Hello! Welcome to my first post on soft skills! If this is not the first time you&rsquo;re on my blog, you know that as a software engineer, I&rsquo;ve been mainly writing about technical topics, but I strongly believe that soft skills are just as important for success in any field as technical ones. In this post, I&rsquo;ll share my thoughts on a book I recently read - <code>Atomic Habits</code> written by James Clear - and discuss how I&rsquo;ve applied some of its ideas in my daily work, encouraging you to read and use such books as well!</p>
+<p>Please note that this post is not a comprehensive summary of &ldquo;Atomic Habits,&rdquo; as there are many excellent summaries already available. Instead, I wanted to share my personal thoughts and experiences applying some of the book&rsquo;s concepts as a software engineer. If you&rsquo;re looking for the proper summary, take a look at the links at the end of the blog post 😄</p>
+<h2 id="show-and-tell">Show and Tell</h2>
+<p>The &ldquo;Show and Tell&rdquo; method is something heavily used in the Japanese railway system. It involves vocalizing each action you take or naming each item you pick up. This increases awareness of the actions you&rsquo;re performing. For example, when reviewing a pull request, it&rsquo;s helpful to read difficult parts out loud. Similarly, when deploying something to production, you can verbalize what you&rsquo;re doing with the aim of reducing the number of errors.</p>
+<h2 id="the-diderot-effect">The Diderot Effect</h2>
+<p>The Diderot Effect refers to buying something that leads to additional purchases. Each purchase creates a spiral of consumption, leading to more purchases. Understanding this effect can help you estimate the actual cost of buying something, as one purchase may lead to many more.</p>
+<p>I&rsquo;ve also noticed this effect during refactoring. Many times when I&rsquo;ve tried to improve the readability of a particular section of code, I&rsquo;ve found that it&rsquo;s necessary to improve ten additional sections as well, so it&rsquo;s crucial to refrain from saving the whole world with one enormously big refactoring and just stick to the goal we had in mind before we started.</p>
+<h2 id="make-good-habits-easy">Make Good Habits Easy</h2>
+<p>For example, placing a glass of water on your desk in front of your monitor helps you to stay hydrated for the whole day!</p>
+<p>I&rsquo;ve implemented this principle in my work as a programmer by creating a checklist for starting and ending each day. I often found myself with a list of unread emails, Slack messages, and loose notes that I&rsquo;d forgotten about. I also forgot to set specific goals for each day. To make the daily organisational habit easier, I created a checklist that I go through every morning. This way, when I&rsquo;m taking first sips of my morning coffee, I know exactly what I need to do: review emails and Slack messages, create tasks based on them, and categorize notes from the previous day (which also reminds me of the context from the previous day).</p>
+<h2 id="changing-your-attitude-towards-difficult-habits">Changing Your Attitude Towards Difficult Habits</h2>
+<p>You must realize that difficult habits aren&rsquo;t unpleasant tasks that you must perform because you imposed them on yourself. You should change the way you think about them, by remembering that you want to work on these habits because they will benefit you in the future. For example:</p>
+<ul>
+<li>Exercise: instead of thinking &ldquo;I have to run in the morning&rdquo;, say &ldquo;It&rsquo;s time to improve my endurance and speed.&rdquo;</li>
+<li>Finances: instead of thinking of it as deprivation, think of it as a way to increase your future standard of living.</li>
+<li>Clean code: instead of thinking &ldquo;I have to write boring documentation&rdquo; say &ldquo;It&rsquo;s time to help my users to self-service.&rdquo;</li>
+</ul>
+<h2 id="the-habit-of-directors">The Habit of Directors</h2>
+<p>Directors often write down the decisions they make, so they can revisit them later and analyze whether they were good or not.</p>
+<p>In my case, this idea is reflected in keeping a list of my achievements, major tasks I&rsquo;ve worked on, decisions I&rsquo;ve made that impacted the business, etc. Such list is incredibly useful in many cases. You can use it during your annual performance review to showcase yourself as an employee with a significant impact on the business, citing specific facts about what you&rsquo;ve accomplished. You can also look at this list from time to time and see how you&rsquo;re developing, or reconsider whether the decisions you made in the past were correct given the current situation.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>&ldquo;Atomic Habits&rdquo; offers a practical and effective approach to building good habits and breaking bad ones. By implementing the ideas from the book, you can make progress towards achieving your goals and improving your life. Personally I&rsquo;ve applied those principles in my work as a software engineer, but they&rsquo;re relevant to anyone looking to improve their habits and live a more fulfilling life. Have you ever thought about introducing good habits or removing bad ones to improve your productivity as a software engineer? Please share your ideas in the comments!</p>
+<h1 id="further-reading">Further reading</h1>
+<ul>
+<li><a href="https://jamesclear.com/atomic-habits-summary">Atomic Habits Summary</a> - Good summary of the book on the official author&rsquo;s site</li>
+</ul>
+<p>Photo by <a href="https://unsplash.com/@lazizli?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Lala Azizli</a> on <a href="https://unsplash.com/photos/4SutVTJ6Rv4?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a></p>
+
+
+                
+
+                
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2021/09/kafka-assignors/" data-toggle="tooltip" data-placement="top" title="How to assign partitions to your consumers?">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+                
+
+                
+
+
+<div id="disqus-comment"></div>
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "theer108" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+
+            
+            
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        <a href="/tags/book" title="book">
+                            book
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/docker" title="docker">
+                            docker
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/soft-skills" title="soft-skills">
+                            soft-skills
+                        </a>
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">                  
+                    
+                    
+                    
+                    
+                    
+
+		            
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		            
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		           
+                    
+                    
+                    
+                    
+                    
+                    
+            
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Łukasz Chrząszcz 2023
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function loadAsync(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        loadAsync("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

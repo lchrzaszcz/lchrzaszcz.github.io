@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>book on Łukasz Chrząszcz</title>
+    <link>https://chrzaszcz.dev/tags/book/</link>
+    <description>Recent content in book on Łukasz Chrząszcz</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 29 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://chrzaszcz.dev/tags/book/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My thoughts on Atomic Habits</title>
+      <link>https://chrzaszcz.dev/2023/03/atomic-habits/</link>
+      <pubDate>Wed, 29 Mar 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://chrzaszcz.dev/2023/03/atomic-habits/</guid>
+      <description>Hi! Hello! Welcome to my first post on soft skills! If this is not the first time you&amp;rsquo;re on my blog, you know that as a software engineer, I&amp;rsquo;ve been mainly writing about technical topics, but I strongly believe that soft skills are just as important for success in any field as technical ones. In this post, I&amp;rsquo;ll share my thoughts on a book I recently read - Atomic Habits written by James Clear - and discuss how I&amp;rsquo;ve applied some of its ideas in my daily work, encouraging you to read and use such books as well!</description>
+    </item>
+    
+  </channel>
+</rss>
