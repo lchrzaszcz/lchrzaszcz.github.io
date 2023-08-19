@@ -8,6 +8,18 @@
     <language>en-us</language>
     <lastBuildDate>Wed, 29 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>About me</title>
+      <link>https://chrzaszcz.dev/about/</link>
+      <pubDate>Sat, 19 Aug 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://chrzaszcz.dev/about/</guid>
+      <description>Hi!
+I am Łukasz and I am a software engineer - since I was 9 😄.
+What can I say about myself? I always want to reach deeper understanding of the stuff I am dealing with. How exactly is rebalancing in Kafka implemented? How does Zookeeper reach its consensus? Those are the questions that inspire me to dig in the code and share my findings with others.
+In my opinion the most important virtue of a software engineer is eagerness to understand the principles that drive almost all technologies, since libraries, frameworks, and databases come and go, but principles last forever.</description>
+    </item>
+    
+    <item>
       <title>My thoughts on Atomic Habits</title>
       <link>https://chrzaszcz.dev/2023/03/atomic-habits/</link>
       <pubDate>Wed, 29 Mar 2023 00:00:00 +0000</pubDate>
@@ -114,18 +126,6 @@ Whatever your use case is, you need to know a few basic ideas about Kafka.</desc
       
       <guid>https://chrzaszcz.dev/2019/05/19/introduction-to-docker/</guid>
       <description>Docker! That’s a real buzzword today! If you haven’t had a chance to use it yet, then you probably wonder what problems does it solve and if it can come in handy for you? Have you ever struggled with the problem of installing new software just for trying something out? Doing this regularly can lead to chaos in your OS not to mention the extra hassle of configuring more complex or coupled software (Wordpress with LAMP).</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>https://chrzaszcz.dev/top/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://chrzaszcz.dev/top/about/</guid>
-      <description>Hi!
-I am Łukasz and I am a software engineer - since I was 9 😄.
-What can I say about myself? I always want to reach deeper understanding of the stuff I am dealing with. How exactly is rebalancing in Kafka implemented? How does Zookeeper reach its consensus? Those are the questions that inspire me to dig in the code and share my findings with others.
-In my opinion the most important virtue of a software engineer is eagerness to understand the principles that drive almost all technologies, since libraries, frameworks, and databases come and go, but principles last forever.</description>
     </item>
     
   </channel>
