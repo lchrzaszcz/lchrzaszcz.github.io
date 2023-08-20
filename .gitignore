@@ -3,3 +3,5 @@ _site
 
 .idea
 chrzaszcz.dev/themes/hugo-theme-cleanwhite
+
+.DS_Store
