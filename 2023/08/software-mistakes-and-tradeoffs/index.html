@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Łukasz Chrząszcz">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="https://chrzaszcz.dev/img/2023-08-software-mistakes-and-tradeoffs/background.jpg">
+    <meta property="twitter:image" content="https://chrzaszcz.dev/img/2023-08-software-mistakes-and-tradeoffs/background.jpg" />
+    
+
+    
+    <meta name="title" content="My thoughts on Software Mistakes and Tradeoffs" />
+    <meta property="og:title" content="My thoughts on Software Mistakes and Tradeoffs" />
+    <meta property="twitter:title" content="My thoughts on Software Mistakes and Tradeoffs" />
+    
+
+    
+    <meta name="description" content="Explore &#34;Software Mistakes and Tradeoffs,&#34; a must-read for software engineers at all levels, as it unravels the intricacies of decision-making in coding, making it an indispensable companion on your journey through the dynamic world of software development.">
+    <meta property="og:description" content="Explore &#34;Software Mistakes and Tradeoffs,&#34; a must-read for software engineers at all levels, as it unravels the intricacies of decision-making in coding, making it an indispensable companion on your journey through the dynamic world of software development." />
+    <meta property="twitter:description" content="Explore &#34;Software Mistakes and Tradeoffs,&#34; a must-read for software engineers at all levels, as it unravels the intricacies of decision-making in coding, making it an indispensable companion on your journey through the dynamic world of software development." />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="blog,developer,software engineer">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>My thoughts on Software Mistakes and Tradeoffs | Łukasz Chrząszcz Dev Blog</title>
+
+    <link rel="canonical" href="/2023/08/software-mistakes-and-tradeoffs/">
+
+    
+    
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hugo-theme-cleanwhite.min.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link rel="stylesheet" href="/css/font-awesome.all.min.css">
+
+    
+    
+
+    
+    <script src="/js/jquery.min.js"></script>
+
+    
+    <script src="/js/bootstrap.min.js"></script>
+
+    
+    <script src="/js/hux-blog.min.js"></script>
+
+    
+    <script src="/js/lazysizes.min.js"></script>
+
+    
+    
+
+</head>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LCDYCK8V0V"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-LCDYCK8V0V', { 'anonymize_ip': false });
+}
+</script>
+
+
+
+
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Łukasz Chrząszcz</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">All Posts</a>
+                    </li>
+                    
+                        
+                    
+                    
+		    
+                        <li><a href="/about//">ABOUT</a></li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/2023-08-software-mistakes-and-tradeoffs/background.jpg')
+    }
+</style>
+
+<header class="intro-header" >
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/software-engineering" title="software-engineering">
+                            software-engineering
+                        </a>
+                        
+                        <a class="tag" href="/tags/book" title="book">
+                            book
+                        </a>
+                        
+                    </div>
+                    <h1>My thoughts on Software Mistakes and Tradeoffs</h1>
+                    <h2 class="subheading">Cracking the Code of Software Engineering Challenges</h2>
+                    <span class="meta">
+                        
+                            Posted by 
+                            
+                                Łukasz Chrząszcz
+                             
+                            on 
+                            Sunday, August 20, 2023
+                            
+                            
+                            
+                            
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <p>If you&rsquo;ve watched Star Wars then you know that only a Sith deals in absolutes. If you are a software engineer, you are probably not a Sith at the same time (if you are, let me know in the comments section below 🤔), but do you deal in absolutes? In software engineering, just like it is with being a Jedi, every decision is all about the tradeoff, and not a single decision is either good or bad. You simply cannot choose one option and not pay the price. Are you adopting microservices? Cool, but you will have more maintenance costs. Are you going for reactive programming? Awesome, but you will have to train the team. See? Tradeoffs!</p>
+<p>Recently, I had the pleasure to read the book <code>Software Mistakes and Tradeoffs</code> written by Tomasz Lelek and Jon Skeet. The whole book revolves around the concept that no decision is either entirely good or entirely bad. It is an essence of the authors&rsquo; many years of experience in making decisions as software engineers. In each chapter, we discover a new problem that we try to solve using different approaches. Each approach comes with several pros and cons, and it&rsquo;s all about choosing the right fit for your project.</p>
+<p>This book is a great read with solutions for all the &ldquo;holy wars&rdquo; in your team. For sure, you had some in your team. Do you remember when you had a fierce discussion with your colleagues about introducing functional programming to the project? Maybe you were arguing about using that shiny new library? After reading the book, if I ever take part in similar discussion, I will just suggest reading a chapter from <code>Software Mistakes and Tradeoffs</code>, to set out the basics and know what to check before deciding. Given that, I felt exactly like I would be reading <code>Building Microservices</code> by Sam Newman. It goes through all the aspects of something and gives you the scope of things to consider when making your choices. It makes you know what you do not know.</p>
+<p>Let&rsquo;s explore a few chapters from the book that I particularly loved, so you can get the gist of an idea of what the book is about.</p>
+<p>Disclaimer: I had the pleasure of working with Tomasz Lelek (those were the times! 😄) and he gifted me the book, so I could read it and share my thoughts here. Nevertheless, I&rsquo;m describing my genuine thoughts so do not fear any bias 😄</p>
+<h1 id="oh-cool-there-is-a-library-for-that">Oh cool! There is a library for that!</h1>
+<p>I have heard that the best programmers are the laziest programmer. The first thing we all do is to check if there is a library for anything we would like to do. For many people, it is a no-brainer. For me, it was also the case a few years ago. However, I realized a few times, that the overall maintenance cost of a library I chose is higher than any time savings I got from not writing that piece of code on my own.</p>
+<p>The authors of the book also mention that you have to be extra careful when choosing the library. Just like in the well-known comic <a href="https://i.imgur.com/ZyeCO.jpg">joke</a> titled &ldquo;What if programming languages were essays&rdquo;, it is tempting to just type <code>from essay import *</code> 🥁, but&hellip;</p>
+<ul>
+<li>What about the maturity of this library?</li>
+<li>What about security?</li>
+<li>Is this library actively developed?</li>
+</ul>
+<p>There are so many things to check before using a library!</p>
+<p>Obviously, we should not analyze if Spring is mature enough for our project, as some libraries are widely recognized, and we can safely import them, but we should definitely check if that library with just a few stars on GitHub will not cause more maintenance than it makes sense.</p>
+<p>If we already checked that the library is actively developed, it has a lot of stars ⭐ on GitHub, but still does not mean that we can import it and call it a day. We have to learn it and understand its default values. The book shows the example of HTTP clients. In most codebases I have seen, the HTTP client is created and used without any configuration&hellip; and it works! Unfortunately, sooner or later, we will see timeout errors or degraded performance, because we did not set proper timeouts. The library worked for us locally, in dev environment, in test environment, and even in production environment, but it might be the case that we were just lucky or the default timeouts were way higher than the actual response times (that means our users are waiting for a late response from a dependant server that might never arrive).</p>
+<p>Does it mean that you should not use HTTP clients? Not at all! That means that you should not assume that importing and using a library will be a zero-cost operation, you have to understand its configuration and how it works. Relying on default values is fine, as long as you know that they are there and you made a conscious decision to leave them as they are.</p>
+<p>Another thing the authors mention is the testability of the new library. Usually, libraries are already tested thoroughly, nevertheless, you might still want to test your expectations and be sure that the library works the way you think it does. If you would like to do that, you might find that it is not always that easy. This is especially important for complex libraries like <code>reactor</code>, where it is extremely hard to simulate some test cases. Fortunately, there is a library <code>reactor-test</code> that provides you with a set of tools to create any tests you would like for your reactive application. That is something you want to look for in the libraries you are importing into your project. So remember to check how easy it is to test your integration with the library.</p>
+<p>Finally, keep in mind that adding a new library as a dependency adds to your project library&rsquo;s dependencies as well. I was always amazed by <code>resilience4j</code> as it has almost no dependencies, so it was always easy to include it. However, not all libraries are like that. I cannot even count the number of times I got conflicting versions of <code>jackson</code> coming from different libraries. To be honest I thought several times that it will be easier for me to just write the library myself 🤣</p>
+<p>The cool thing about this chapter in the book is that it gives you a comprehensive checklist to go through before including a new library in your project. Since I have checklists for all repetitive and error-prone tasks (have you read <a href="https://en.wikipedia.org/wiki/The_Checklist_Manifesto">The Checklist Manifesto</a>?), I just loved it as a summary of the whole chapter. Obviously, now I have that checklist on my checklist list.</p>
+<h1 id="what-timezone-is-on-mars">What timezone is on Mars?</h1>
+<p>I always knew that &ldquo;time&rdquo; is like a scary movie for software engineers. I knew that there are different timezones, summertime, leap seconds, etc. but this chapter in <code>Software Mistakes and Tradeoffs</code> gave me true goosebumps. There are a few dozens of pages full of caveats, problems, and edge cases connected to time in computers.</p>
+<p>You probably know that the time in software engineering is calculated based on something called <code>epoch</code>, which is an agreed moment in time from which computers start to calculate time. A well-known <code>epoch</code> is the 1st of January 1970 which is also called the UNIX epoch, so any date and time are represented as the number of seconds that elapsed from this epoch. That is something I was taking for granted during my whole career, but little did I know that there are different notions of <code>epoch</code>! Thanks to the book I am reviewing, I learned that in .NET the epoch is <code>01-01-0001T00:00:00</code>.</p>
+<p>Another problem described by the book is connected to calculations on dates. To give you an example what might be a non-trivial problem - what is the result of adding 1 month to the 31st of May 2023?</p>
+<ul>
+<li>Is it the 1st of July 2023? - which is the result of adding 31 days</li>
+<li>Is it the 30th of June? - which is the result of adding 30 days</li>
+<li>It might also be the case that you want to just bump the &ldquo;month&rdquo; part of the whole date by 1, but June has only 30 days, so the result would be the 31st of June which does not exist. What should be the result then?</li>
+</ul>
+<p>The problem is that different libraries have different implementations and the results might vary. You need to be extra careful with that. The best option is to design comprehensive tests that cover such edge cases.</p>
+<p>If you are a science-fiction fan as I am, you will be probably excited by the idea of building Moon 🌔 or Mars 🚀 base. However, the book asks another problematic question - if it is 16:00 20th of August 2023 in Poland, what time it is on Mars? Let&rsquo;s keep in mind that the day on Mars is not 24 hours long (although it is <em>almost</em> 24 hours), a year is not 365 days. Things start to get tricky, right? I believe that it is just a matter of time when we will need to convert 16:00 20th of August 2023 CEST to the &ldquo;Central Martian Summer Time&rdquo; 🤣</p>
+<p>Surprisingly, according to the book, there is already a suggestion that open-source libraries for time operations should include logic for other planets than Earth. The funniest quote from the book refers to that effort:</p>
+<blockquote>
+<p>&ldquo;I hope to have retired by the time it becomes relevant to mainstream software engineering&rdquo;</p>
+</blockquote>
+<p>A fun fact, is that after reading several problems connected to time I thought <em>&ldquo;Hey! What about time dilation? If we start to analyze the small differences in Earth&rsquo;s movement then it makes sense to take into account relativistic effects&rdquo;</em>&hellip; and after moving to the next page there it was - the time dilation problem. You might be thinking that it does not make sense to even think about time dilation, but I was surprised that it is actually important in - for example - GPS systems 🛰️</p>
+<p>Overall, I could not stop myself from reading this chapter in one sitting, even though it was late at night. It is a marvelous journey from simple and well-known time problems to time dilation and Mars. Awesome 🤩!</p>
+<h1 id="should-you-adopt-the-hottest-trend">Should you adopt the hottest trend?</h1>
+<p>The third chapter that got my attention is the one about all those fierce discussions in the team about whether we should use a shiny, brand-new technology that promises to solve all problems in our project. Software engineering obviously moves forward, there are new frameworks and libraries every day (I look at you JS 👀! I am checking <a href="https://dayssincelastjavascriptframework.com/">days since last javascript framework</a> counter every day!). It often makes sense to adopt some new things, but I believe you agree that we should not chase every novelty.</p>
+<p>Authors in this chapter describe the pros and cons of dependency injection frameworks, reactive programming, and functional programming. Especially last two caught my attention, as I remember the story of my team when we decided to use reactive programming in one of the services. We expected a huge volume of traffic, so we decided to try out this <em>&ldquo;reactive thingy&rdquo;</em> that promises to easily provide high throughput. Little did we know, that although it was fast and efficient, it was also extremely expensive in terms of maintenance.</p>
+<p>If we had a book like the one I am describing, we would probably have read this chapter and tried the conventional paradigm first. Unfortunately, we had not had this book, so we went through the pain and troubles of finding out on our own, that although something looks cool, it might not be that great to spend months swearing 😤, fixing bugs 🪲, learning the hard way 🗒 to finally get rid of the reactive programming.</p>
+<p>Do not get me wrong, I am not against reactive programming, I really like the idea. I am just saying that in that particular situation, it was overkill and brought us no actual benefit but added the extra maintenance. I think it is worth reading this chapter and learning to cautiously approach every new technology.</p>
+<h1 id="summary">Summary</h1>
+<p>In the ever-changing landscape of software engineering, the book <code>Software Mistakes and Tradeoffs</code> stands out as a true gem, offering insights that every developer can treasure. With its down-to-earth approach to real-world challenges and its knack for dissecting tough decisions, this book is more than a read — it is a reliable companion for your coding journey. I have read so many books about software engineering, and worked for so many years in the industry, that I thought that almost no book can surprise me. I can name just a few technical books, that were actually revolutionary to me. Such books for me are books that describe concepts, ideas, and good practices that will never go out of date. <code>Software Mistakes and Tradeoffs</code> is one of those books, that go through many topics and describe them from many different angles, analysing the pros and cons of every possible solution.</p>
+<p>Is this book for experienced engineers or beginners? I would say both. The book might be tricky for beginners because it is really condensed, so some basic concepts are not explained, and you might feel a little bit lost, but the best part of it is that it will make you know what to read later and even more it gives you something you need the most at this stage of your career - experience. This book is a synthesis of many years of experience. If you are already an experienced software engineer, the book will help you fill the gaps in knowledge (if you had any) and it will help you to understand what to take into account when making a decision in your project. Personally, as an experienced software engineer, I was surprised a few times - who would have thought that you have to think about timezones on Mars?! So, whether you are a rookie trying to navigate the maze of software development or a seasoned pro aiming to refine your decision-making, this book has something for you. Let it be your secret weapon for untangling dilemmas and finding the way forward in a world where every line of code is a step toward progress.</p>
+<p>I encourage you to read the book on your own. Some books - just like some meetings - could have been an e-mail, meaning that for some books it would be more beneficial to just read the summary, but here it is not the case. I can describe some key points as I did in this post, but the true value is in the examples and the details in each chapter, so think of this summary as an encouragement to read the book, not to replace reading it. Additionally, I think this book should be looked at as a group of separate chapters, as every chapter is a throughout analysis of the different topics, so probably you will revisit selected chapters once you stumbled upon that particular problem in your work.</p>
+<h1 id="further-reading">Further reading</h1>
+<ul>
+<li><a href="https://shepherd.com/best-books/big-data-processing-ecosystem">The best books about big data processing ecosystem</a> - Personal recommendations from Tomasz Lelek, be sure to read what he is recommending! 😄</li>
+<li><a href="http://letstalkaboutjava.blogspot.com/2023/03/how-to-make-good-programming-decisions.html">How to make good programming decisions</a> - Another book review, if you would like to know different perspective</li>
+<li><a href="https://medium.com/javarevisited/software-engineering-mistakes-and-trade-offs-book-by-jon-skeet-and-tomasz-lelek-d435aaf131c8">Software engineering mistakes and tradeoffs book</a> - And yet another book review for even more diverse perspective</li>
+<li><a href="https://www.topcoder.com/thrive/articles/preparing-to-work-with-datetime-information">Preparing to work with datetime information</a> - I love this article, as it describes in detail the chapter about time! After reading this article you will know what questions to ask to understand requirements 😄</li>
+<li><a href="https://codeblog.jonskeet.uk/2021/06/11/new-book-software-mistakes-and-tradeoffs/">New book: Software Mistakes and Tradeoffs</a> - A news about the book on the Jon Skeet&rsquo;s coding blog</li>
+<li><a href="https://dev.to/tomekl007/scaling-processing-using-data-locality-lg8">Scaling processing using data locality</a> - Good article from Tomasz Lelek about data locality. In the book there is a whole chapter about that, so go check it out if you are interested in big data 😄</li>
+</ul>
+<p>If you would like to purchase the book, <a href="https://www.manning.com/books/software-mistakes-and-tradeoffs">here is the link</a>. You can use the code <code>SMT35</code> to get 35% discount! 🤩</p>
+<p>Photo by <a href="https://unsplash.com/@tingeyinjurylawfirm?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText%22">Tingey Injury Law Firm</a> on <a href="https://unsplash.com/photos/DZpc4UY8ZtY?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a></p>
+
+
+                
+
+                
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/03/atomic-habits/" data-toggle="tooltip" data-placement="top" title="My thoughts on Atomic Habits">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+                
+
+                
+
+
+<div id="disqus-comment"></div>
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "theer108" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+            </div>
+
+            
+            
+
+            
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        <a href="/tags/book" title="book">
+                            book
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/docker" title="docker">
+                            docker
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/kafka" title="kafka">
+                            kafka
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/soft-skills" title="soft-skills">
+                            soft-skills
+                        </a>
+                        
+                        
+                        
+                        <a href="/tags/software-engineering" title="software-engineering">
+                            software-engineering
+                        </a>
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">                  
+                    
+                    
+                    
+                    
+                    
+
+		            
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/lchrzaszcz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		            
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/%C5%82ukasz-chrz%C4%85szcz-502733b9/">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		           
+                    
+                    
+                    
+                    
+                    
+                    
+            
+            
+            <li>
+                <a target="_blank" href="https://www.instagram.com/chrzaszcz.dev/">
+                    <span class="fa-stack fa-lg">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fab fa-instagram fa-stack-1x fa-inverse"></i>
+                    </span>
+                </a>
+            </li>
+            
+            
+           
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Łukasz Chrząszcz" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+            
+             </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Łukasz Chrząszcz 2023
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function loadAsync(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        loadAsync("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    loadAsync("https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

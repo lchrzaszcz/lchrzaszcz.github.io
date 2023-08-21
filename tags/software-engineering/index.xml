@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>software-engineering on Łukasz Chrząszcz</title>
+    <link>https://chrzaszcz.dev/tags/software-engineering/</link>
+    <description>Recent content in software-engineering on Łukasz Chrząszcz</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 20 Aug 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://chrzaszcz.dev/tags/software-engineering/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My thoughts on Software Mistakes and Tradeoffs</title>
+      <link>https://chrzaszcz.dev/2023/08/software-mistakes-and-tradeoffs/</link>
+      <pubDate>Sun, 20 Aug 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://chrzaszcz.dev/2023/08/software-mistakes-and-tradeoffs/</guid>
+      <description>If you&amp;rsquo;ve watched Star Wars then you know that only a Sith deals in absolutes. If you are a software engineer, you are probably not a Sith at the same time (if you are, let me know in the comments section below 🤔), but do you deal in absolutes? In software engineering, just like it is with being a Jedi, every decision is all about the tradeoff, and not a single decision is either good or bad.</description>
+    </item>
+    
+  </channel>
+</rss>
