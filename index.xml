@@ -8,6 +8,17 @@
     <language>en-us</language>
     <lastBuildDate>Thu, 05 Oct 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://chrzaszcz.dev/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Consultations, workshops, mentoring</title>
+      <link>https://chrzaszcz.dev/consultancy/</link>
+      <pubDate>Sat, 09 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://chrzaszcz.dev/consultancy/</guid>
+      <description>Hello!
+I&amp;rsquo;m Łukasz Chrząszcz, your guide through the complexities of software engineering and effective team leadership. My adventure with coding started when I was just 9 years old, and it has been a thrilling journey of continuous learning and sharing.
+Why Partner with Me? In-Depth Technical Mastery: Gain clarity on advanced topics like Kafka&amp;rsquo;s transactional models and partitioning strategies. My detailed explorations, such as dissecting Kafka&amp;rsquo;s partition assignments and transaction processes, are designed to demystify the complexities of these systems for you.</description>
+    </item>
+    
+    <item>
       <title>My thoughts on Corporate Rebels</title>
       <link>https://chrzaszcz.dev/2023/10/corporate-rebels/</link>
       <pubDate>Thu, 05 Oct 2023 00:00:00 +0000</pubDate>
