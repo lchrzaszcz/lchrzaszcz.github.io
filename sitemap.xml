@@ -2,6 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://chrzaszcz.dev/2024/01/how-to-read-books/</loc>
+    <lastmod>2024-01-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://chrzaszcz.dev/</loc>
+    <lastmod>2024-01-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://chrzaszcz.dev/post/</loc>
+    <lastmod>2024-01-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://chrzaszcz.dev/tags/soft-skills/</loc>
+    <lastmod>2024-01-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://chrzaszcz.dev/tags/</loc>
+    <lastmod>2024-01-21T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://chrzaszcz.dev/consultancy/</loc>
     <lastmod>2023-12-09T00:00:00+00:00</lastmod>
   </url><url>
@@ -11,22 +26,10 @@
     <loc>https://chrzaszcz.dev/tags/leadership/</loc>
     <lastmod>2023-10-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://chrzaszcz.dev/</loc>
-    <lastmod>2023-10-05T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>https://chrzaszcz.dev/2023/10/corporate-rebels/</loc>
     <lastmod>2023-10-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://chrzaszcz.dev/post/</loc>
-    <lastmod>2023-10-05T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://chrzaszcz.dev/tags/</loc>
-    <lastmod>2023-10-05T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>https://chrzaszcz.dev/2023/09/cultural-differences/</loc>
-    <lastmod>2023-09-10T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://chrzaszcz.dev/tags/soft-skills/</loc>
     <lastmod>2023-09-10T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://chrzaszcz.dev/2023/08/software-mistakes-and-tradeoffs/</loc>
